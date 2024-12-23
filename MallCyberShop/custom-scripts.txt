@@ -1,0 +1,8 @@
+npm install -g eas-cli
+eas login
+eas build:configure
+
+
+
+Generra APK con EXPP
+eas build --platform android --profile preview
