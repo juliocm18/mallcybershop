@@ -12,6 +12,7 @@ import {
   Image,
   ActivityIndicator,
 } from "react-native";
+import {Ionicons} from "@expo/vector-icons";
 
 const fetchRemoteJson = async (url: string) => {
   const uniqueUrl = `${url}?_=${Date.now()}`;
@@ -94,13 +95,21 @@ const App = () => {
 
   return (
     <View style={styles.container}>
-      <TextInput
-        style={styles.searchBar}
-        placeholder="Buscar aplicación"
-        placeholderTextColor="#ccc"
-        value={search}
-        onChangeText={setSearch}
-      />
+      <View style={styles.searchContainer}>
+        <Ionicons
+          name="search"
+          size={24}
+          color="#ccc"
+          style={styles.searchIcon}
+        />
+        <TextInput
+          style={styles.searchBar}
+          placeholder="Buscar aplicación"
+          placeholderTextColor="#ccc"
+          value={search}
+          onChangeText={setSearch}
+        />
+      </View>
       <FlatList
         data={filteredApps}
         numColumns={3}
@@ -131,13 +140,21 @@ const styles = StyleSheet.create({
     backgroundColor: "#ff9f61",
     padding: 10,
   },
-  searchBar: {
-    height: 50,
+  searchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: "#faf7f7",
     borderRadius: 8,
     paddingHorizontal: 15,
-    color: "#000",
     marginBottom: 20,
+  },
+  searchIcon: {
+    marginRight: 10,
+  },
+  searchBar: {
+    flex: 1,
+    height: 50,
+    color: "#000",
     fontSize: 16,
   },
   logoContainer: {
@@ -169,5 +186,4 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
 });
-
 export default App;
