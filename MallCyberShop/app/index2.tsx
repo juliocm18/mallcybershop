@@ -16,9 +16,6 @@ import {Ionicons, FontAwesome} from "@expo/vector-icons";
 import {GestureHandlerRootView} from "react-native-gesture-handler";
 import DraggableFlatList from "react-native-draggable-flatlist";
 import BouncyCheckbox from "react-native-bouncy-checkbox";
-import Entypo from "@expo/vector-icons/Entypo";
-
-import RNModal from "react-native-modal";
 
 const fetchRemoteJson = async (url: string) => {
   const uniqueUrl = `${url}?_=${Date.now()}`;
@@ -49,16 +46,6 @@ const openWhatsApp = () => {
 };
 
 const App = () => {
-  const links = {
-    web: "https://example.com",
-    App: "myapp://home",
-    Facebook: "https://facebook.com/example",
-    Instagram: "https://instagram.com/example",
-    TikTok: "https://tiktok.com/@example",
-    Twitter: "https://twitter.com/example",
-    YouTube: "https://youtube.com/@example",
-  };
-
   const [search, setSearch] = useState("");
   const [apps, setApps] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -66,44 +53,6 @@ const App = () => {
   const [categories, setCategories] = useState<string[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
-
-  const [isModalSocialVisible, setModalSocialVisible] = useState(false);
-
-  const renderIcon = (key: any) => {
-    switch (key) {
-      case "web":
-        return <FontAwesome name="globe" size={20} color="#006140" />;
-      case "App":
-        return <FontAwesome name="mobile" size={20} color="#484545" />;
-      case "Facebook":
-        return <FontAwesome name="facebook" size={20} color="#1877F2" />;
-      case "Instagram":
-        return <FontAwesome name="instagram" size={20} color="#C13584" />;
-      case "TikTok":
-        return <Ionicons name="logo-tiktok" size={24} color="black" />;
-      case "Twitter":
-        return <FontAwesome name="twitter" size={20} color="#1da1f2" />;
-      case "YouTube":
-        return <FontAwesome name="youtube" size={20} color="#FF0000" />;
-
-      default:
-        return null;
-    }
-  };
-
-  const toggleModalSocial = () => {
-    setModalSocialVisible(!isModalSocialVisible);
-  };
-
-  const handleLinkPress = async (url: string) => {
-    const supported = await Linking.canOpenURL(url);
-    if (supported) {
-      await Linking.openURL(url);
-    } else {
-      alert("No se pudo abrir el enlace");
-    }
-    toggleModalSocial();
-  };
 
   useEffect(() => {
     const loadRemoteJson = async () => {
@@ -219,8 +168,7 @@ const App = () => {
         renderItem={({item, drag}) => (
           <TouchableOpacity
             style={styles.logoContainer}
-            // onPress={() => handleOpenApp(item)} Se deshabilita abrir directamente la web
-            onPress={toggleModalSocial}
+            onPress={() => handleOpenApp(item)}
             onLongPress={drag} // Activa el arrastre al mantener presionado
           >
             <View style={styles.logoWrapper}>
@@ -266,32 +214,6 @@ const App = () => {
           </View>
         </View>
       </Modal>
-
-      {/* MODAL DE rEDES SOCIALES */}
-
-      <RNModal
-        isVisible={isModalSocialVisible}
-        onBackdropPress={toggleModalSocial}
-      >
-        <View style={styles.socialModalContent}>
-          <Text style={styles.socialModaltitle}>Selecciona un enlace:</Text>
-          <View style={styles.socialModallinksContainer}>
-            {Object.keys(links).map((key) => (
-              <TouchableOpacity
-                key={key}
-                style={styles.socialModallinkButton}
-                onPress={() =>
-                  handleLinkPress(links[key as keyof typeof links].toString())
-                }
-              >
-                {renderIcon(key)}
-
-                <Text style={styles.socialModallinkText}>{key}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-      </RNModal>
       <TouchableOpacity
         style={styles.floatingWhatsAppButton}
         onPress={openWhatsApp}
@@ -416,34 +338,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 2,
     elevation: 5,
-  },
-  socialModaltitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 10,
-  },
-  socialModallinksContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
-    width: "100%",
-  },
-  socialModallinkButton: {
-    flexBasis: "48%", // Dos columnas
-    padding: 10,
-    marginVertical: 5,
-    backgroundColor: "#eee",
-    borderRadius: 5,
-    alignItems: "center",
-  },
-  socialModallinkText: {
-    fontSize: 16,
-  },
-  socialModalContent: {
-    backgroundColor: "white",
-    padding: 20,
-    borderRadius: 10,
-    alignItems: "center",
   },
 });
 

@@ -6,3 +6,8 @@ eas build:configure
 
 Generra APK con EXPP
 eas build --platform android --profile preview
+
+Estoy realizando una aplicacion en react native version mayor a > 0.76 usando expo version mayor a >52.0, analiza este código y agrégale un botón flotante con el icono de whatssApp que  al hacer click abra whatssApp para enviarle un mensaje al numero "+51997528065" con el texto predeterminado "Hola"
+
+Estoy realizando una aplicacion en react native version mayor a > 0.76 usando expo version mayor a >52.0, analiza este código y agregale la funcionalidad
+de que al hacer click a un icono abra un modal para seleccionar a que link quiere redirigirse enrtre Página web, App, Facebook, Instagram, Tik tok, Twitter, YouTube.

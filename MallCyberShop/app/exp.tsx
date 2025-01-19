@@ -16,7 +16,6 @@ import {Ionicons, FontAwesome} from "@expo/vector-icons";
 import {GestureHandlerRootView} from "react-native-gesture-handler";
 import DraggableFlatList from "react-native-draggable-flatlist";
 import BouncyCheckbox from "react-native-bouncy-checkbox";
-import Entypo from "@expo/vector-icons/Entypo";
 
 import RNModal from "react-native-modal";
 
@@ -68,28 +67,7 @@ const App = () => {
   const [modalVisible, setModalVisible] = useState(false);
 
   const [isModalSocialVisible, setModalSocialVisible] = useState(false);
-
-  const renderIcon = (key: any) => {
-    switch (key) {
-      case "web":
-        return <FontAwesome name="globe" size={20} color="#006140" />;
-      case "App":
-        return <FontAwesome name="mobile" size={20} color="#484545" />;
-      case "Facebook":
-        return <FontAwesome name="facebook" size={20} color="#1877F2" />;
-      case "Instagram":
-        return <FontAwesome name="instagram" size={20} color="#C13584" />;
-      case "TikTok":
-        return <Ionicons name="logo-tiktok" size={24} color="black" />;
-      case "Twitter":
-        return <FontAwesome name="twitter" size={20} color="#1da1f2" />;
-      case "YouTube":
-        return <FontAwesome name="youtube" size={20} color="#FF0000" />;
-
-      default:
-        return null;
-    }
-  };
+  3;
 
   const toggleModalSocial = () => {
     setModalSocialVisible(!isModalSocialVisible);
@@ -273,7 +251,7 @@ const App = () => {
         isVisible={isModalSocialVisible}
         onBackdropPress={toggleModalSocial}
       >
-        <View style={styles.socialModalContent}>
+        <View style={styles.modalContent}>
           <Text style={styles.socialModaltitle}>Selecciona un enlace:</Text>
           <View style={styles.socialModallinksContainer}>
             {Object.keys(links).map((key) => (
@@ -284,8 +262,7 @@ const App = () => {
                   handleLinkPress(links[key as keyof typeof links].toString())
                 }
               >
-                {renderIcon(key)}
-
+                <FontAwesome name="instagram" size={20} color="#C13584" />
                 <Text style={styles.socialModallinkText}>{key}</Text>
               </TouchableOpacity>
             ))}
@@ -438,12 +415,6 @@ const styles = StyleSheet.create({
   },
   socialModallinkText: {
     fontSize: 16,
-  },
-  socialModalContent: {
-    backgroundColor: "white",
-    padding: 20,
-    borderRadius: 10,
-    alignItems: "center",
   },
 });
 
