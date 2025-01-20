@@ -1,0 +1,245 @@
+[
+    {
+        "id": 1,
+        "key": "bcp-package-1",
+        "name": "BCP",
+        "package": "#1",
+        "url": "https://www.viabcp.com/",
+        "logo": "https://burbitstudio.com/cyber-shop-mall/bcp.webp",
+        "categories": ["Moda", "Deportes"]
+    },
+    {
+        "id": 2,
+        "key": "ucv-package-2",
+        "name": "UCV",
+        "package": "#2",
+        "url": "https://www.ucv.edu.pe/",
+        "logo": "https://burbitstudio.com/cyber-shop-mall/ucv.webp",
+        "categories": ["Tecnología", "Hogar"]
+    },
+    {
+        "id": 3,
+        "key": "yape-package-3",
+        "name": "Yape",
+        "package": "#3",
+        "url": "https://www.yape.com.pe/",
+        "logo": "https://burbitstudio.com/cyber-shop-mall/yape.webp",
+        "categories": ["Tecnología"]
+    },
+    {
+        "id": 4,
+        "key": "tinka-package-4",
+        "name": "Tinka",
+        "package": "#4",
+        "url": "https://www.latinka.com.pe/p/",
+        "logo": "https://burbitstudio.com/cyber-shop-mall/tinka.webp",
+        "categories": ["Deportes", "Moda"]
+    },
+    {
+        "id": 5,
+        "key": "sunarp-package-5",
+        "name": "Sunarp",
+        "package": "#5",
+        "url": "https://sidciudadano.sunarp.gob.pe/sid/sesion.htm",
+        "logo": "https://burbitstudio.com/cyber-shop-mall/sunarp.webp",
+        "categories": ["Tecnología"]
+    },
+    {
+        "id": 6,
+        "key": "soltv-package-6",
+        "name": "SolTV",
+        "package": "#6",
+        "url": "https://soltvperu.com/",
+        "logo": "https://burbitstudio.com/cyber-shop-mall/soltv.webp",
+        "categories": ["Hogar", "Tecnología"]
+    },
+    {
+        "id": 7,
+        "key": "mifarma-package-7",
+        "name": "MiFarma",
+        "package": "#7",
+        "url": "https://www.mifarma.com.pe/",
+        "logo": "https://burbitstudio.com/cyber-shop-mall/mifarma.webp",
+        "categories": ["Hogar", "Moda"]
+    },
+    {
+        "id": 8,
+        "key": "latina-package-8",
+        "name": "Latina",
+        "package": "#8",
+        "url": "https://www.latina.pe/",
+        "logo": "https://burbitstudio.com/cyber-shop-mall/latina.webp",
+        "categories": ["Moda"]
+    },
+    {
+        "id": 9,
+        "key": "itssa-package-9",
+        "name": "Itssa",
+        "package": "#9",
+        "url": "https://www.ittsabus.com/",
+        "logo": "https://burbitstudio.com/cyber-shop-mall/ittsa.webp",
+        "categories": ["Deportes", "Hogar"]
+    },
+    {
+        "id": 10,
+        "key": "inkafarma-package-10",
+        "name": "Inkafarma",
+        "package": "#10",
+        "url": "https://inkafarma.pe/",
+        "logo": "https://burbitstudio.com/cyber-shop-mall/inkafarma.webp",
+        "categories": ["Hogar", "Tecnología"]
+    },
+    {
+        "id": 11,
+        "key": "interbank-package-11",
+        "name": "Interbank",
+        "package": "#11",
+        "url": "https://interbank.pe/",
+        "logo": "https://burbitstudio.com/cyber-shop-mall/interbank.webp",
+        "categories": ["Tecnología", "Moda"]
+    },
+    {
+        "id": 12,
+        "key": "inkabet-package-12",
+        "name": "Inkabet",
+        "package": "#12",
+        "url": "https://inkabet.pe/pe",
+        "logo": "https://burbitstudio.com/cyber-shop-mall/inkabet.webp",
+        "categories": ["Deportes", "Moda"]
+    },
+    {
+        "id": 13,
+        "key": "betsson-package-13",
+        "name": "Betsson",
+        "package": "#13",
+        "url": "https://www.betsson.com/pe",
+        "logo": "https://burbitstudio.com/cyber-shop-mall/betson.webp",
+        "categories": ["Deportes"]
+    },
+    {
+        "id": 14,
+        "key": "betano-package-14",
+        "name": "Betano",
+        "package": "#14",
+        "url": "https://www.betano.pe/",
+        "logo": "https://burbitstudio.com/cyber-shop-mall/betano.webp",
+        "categories": ["Deportes", "Tecnología"]
+    },
+    {
+        "id": 15,
+        "key": "satt-package-15",
+        "name": "SATT",
+        "package": "#15",
+        "url": "https://www.gob.pe/satt",
+        "logo": "https://burbitstudio.com/cyber-shop-mall/satt.png",
+        "categories": ["Tecnología"]
+    },
+    {
+        "id": 16,
+        "key": "alk-network-package-16",
+        "name": "ALK Network",
+        "package": "#16",
+        "url": "https://alknetworks.com/",
+        "logo": "https://burbitstudio.com/cyber-shop-mall/alk.png",
+        "categories": ["Tecnología"]
+    },
+    {
+        "id": 17,
+        "key": "cocos-lucas-package-17",
+        "name": "Coco$ y Luca$",
+        "package": "#17",
+        "url": "https://www.cocosylucasbcp.com/",
+        "logo": "https://burbitstudio.com/cyber-shop-mall/cocolucas.png",
+        "categories": ["Deportes", "Hogar"]
+    },
+    {
+        "id": 18,
+        "key": "atv-package-18",
+        "name": "ATV",
+        "package": "#18",
+        "url": "https://www.atv.pe/",
+        "logo": "https://burbitstudio.com/cyber-shop-mall/atv.png",
+        "categories": ["Moda", "Tecnología"]
+    },
+    {
+        "id": 19,
+        "key": "sedalib-package-19",
+        "name": "Sedalib",
+        "package": "#19",
+        "url": "https://sedalib.com.pe/",
+        "logo": "https://burbitstudio.com/cyber-shop-mall/sedalib.png",
+        "categories": ["Hogar"]
+    },
+    {
+        "id": 20,
+        "key": "reniec-package-20",
+        "name": "Reniec",
+        "package": "#20",
+        "url": "https://www.gob.pe/reniec",
+        "logo": "https://burbitstudio.com/cyber-shop-mall/reniec.png",
+        "categories": ["Tecnología"]
+    },
+    {
+        "id": 21,
+        "key": "emtrafesa-package-21",
+        "name": "Emtrafesa",
+        "package": "#21",
+        "url": "https://www.emtrafesa.pe/",
+        "logo": "https://burbitstudio.com/cyber-shop-mall/emtrafesa.png",
+        "categories": ["Deportes", "Moda"]
+    },
+    {
+        "id": 22,
+        "key": "sodimac-package-22",
+        "name": "Sodimac",
+        "package": "#22",
+        "url": "https://www.sodimac.com.pe/sodimac-pe",
+        "logo": "https://burbitstudio.com/cyber-shop-mall/sodimac.png",
+        "categories": ["Hogar"]
+    },
+    {
+        "id": 23,
+        "key": "hidrandina-package-23",
+        "name": "Hidrandina",
+        "package": "#23",
+        "url": "https://www.gob.pe/hidrandina",
+        "logo": "https://burbitstudio.com/cyber-shop-mall/hidrandina.png",
+        "categories": ["Tecnología"]
+    },
+    {
+        "id": 24,
+        "key": "promart-package-24",
+        "name": "Promart",
+        "package": "#24",
+        "url": "https://www.promart.pe/",
+        "logo": "https://burbitstudio.com/cyber-shop-mall/promart.png",
+        "categories": ["Hogar", "Deportes"]
+    },
+    {
+        "id": 25,
+        "key": "willax-package-25",
+        "name": "Willax",
+        "package": "#25",
+        "url": "https://willax.pe/",
+        "logo": "https://burbitstudio.com/cyber-shop-mall/willax.png",
+        "categories": ["Moda"]
+    },
+    {
+        "id": 26,
+        "key": "sonrisas-package-26",
+        "name": "Sonrisas",
+        "package": "#26",
+        "url": "https://taxisonrisas.com.pe/",
+        "logo": "https://burbitstudio.com/cyber-shop-mall/sonrisas.png",
+        "categories": ["Deportes", "Hogar"]
+    },
+    {
+        "id": 27,
+        "key": "turismo-dias-package-27",
+        "name": "Turismo Dias",
+        "package": "#27",
+        "url": "https://www.turismodias.com.pe/",
+        "logo": "https://burbitstudio.com/cyber-shop-mall/turismodias.png",
+        "categories": ["Moda", "Hogar"]
+    }
+]

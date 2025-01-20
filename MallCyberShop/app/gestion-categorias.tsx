@@ -1,0 +1,196 @@
+import React, {useState, useEffect} from "react";
+import {
+  View,
+  Text,
+  Button,
+  TextInput,
+  FlatList,
+  Alert,
+  StyleSheet,
+  TouchableOpacity,
+} from "react-native";
+import {
+  getCategories,
+  createCategory,
+  deleteCategory,
+  updateCategory, // Asumir que tienes una función para actualizar categorías
+} from "./functions/category";
+import {FontAwesome, Ionicons} from "@expo/vector-icons";
+import {useRouter} from "expo-router";
+export type Category = {
+  id: number;
+  name: string;
+};
+
+const GestionCategorias = () => {
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [newCategory, setNewCategory] = useState<string>("");
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+
+  const router = useRouter(); // Usamos useRouter para manejar la navegación
+
+  const handleGoBack = () => {
+    router.back(); // Navega a la pantalla anterior
+  };
+
+  // Cargar categorías
+  const loadCategories = async () => {
+    const data = await getCategories();
+    if (data) setCategories(data);
+  };
+
+  useEffect(() => {
+    loadCategories();
+  }, []);
+
+  // Crear o actualizar categoría
+  const handleSaveCategory = async () => {
+    console.log("newCategory", newCategory);
+    if (!newCategory.trim()) {
+      Alert.alert("Error", "Category name cannot be empty");
+      return;
+    }
+
+    if (editingCategory) {
+      // Actualizar categoría
+      const updatedCategory = await updateCategory(
+        editingCategory.id,
+        newCategory
+      );
+      if (updatedCategory) {
+        setNewCategory("");
+        setEditingCategory(null);
+        loadCategories();
+        Alert.alert("Success", "Category updated");
+      }
+    } else {
+      // Crear categoría
+      console.log("crear cat");
+      const createdCategory = await createCategory(newCategory);
+      if (createdCategory) {
+        setNewCategory("");
+        loadCategories();
+        Alert.alert("Success", "Category created");
+      }
+    }
+  };
+
+  // Eliminar categoría
+  const handleDeleteCategory = async (id: number) => {
+    const success = await deleteCategory(id);
+    if (success) {
+      loadCategories(); // Recargar categorías
+      Alert.alert("Success", "Category deleted");
+    }
+  };
+
+  // Habilitar edición de categoría
+  const handleEditCategory = (category: Category) => {
+    setNewCategory(category.name);
+    setEditingCategory(category);
+  };
+
+  return (
+    <View style={styles.container}>
+      <TextInput
+        value={newCategory}
+        onChangeText={setNewCategory}
+        placeholder="Category Name"
+        style={styles.input}
+      />
+      <TouchableOpacity style={styles.button} onPress={handleSaveCategory}>
+        <Text style={styles.buttonText}>
+          {editingCategory ? "Update Category" : "Add Category"}
+        </Text>
+      </TouchableOpacity>
+
+      <FlatList
+        data={categories}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={({item}) => (
+          <View style={styles.categoryItem}>
+            <Text style={styles.categoryText}>{item.name}</Text>
+            <View style={styles.buttonsContainer}>
+              <TouchableOpacity
+                style={styles.editButton}
+                onPress={() => handleEditCategory(item)}
+              >
+                <Text style={styles.editButtonText}>Edit</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.deleteButton}
+                onPress={() => handleDeleteCategory(item.id)}
+              >
+                <Text style={styles.deleteButtonText}>Delete</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+      />
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 20,
+  },
+  input: {
+    height: 40,
+    borderColor: "#ccc",
+    borderWidth: 1,
+    borderRadius: 5,
+    marginBottom: 10,
+    paddingLeft: 10,
+    backgroundColor: "#fff",
+  },
+  button: {
+    backgroundColor: "#ff9f61",
+    padding: 10,
+    borderRadius: 5,
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  buttonText: {
+    color: "#fff",
+    fontWeight: "bold",
+  },
+  categoryItem: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 10,
+    borderBottomWidth: 1,
+    borderColor: "#ddd",
+  },
+  categoryText: {
+    fontSize: 16,
+  },
+  buttonsContainer: {
+    flexDirection: "row",
+  },
+  editButton: {
+    backgroundColor: "#ff9f61",
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    marginRight: 10,
+    borderRadius: 5,
+  },
+  editButtonText: {
+    color: "#fff",
+    fontWeight: "bold",
+  },
+  deleteButton: {
+    backgroundColor: "#e74c3c",
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: 5,
+  },
+  deleteButtonText: {
+    color: "#fff",
+    fontWeight: "bold",
+  },
+});
+
+export default GestionCategorias;
