@@ -62,7 +62,7 @@ export default function Login() {
         style={styles.button}
         onPress={() => router.push("./home")}
       >
-        <Text style={styles.buttonText}>Go to Home</Text>
+        <Text style={styles.buttonText}>Ir a la Tienda</Text>
       </TouchableOpacity>
 
       {/* Uncomment to enable the Sign Up button */}

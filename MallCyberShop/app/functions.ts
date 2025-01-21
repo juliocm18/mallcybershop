@@ -1,6 +1,6 @@
 import {Linking, Alert} from "react-native";
-import {Ionicons, FontAwesome} from "@expo/vector-icons";
-
+import * as Device from "expo-device";
+import * as Application from "expo-application";
 export const fetchRemoteJson = async (url: string) => {
   const uniqueUrl = `${url}?_=${Date.now()}`;
 
@@ -54,4 +54,18 @@ export const handleOpenApp = async (app: {package: string; url: string}) => {
   } catch (error) {
     Alert.alert("Error", "Hubo un problema al intentar abrir el enlace.");
   }
+};
+
+export const getDeviceIdentifier = async (): Promise<string> => {
+  try {
+    if (Device.osName === "iOS") {
+      const iosId = await Application.getIosIdForVendorAsync();
+      return iosId || "unknown";
+    } else if (Device.osName === "Android") {
+      return Application.applicationId || "unknown";
+    }
+  } catch (error) {
+    console.error("Error getting device ID:", error);
+  }
+  return "unknown";
 };

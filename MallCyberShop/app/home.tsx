@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from "react";
+import React, {useState, useEffect, useRef} from "react";
 import {
   View,
   Text,
@@ -6,24 +6,35 @@ import {
   TouchableOpacity,
   Image,
   ActivityIndicator,
-  Button,
   ScrollView,
 } from "react-native";
 import {Ionicons, FontAwesome} from "@expo/vector-icons";
 import {DraggableGrid} from "react-native-draggable-grid";
-import {fetchRemoteJson, openWhatsApp, handleLinkPress} from "./functions";
+import {
+  fetchRemoteJson,
+  openWhatsApp,
+  handleLinkPress,
+  getDeviceIdentifier,
+} from "./functions";
 import {useRouter} from "expo-router";
 import {styles} from "./styles";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import CategoryModal from "./CategoryModal";
 import SocialLinksModal from "./SocialLinksModal";
 import {useAuth} from "./context/AuthContext";
+import {supabase} from "./supabase";
 
 type IconItem = {
   id: string;
   name: string;
   logo: string;
 };
+
+interface GridItem {
+  id: string;
+  label: string;
+  color: string;
+}
 
 const STORAGE_KEY = "icon_order";
 
@@ -43,6 +54,21 @@ const getIconOrder = async (): Promise<IconItem[] | null> => {
   } catch (error) {
     console.error("Error retrieving icon order:", error);
     return null;
+  }
+};
+
+const registerCompanyCounter = async (companyId: number) => {
+  const deviceId = await getDeviceIdentifier();
+
+  const {error} = await supabase.from("company_counter").insert([
+    {
+      imei: deviceId,
+      companyId,
+    },
+  ]);
+
+  if (error) {
+    console.error("Error inserting data:", error);
   }
 };
 
@@ -67,12 +93,12 @@ export default function Home() {
   const [categories, setCategories] = useState<string[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
-
   const [isModalSocialVisible, setModalSocialVisible] = useState(false);
-
   const [isAllowReorder, setAllowReorder] = useState(true);
 
-  const toggleModalSocial = () => {
+  const toggleModalSocial = (item: GridItem) => {
+    console.log(item);
+    //registerCompanyCounter(+item.id)
     setModalSocialVisible(!isModalSocialVisible);
   };
 
@@ -96,7 +122,6 @@ export default function Home() {
           const filteredIcons = storedIcons.filter((icon: any) =>
             remoteMap.has(icon.id)
           );
-
           // Fusionar ambas listas sin duplicados
           const mergedIcons = Array.from(
             new Map(
@@ -106,17 +131,14 @@ export default function Home() {
               ])
             ).values()
           );
-
           setData(mergedIcons);
         }
 
         const tempCategories = ["Moda", "Tecnología", "Hogar", "Deportes"];
-
         // Extraer categorías únicas
         // const uniqueCategories: string[] = Array.from(
         //   new Set(remoteData.flatMap((app: any) => app.categories || []))
         // );
-
         const uniqueCategories: string[] = tempCategories;
         setCategories(uniqueCategories);
       } catch (err) {
