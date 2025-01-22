@@ -1,6 +1,6 @@
 import {createClient} from "@supabase/supabase-js";
 
-const SUPABASE_URL = "https://mtmikpoblfslzhastcyj.supabase.co";
+export const SUPABASE_URL = "https://mtmikpoblfslzhastcyj.supabase.co";
 const SUPABASE_ANON_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im10bWlrcG9ibGZzbHpoYXN0Y3lqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzczMjk4NDQsImV4cCI6MjA1MjkwNTg0NH0.cELpUKe4dwzEbCnqJ3aOYITRXs-ofd92I9vFVEyHv3o";
 

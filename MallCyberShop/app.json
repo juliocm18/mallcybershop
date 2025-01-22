@@ -45,6 +45,12 @@
       "eas": {
         "projectId": "8e87a6e1-1fef-4241-a33e-53062f3d9545"
       }
-    }
+    },
+    "permissions": [
+      "CAMERA",
+      "MEDIA_LIBRARY",
+      "READ_EXTERNAL_STORAGE", 
+      "WRITE_EXTERNAL_STORAGE"
+    ]
   }
 }

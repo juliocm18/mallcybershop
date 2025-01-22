@@ -58,32 +58,27 @@ export const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   logoContainer: {
-    flex: 1,
+    marginHorizontal: 10, // Espacio horizontal entre las celdas
+    //marginBottom: 20, // Aumenta el espacio entre las filas
     alignItems: "center",
-    margin: 10,
+    justifyContent: "center",
+    height: 120, // Asegura que haya suficiente altura para el ícono y el texto
   },
   logoWrapper: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: "#fff",
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  logoLabel: {
-    color: "#000",
-    marginTop: 5,
-    textAlign: "center",
-  },
-  logo: {
     width: 60,
     height: 60,
-    borderRadius: 30,
+    marginBottom: 10, // Mayor espacio entre la imagen y el texto
+    backgroundColor: "#fff",
+    borderRadius: 10,
+  },
+  logo: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 10,
+  },
+  logoLabel: {
+    fontSize: 14,
+    textAlign: "center",
   },
   checkboxContainer: {
     marginVertical: 10, // Espacio vertical entre checkboxes

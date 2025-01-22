@@ -268,7 +268,7 @@ export default function Home() {
       </View>
       <ScrollView contentContainerStyle={{flexGrow: 1}}>
         <DraggableGrid
-          numColumns={3}
+          numColumns={4}
           renderItem={render_item}
           // data={data} se reemplaza por filtered apps
           data={filteredApps}

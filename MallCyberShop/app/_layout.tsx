@@ -18,33 +18,32 @@ function MainLayout() {
       if (session) {
         router.replace("./adminhome");
       } else {
-        router.replace("./home");
+        router.replace("./adminhome");
       }
     }
   }, [session, loading]);
-  // console.log("🔄 App cargada por primera vez");
-
-  // const registerColdStart = async () => {
-  //   if (coldStartDetected) return; // Evitar múltiples registros
-  //   setColdStartDetected(true);
-
-  //   console.log("🔵 Cold Start Detectado");
-  //   const deviceId = await getDeviceIdentifier();
-
-  //   const {error} = await supabase.from("counter").insert({
-  //     imei: deviceId,
-  //   });
-
-  //   if (error) {
-  //     console.error("❌ Error registrando login:", error.message);
-  //   } else {
-  //     console.log("✅ Login registrado exitosamente (Cold Start)");
-  //   }
-  // };
-
-  // registerColdStart(); // Llamar al inicio de la app
 
   useEffect(() => {
+    const registerColdStart = async () => {
+      if (coldStartDetected) return; // Evitar múltiples registros
+      setColdStartDetected(true);
+
+      console.log("🔵 Cold Start Detectado");
+      const deviceId = await getDeviceIdentifier();
+
+      const {error} = await supabase.from("counter").insert({
+        imei: deviceId,
+      });
+
+      if (error) {
+        console.error("❌ Error registrando login:", error.message);
+      } else {
+        console.log("✅ Login registrado exitosamente (Cold Start)");
+      }
+    };
+
+    registerColdStart(); // Llamar al inicio de la app
+
     // Guardar la hora de inicio de sesión correctamente
     sessionStartTime.current = Date.now();
     console.log("⏳ Sesión iniciada en:", sessionStartTime.current);
