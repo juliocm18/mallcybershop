@@ -30,12 +30,12 @@ const Home: React.FC = () => {
               size={30}
               color="white"
             />
-            <Text style={styles.label}>Dashboard</Text>
+            <Text style={styles.label}>Panel de Control</Text>
           </View>
         </Link>
 
         <Link
-          href="./gestion-categorias"
+          href="./category/gestion-categorias"
           style={[styles.button, {backgroundColor: "#4CAF50"}]}
         >
           <View style={styles.iconLabelContainer}>
@@ -50,7 +50,7 @@ const Home: React.FC = () => {
         </Link>
 
         <Link
-          href="./gestion-socios"
+          href="./company/gestion-socios"
           style={[styles.button, {backgroundColor: "#FF9800"}]}
         >
           <View style={styles.iconLabelContainer}>

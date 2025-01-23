@@ -2,7 +2,6 @@ import React, {useState, useEffect} from "react";
 import {
   View,
   Text,
-  Button,
   TextInput,
   FlatList,
   Alert,
@@ -14,8 +13,7 @@ import {
   createCategory,
   deleteCategory,
   updateCategory, // Asumir que tienes una función para actualizar categorías
-} from "./functions/category";
-import {FontAwesome, Ionicons} from "@expo/vector-icons";
+} from "./category";
 import {useRouter} from "expo-router";
 export type Category = {
   id: number;
@@ -100,7 +98,7 @@ const GestionCategorias = () => {
       />
       <TouchableOpacity style={styles.button} onPress={handleSaveCategory}>
         <Text style={styles.buttonText}>
-          {editingCategory ? "Update Category" : "Add Category"}
+          {editingCategory ? "Actualizar" : "Guardar"}
         </Text>
       </TouchableOpacity>
 
@@ -115,13 +113,13 @@ const GestionCategorias = () => {
                 style={styles.editButton}
                 onPress={() => handleEditCategory(item)}
               >
-                <Text style={styles.editButtonText}>Edit</Text>
+                <Text style={styles.editButtonText}>Editar</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.deleteButton}
                 onPress={() => handleDeleteCategory(item.id)}
               >
-                <Text style={styles.deleteButtonText}>Delete</Text>
+                <Text style={styles.deleteButtonText}>Eliminar</Text>
               </TouchableOpacity>
             </View>
           </View>

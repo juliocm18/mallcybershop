@@ -10,8 +10,7 @@ import {
   StyleSheet,
   ScrollView,
 } from "react-native";
-import * as ImagePicker from "expo-image-picker";
-import {createCompany, pickImage, uploadImage} from "./functions/company";
+import {createCompany, pickImage, uploadImage} from "./company/company";
 
 const CreateCompanyScreen = () => {
   const [key, setKey] = useState("test");
@@ -40,9 +39,6 @@ const CreateCompanyScreen = () => {
     }
 
     try {
-      // const uri = await pickImage();
-      // if (!uri) return;
-
       const uploadedUrl = await uploadImage(logoUri);
       console.log("uploadedUrl", uploadedUrl);
       if (uploadedUrl) {

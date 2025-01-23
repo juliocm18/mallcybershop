@@ -1,5 +1,5 @@
 import {supabase} from "../supabase";
-import {Category} from "./types";
+import {Category} from "../functions/types";
 
 export const getCategories = async (): Promise<Category[] | null> => {
   try {
