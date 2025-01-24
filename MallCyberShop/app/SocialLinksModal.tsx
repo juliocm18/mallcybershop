@@ -1,5 +1,5 @@
 import React from "react";
-import {View, Text, TouchableOpacity} from "react-native";
+import {View, Text, TouchableOpacity, Image} from "react-native";
 import RNModal from "react-native-modal";
 import {FontAwesome, Ionicons} from "@expo/vector-icons";
 import {styles} from "./styles";
@@ -20,7 +20,16 @@ const SocialLinksModal: React.FC<SocialLinksModalProps> = ({
   const renderIcon = (key: string) => {
     switch (key) {
       case "web":
-        return <FontAwesome name="globe" size={20} color="#006140" />;
+        //return <FontAwesome name="globe" size={20} color="#006140" />;
+        return (
+          <Image
+            source={{
+              uri: "https://cdn1.iconfinder.com/data/icons/logotypes/32/square-facebook-512.png",
+            }}
+            style={{width: 20, height: 20}}
+            resizeMode="cover"
+          />
+        );
       case "App":
         return <FontAwesome name="mobile" size={20} color="#484545" />;
       case "Facebook":

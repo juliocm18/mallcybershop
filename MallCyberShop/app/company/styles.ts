@@ -54,6 +54,13 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 10,
     borderRadius: 5,
   },
+  LinkButton: {
+    backgroundColor: "#0087ff",
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    marginRight: 10,
+    borderRadius: 5,
+  },
   modalButtonText: {
     color: "#fff",
     fontWeight: "bold",

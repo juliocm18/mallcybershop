@@ -13,25 +13,36 @@ import {
 import {supabase} from "../supabase";
 import {
   createCompany,
+  createCompanyLink,
   deleteCompany,
+  deleteCompanyLink,
+  fetchCompanyLinks,
   pickImage,
   updateCompany,
+  updateCompanyLink,
   uploadImage,
 } from "./company";
 import {styles} from "./styles";
+import {FontAwesome} from "@expo/vector-icons";
 
 const CompanyScreen = () => {
   const [companies, setCompanies] = useState<Company[]>([]);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [companyLinks, setCompanyLinks] = useState<CompanyLink[]>([]);
 
+  const [modalVisible, setModalVisible] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [modalLinkVisible, setModalLinkVisible] = useState(false);
   const [key, setKey] = useState("");
   const [name, setName] = useState("");
   const [packageType, setPackageType] = useState("");
-  const [url, setUrl] = useState("");
   const [logoUri, setLogoUri] = useState<string | null>(null);
   const [categories, setCategories] = useState("");
   const [editingImage, setEditingImage] = useState(false);
+
+  const [companyId, setCompanyId] = useState<number>(0);
+  const [editingLinkId, setEditingLinkId] = useState<number | null>(null);
+  const [identificador, setIdentificador] = useState("");
+  const [link, setLink] = useState("");
 
   const handlePickImage = async () => {
     if (editingId) {
@@ -48,7 +59,6 @@ const CompanyScreen = () => {
     setKey("");
     setName("");
     setPackageType("");
-    setUrl("");
     setLogoUri(null);
     setCategories("");
     setEditingId(null);
@@ -73,7 +83,7 @@ const CompanyScreen = () => {
   };
 
   const handleSave = async () => {
-    if (!key || !name || !packageType || !url || !categories) {
+    if (!key || !name || !packageType || !categories) {
       Alert.alert("Error", "Campos reequeridos");
       return;
     }
@@ -97,12 +107,11 @@ const CompanyScreen = () => {
           key,
           name,
           package: packageType,
-          url,
           logo: uploadedUrl || "",
           categories: categories.split(",").map((c) => c.trim()),
         };
         const updatedCategory = await updateCompany(editingId, newCompany);
-        console.log(updatedCategory);
+
         if (updatedCategory) {
           clearFields();
           setModalVisible(false);
@@ -123,10 +132,10 @@ const CompanyScreen = () => {
         }
 
         const newCompany = {
+          id: 0,
           key,
           name,
           package: packageType,
-          url,
           logo: uploadedUrl,
           categories: categories.split(",").map((c) => c.trim()),
         };
@@ -147,18 +156,89 @@ const CompanyScreen = () => {
   };
 
   const handleEdit = (company: Company) => {
-    setEditingId(company.id);
+    setEditingId(company.id || 0);
     setKey(company.key);
     setName(company.name);
     setPackageType(company.package);
-    setUrl(company.url);
     setLogoUri(company.logo);
     setCategories(company.categories.join(", "));
     setEditingImage(false);
     setModalVisible(true);
   };
 
-  const handleDelete = async (id: string) => {
+  const handleSaveCompanyLink = async () => {
+    if (!identificador || !link) {
+      Alert.alert("Error", "Campos reequeridos");
+      return;
+    }
+    try {
+      if (editingLinkId) {
+        const companyObj = {
+          identificador: identificador,
+          link: link,
+        };
+        const companyLinlUpdated = await updateCompanyLink(
+          editingLinkId,
+          companyObj
+        );
+        if (companyLinlUpdated) {
+          setIdentificador("");
+          setLink("");
+          setEditingLinkId(null);
+          const companyLinks = await fetchCompanyLinks(companyId);
+          setCompanyLinks(companyLinks);
+        }
+      } else {
+        const companyObj = {
+          identificador: identificador,
+          link: link,
+          companyId: companyId,
+        };
+        const companyLinlInserted = await createCompanyLink(companyObj);
+        if (companyLinlInserted) {
+          setIdentificador("");
+          setLink("");
+          setEditingLinkId(null);
+          const companyLinks = await fetchCompanyLinks(companyId);
+          setCompanyLinks(companyLinks);
+        }
+      }
+    } catch (error: any) {
+      console.error("Error creating/updating company link:", error.message);
+      Alert.alert("Error", error.message);
+    }
+  };
+
+  const handleEditLink = (companyLink: CompanyLink) => {
+    setEditingLinkId(companyLink.id || 0);
+    setIdentificador(companyLink.identificador);
+    setLink(companyLink.link);
+  };
+
+  const handleLinks = async (company: Company) => {
+    setModalLinkVisible(true);
+    setEditingLinkId(null);
+    setIdentificador("");
+    setLink("");
+    setCompanyId(company.id || 0);
+    try {
+      const companyLinks = await fetchCompanyLinks(company.id || 0);
+      setCompanyLinks(companyLinks);
+    } catch (error: any) {
+      console.error("Error fetching company links:", error.message);
+    }
+  };
+
+  const handleDeleteLink = async (companyLink: CompanyLink) => {
+    deleteCompanyLink(companyLink.id || 0);
+    const companyLinks = await fetchCompanyLinks(companyId);
+    setCompanyLinks(companyLinks);
+    setIdentificador("");
+    setLink("");
+    setEditingLinkId(null);
+  };
+
+  const handleDelete = async (id: number) => {
     deleteCompany(id);
     fetchCompanies();
   };
@@ -172,7 +252,7 @@ const CompanyScreen = () => {
       />
       <FlatList
         data={companies}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => (item.id || 0).toString()}
         renderItem={({item}) => (
           <View style={styles.row}>
             <Text style={styles.cell}>{item.name}</Text>
@@ -184,8 +264,14 @@ const CompanyScreen = () => {
                 <Text style={styles.editButtonText}>Editar</Text>
               </TouchableOpacity>
               <TouchableOpacity
+                style={styles.LinkButton}
+                onPress={() => handleLinks(item)}
+              >
+                <Text style={styles.editButtonText}>Links</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
                 style={styles.deleteButton}
-                onPress={() => handleDelete(item.id)}
+                onPress={() => handleDelete(item.id || 0)}
               >
                 <Text style={styles.modalButtonText}>Eliminar</Text>
               </TouchableOpacity>
@@ -215,9 +301,6 @@ const CompanyScreen = () => {
               value={packageType}
               onChangeText={setPackageType}
             />
-
-            <Text style={styles.label}>Página web</Text>
-            <TextInput style={styles.input} value={url} onChangeText={setUrl} />
 
             <Text style={styles.label}>Categorías (separados por coma)</Text>
             <TextInput
@@ -251,6 +334,72 @@ const CompanyScreen = () => {
               >
                 <Text style={styles.modalButtonText}>Cancelar</Text>
               </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal visible={modalLinkVisible} animationType="slide" transparent>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.socialModaltitle}>Administrar Links</Text>
+
+            <FlatList
+              data={companyLinks}
+              keyExtractor={(item) => (item.id || 0).toString()}
+              renderItem={({item}) => (
+                <View style={styles.row}>
+                  <View style={{flexDirection: "column"}}>
+                    <Text style={styles.cell}>Tipo: {item.identificador}</Text>
+                    <Text style={styles.cell}>{item.link}</Text>
+                  </View>
+                  <View style={styles.buttonsContainer}>
+                    <TouchableOpacity
+                      style={styles.editButton}
+                      onPress={() => handleEditLink(item)}
+                    >
+                      <FontAwesome name="edit" size={24} color="white" />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.deleteButton}
+                      onPress={() => handleDeleteLink(item)}
+                    >
+                      <FontAwesome name="trash" size={24} color="white" />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )}
+            />
+
+            <View style={styles.modalContent}>
+              <Text style={styles.label}>Identificador</Text>
+              <TextInput
+                style={styles.input}
+                value={identificador}
+                onChangeText={setIdentificador}
+              />
+
+              <Text style={styles.label}>Link</Text>
+              <TextInput
+                style={styles.input}
+                value={link}
+                onChangeText={setLink}
+              />
+
+              <View style={styles.modalButtonContainer}>
+                <TouchableOpacity
+                  style={styles.modalUpdateButton}
+                  onPress={handleSaveCompanyLink}
+                >
+                  <Text style={styles.modalButtonText}>Guardar</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.modalCancelButton}
+                  onPress={() => setModalLinkVisible(false)}
+                >
+                  <Text style={styles.modalButtonText}>Cancelar</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
         </View>

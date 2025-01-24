@@ -2,14 +2,7 @@ import {Alert} from "react-native";
 import {supabase, SUPABASE_URL} from "../supabase";
 import * as ImagePicker from "expo-image-picker";
 import {manipulateAsync, SaveFormat} from "expo-image-manipulator";
-export interface Company {
-  key: string;
-  name: string;
-  package: string;
-  url: string;
-  logo: string;
-  categories: string[];
-}
+
 export const pickImage = async (): Promise<string | null> => {
   const result = await ImagePicker.launchImageLibraryAsync({
     allowsEditing: true,
@@ -117,7 +110,7 @@ export const fetchCompanies = async () => {
 
 // ✏️ Actualizar empresa
 export const updateCompany = async (
-  companyId: string,
+  companyId: number,
   updatedCompany: Partial<Company>
 ) => {
   const {data, error} = await supabase
@@ -130,11 +123,51 @@ export const updateCompany = async (
 };
 
 // ❌ Eliminar empresa
-export const deleteCompany = async (companyId: string) => {
+export const deleteCompany = async (companyId: number) => {
   const {data, error} = await supabase
     .from("company")
     .delete()
     .eq("id", companyId);
   if (error) throw new Error(error.message);
   return data;
+};
+
+export const fetchCompanyLinks = async (companyId: number) => {
+  const {data, error} = await supabase
+    .from("company_link")
+    .select("*")
+    .eq("companyId", companyId);
+  if (error) throw new Error(error.message);
+  return data;
+};
+
+export const deleteCompanyLink = async (companyLinkId: number) => {
+  const {data, error} = await supabase
+    .from("company_link")
+    .delete()
+    .eq("id", companyLinkId);
+  if (error) throw new Error(error.message);
+  return data;
+};
+
+export const updateCompanyLink = async (
+  companyLinkId: number,
+  updatedCompanyLink: Partial<CompanyLink>
+) => {
+  const {data, error} = await supabase
+    .from("company_link")
+    .update(updatedCompanyLink)
+    .eq("id", companyLinkId)
+    .select();
+  if (error) throw new Error(error.message);
+  return data ? data[0] : null;
+};
+
+export const createCompanyLink = async (companyLink: CompanyLink) => {
+  const {data, error} = await supabase
+    .from("company_link")
+    .insert(companyLink)
+    .select();
+  if (error) throw new Error(error.message);
+  return data ? data[0] : null;
 };

@@ -1,9 +1,15 @@
 interface Company {
-  id: string;
+  id?: number;
   key: string;
   name: string;
   package: string;
-  url: string;
   logo: string;
   categories: string[];
+}
+
+interface CompanyLink {
+  id?: number;
+  link: string;
+  identificador: string;
+  companyId: number;
 }
