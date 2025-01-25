@@ -23,6 +23,8 @@ import CategoryModal from "./CategoryModal";
 import SocialLinksModal from "./SocialLinksModal";
 import {useAuth} from "./context/AuthContext";
 import {supabase} from "./supabase";
+import {fetchCompanies, fetchCompanyLinks} from "./company/company";
+import {getCategories, getCategoryNames} from "./category/category";
 
 type IconItem = {
   id: string;
@@ -75,15 +77,6 @@ const registerCompanyCounter = async (companyId: number) => {
 export default function Home() {
   const {signIn} = useAuth();
   const router = useRouter();
-  const links = {
-    web: "https://example.com",
-    App: "myapp://home",
-    Facebook: "https://facebook.com/example",
-    Instagram: "https://instagram.com/example",
-    TikTok: "https://tiktok.com/@example",
-    Twitter: "https://twitter.com/example",
-    YouTube: "https://youtube.com/@example",
-  };
 
   const [data, setData] = useState<any[]>([]);
 
@@ -96,9 +89,12 @@ export default function Home() {
   const [isModalSocialVisible, setModalSocialVisible] = useState(false);
   const [isAllowReorder, setAllowReorder] = useState(true);
 
-  const toggleModalSocial = (item: GridItem) => {
-    console.log(item);
+  const [links, setLinks] = useState<any>([]);
+
+  const toggleModalSocial = async (item: GridItem) => {
     //registerCompanyCounter(+item.id)
+    const companyLinks = await fetchCompanyLinks(+item.id);
+    setLinks(companyLinks);
     setModalSocialVisible(!isModalSocialVisible);
   };
 
@@ -106,9 +102,7 @@ export default function Home() {
     const loadRemoteJson = async () => {
       try {
         const storedIcons = await getIconOrder();
-        const remoteData = await fetchRemoteJson(
-          "https://burbitstudio.com/cyber-shop-mall/database.json"
-        );
+        const remoteData = await fetchCompanies();
 
         if (!storedIcons) {
           setData(remoteData);
@@ -134,12 +128,7 @@ export default function Home() {
           setData(mergedIcons);
         }
 
-        const tempCategories = ["Moda", "Tecnología", "Hogar", "Deportes"];
-        // Extraer categorías únicas
-        // const uniqueCategories: string[] = Array.from(
-        //   new Set(remoteData.flatMap((app: any) => app.categories || []))
-        // );
-        const uniqueCategories: string[] = tempCategories;
+        const uniqueCategories = await getCategoryNames();
         setCategories(uniqueCategories);
       } catch (err) {
         console.log(err);
@@ -235,7 +224,7 @@ export default function Home() {
           name="user-circle-o"
           size={24} // Tamaño mediano
           color="white" // Color blanco
-          onPress={() => router.push("./login")}
+          onPress={() => router.push("./auth/login")}
         />
       </View>
       <View style={styles.searchContainer}>

@@ -24,6 +24,34 @@ import {
 } from "./company";
 import {styles} from "./styles";
 import {FontAwesome} from "@expo/vector-icons";
+import {Picker} from "@react-native-picker/picker";
+
+const options = [
+  "comestibles",
+  "email",
+  "facebook",
+  "instagram",
+  "line",
+  "linkedin",
+  "meet",
+  "messenger",
+  "online",
+  "paginaweb",
+  "panaderia",
+  "pinterest",
+  "snapchat",
+  "telefono",
+  "telegram",
+  "threads",
+  "tienda",
+  "tiktok",
+  "wechat",
+  "whatssapp",
+  "whatssappb",
+  "x",
+  "youtube",
+  "zoom",
+];
 
 const CompanyScreen = () => {
   const [companies, setCompanies] = useState<Company[]>([]);
@@ -41,7 +69,7 @@ const CompanyScreen = () => {
 
   const [companyId, setCompanyId] = useState<number>(0);
   const [editingLinkId, setEditingLinkId] = useState<number | null>(null);
-  const [identificador, setIdentificador] = useState("");
+  const [identificador, setIdentificador] = useState(options[0]);
   const [link, setLink] = useState("");
 
   const handlePickImage = async () => {
@@ -373,11 +401,16 @@ const CompanyScreen = () => {
 
             <View style={styles.modalContent}>
               <Text style={styles.label}>Identificador</Text>
-              <TextInput
-                style={styles.input}
-                value={identificador}
-                onChangeText={setIdentificador}
-              />
+              <View style={styles.input}>
+                <Picker
+                  selectedValue={identificador}
+                  onValueChange={(itemValue) => setIdentificador(itemValue)}
+                >
+                  {options.map((option) => (
+                    <Picker.Item key={option} label={option} value={option} />
+                  ))}
+                </Picker>
+              </View>
 
               <Text style={styles.label}>Link</Text>
               <TextInput

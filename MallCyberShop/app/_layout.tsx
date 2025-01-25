@@ -18,11 +18,10 @@ function MainLayout() {
       if (session) {
         router.replace("./adminhome");
       } else {
-        router.replace("./adminhome");
+        router.replace("./home");
       }
     }
   }, [session, loading]);
-
   // useEffect(() => {
   //   const registerColdStart = async () => {
   //     if (coldStartDetected) return; // Evitar múltiples registros

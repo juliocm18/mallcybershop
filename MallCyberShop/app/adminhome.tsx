@@ -20,7 +20,7 @@ const Home: React.FC = () => {
 
       <View style={styles.buttonContainer}>
         <Link
-          href="./dashboard"
+          href="./dashboard/"
           style={[styles.button, {backgroundColor: "#2196F3"}]}
         >
           <View style={styles.iconLabelContainer}>
@@ -30,7 +30,7 @@ const Home: React.FC = () => {
               size={30}
               color="white"
             />
-            <Text style={styles.label}>Panel de Control</Text>
+            <Text style={styles.label}>Panel de Cowntrol</Text>
           </View>
         </Link>
 

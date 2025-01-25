@@ -4,14 +4,18 @@ import {Category} from "../functions/types";
 export const getCategories = async (): Promise<Category[] | null> => {
   try {
     const {data, error} = await supabase.from("category").select("*");
-
     if (error) throw error;
-
     return data;
   } catch (error: any) {
     console.error("Error fetching categories:", error.message);
     return null;
   }
+};
+
+export const getCategoryNames = async (): Promise<string[]> => {
+  const {data, error} = await supabase.from("category").select("name");
+  if (error) throw new Error(error.message);
+  return data.map((category) => category.name);
 };
 
 export const createCategory = async (
