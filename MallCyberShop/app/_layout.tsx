@@ -18,7 +18,7 @@ function MainLayout() {
       if (session) {
         router.replace("./adminhome");
       } else {
-        router.replace("./home");
+        router.replace("./adminhome");
       }
     }
   }, [session, loading]);

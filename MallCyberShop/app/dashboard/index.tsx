@@ -1,22 +1,17 @@
 import React, {useState, useEffect} from "react";
-import {
-  View,
-  Text,
-  ActivityIndicator,
-  Button,
-  StyleSheet,
-  ScrollView,
-  Dimensions,
-  Alert,
-} from "react-native";
-import DateTimePicker from "@react-native-community/datetimepicker";
+import {Picker} from "@react-native-picker/picker";
+import {View, Text, Button, Alert, TouchableOpacity} from "react-native";
 import {supabase} from "../supabase"; // Asegúrate de importar tu configuración de Supabase
-import {LineChart} from "react-native-chart-kit";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
+import ChartData from "./chart-data";
+import {styles} from "./styles";
 
+const options = [
+  {value: "totalIngreso", display: "Total de Ingresos"},
+  {value: "totalLogs", display: "Tiempo total en la aplicación"},
+  {value: "totalByCompany", display: "Total de ingresos por Empresa"},
+];
 const Dashboard = () => {
-  const screenWidth = Dimensions.get("window").width;
-
   const [isStartDatePickerVisible, setStartDatePickerVisible] = useState(false);
   const [isEndDatePickerVisible, setEndDatePickerVisible] = useState(false);
   const [selectedStartDate, setSelectedStartDate] = useState<Date | null>(null);
@@ -25,8 +20,11 @@ const Dashboard = () => {
   const [totalCounter, setTotalCounter] = useState<number | null>(null);
 
   const [loading, setLoading] = useState(false);
-  const [data, setData] = useState<number[]>([]);
+  const [data, setData] = useState<any[]>([]);
   const [labels, setLabels] = useState<string[]>([]);
+
+  const [reportType, setReportType] = useState<string>("");
+  const [selectedReportType, setSelectedReportType] = useState<string>("");
 
   const showStartDatePicker = () => {
     setStartDatePickerVisible(true);
@@ -54,6 +52,22 @@ const Dashboard = () => {
     hideEndDatePicker();
   };
 
+  const handleSearch = async () => {
+    setReportType(selectedReportType);
+    if (selectedStartDate === null || selectedEndDate === null) {
+      Alert.alert("Error", "Selecciona las fechas de inicio y fin");
+      return;
+    }
+    if (reportType === "totalIngreso") {
+      fetchData();
+    } else if (reportType === "totalLogs") {
+      fetchSessionLogs();
+    } else if (reportType === "totalByCompany") {
+      console.log("🏢 Buscando total por empresa");
+      fetchTotalByCompany();
+    }
+  };
+
   const fetchData = async () => {
     setLabels([]);
     setData([]);
@@ -70,8 +84,6 @@ const Dashboard = () => {
       .select("created_at")
       .gte("created_at", selectedStartDate.toISOString())
       .lte("created_at", selectedEndDate.toISOString());
-
-    //console.log("data", data);
 
     if (error) {
       console.error(error);
@@ -132,76 +144,83 @@ const Dashboard = () => {
     setLoading(false);
   };
 
+  const fetchTotalByCompany = async () => {
+    setLabels([]);
+    setData([]);
+    setLoading(true);
+
+    if (selectedStartDate === null || selectedEndDate === null) {
+      Alert.alert("Error", "Selecciona las fechas de inicio y fin");
+      setLoading(false);
+      return;
+    }
+
+    const {data, error} = await supabase.rpc("get_company_count4", {
+      start_date: selectedStartDate.toISOString(),
+      end_date: selectedEndDate.toISOString(),
+    });
+
+    if (error) {
+      console.error(error);
+    } else {
+      setData(data);
+    }
+    setLoading(false);
+  };
+
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <View style={styles.container}>
       <Text style={styles.title}>Dashboard</Text>
 
-      {/* Selectores de Fecha */}
-      <View style={styles.pickerContainer}>
-        <Button
-          title="📅 Fecha Inicio"
-          onPress={showStartDatePicker}
-          color="#0087ff"
-        />
-        {selectedStartDate && (
-          <Text style={{marginTop: 20}}>
-            Selected Date: {selectedStartDate.toLocaleString()}
-          </Text>
-        )}
+      <View style={styles.datePickerContainer}>
+        <TouchableOpacity style={styles.button} onPress={showStartDatePicker}>
+          {selectedStartDate ? (
+            <Text style={{marginTop: 20, color: "white"}}>
+              📅 Fecha Inicio: {selectedStartDate.toLocaleString()}
+            </Text>
+          ) : (
+            <Text style={styles.buttonText}>📅 Fecha Inicio</Text>
+          )}
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.button} onPress={showEndDatePicker}>
+          {selectedEndDate ? (
+            <Text style={{marginTop: 20, color: "white"}}>
+              📅 Fecha Fin: {selectedEndDate.toLocaleString()}
+            </Text>
+          ) : (
+            <Text style={styles.buttonText}>📅 Fecha Fin</Text>
+          )}
+        </TouchableOpacity>
       </View>
 
-      <View style={styles.pickerContainer}>
-        <Button
-          title="📅 Fecha Fin"
-          onPress={showEndDatePicker}
-          color="#0087ff"
-        />
-        {selectedEndDate && (
-          <Text style={{marginTop: 20}}>
-            Selected Date: {selectedEndDate.toLocaleString()}
-          </Text>
-        )}
+      <View>
+        <Text style={styles.label}>Tipo de Reporte:</Text>
+        <View style={styles.input}>
+          <Picker
+            selectedValue={reportType}
+            onValueChange={(itemValue) => setSelectedReportType(itemValue)}
+          >
+            {options.map((option) => (
+              <Picker.Item
+                key={option.value}
+                label={option.display}
+                value={option.value}
+              />
+            ))}
+          </Picker>
+        </View>
       </View>
 
-      <Button
-        title="Buscar Total de ingresos"
-        onPress={fetchData}
-        color="#ff9f61"
-      />
+      <Button title="Buscar" onPress={handleSearch} color="#ff9f61" />
 
-      <Button
-        title="Tiempo total en la aplicación"
-        onPress={fetchSessionLogs}
-        color="#ff9f61"
+      <ChartData
+        data={data}
+        totalCounter={totalCounter || 0}
+        loading={loading}
+        labels={labels}
+        reportType={reportType}
       />
-
-      {data.length === 0 ? (
-        loading ? (
-          <ActivityIndicator size="large" color="#ff9f61" />
-        ) : (
-          <Text>Realice una búsqueda</Text>
-        )
-      ) : data.length > 5 ? (
-        <Text>Numero de Ingresos: {totalCounter} </Text>
-      ) : (
-        <LineChart
-          data={{
-            labels: labels,
-            datasets: [{data: data}],
-          }}
-          width={screenWidth - 10}
-          height={220}
-          chartConfig={{
-            backgroundGradientFrom: "#fff",
-            backgroundGradientTo: "#fff",
-            color: () => "#ff9f61",
-            labelColor: () => "#333",
-            decimalPlaces: 0,
-            propsForDots: {r: "6", strokeWidth: "2", stroke: "#fff"},
-          }}
-          style={styles.chart}
-        />
-      )}
 
       <DateTimePickerModal
         isVisible={isStartDatePickerVisible}
@@ -216,31 +235,8 @@ const Dashboard = () => {
         onConfirm={handleEndConfirm}
         onCancel={hideEndDatePicker}
       />
-    </ScrollView>
+    </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flexGrow: 1,
-    alignItems: "center",
-    padding: 20,
-    backgroundColor: "#fff",
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#ff9f61",
-    marginBottom: 20,
-  },
-  pickerContainer: {
-    alignItems: "center",
-    marginVertical: 10,
-  },
-  chart: {
-    marginVertical: 20,
-    borderRadius: 10,
-  },
-});
 
 export default Dashboard;

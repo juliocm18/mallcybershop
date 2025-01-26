@@ -160,7 +160,6 @@ const CompanyScreen = () => {
         }
 
         const newCompany = {
-          id: 0,
           key,
           name,
           package: packageType,

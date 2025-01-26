@@ -10,21 +10,16 @@ import {
 } from "react-native";
 import {Ionicons, FontAwesome} from "@expo/vector-icons";
 import {DraggableGrid} from "react-native-draggable-grid";
-import {
-  fetchRemoteJson,
-  openWhatsApp,
-  handleLinkPress,
-  getDeviceIdentifier,
-} from "./functions";
+import {openWhatsApp, handleLinkPress, getDeviceIdentifier} from "./functions";
 import {useRouter} from "expo-router";
 import {styles} from "./styles";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import CategoryModal from "./CategoryModal";
 import SocialLinksModal from "./SocialLinksModal";
 import {useAuth} from "./context/AuthContext";
-import {supabase} from "./supabase";
 import {fetchCompanies, fetchCompanyLinks} from "./company/company";
-import {getCategories, getCategoryNames} from "./category/category";
+import {getCategoryNames} from "./category/category";
+import {createCompanyCounter} from "./company/company-counter";
 
 type IconItem = {
   id: string;
@@ -59,17 +54,14 @@ const getIconOrder = async (): Promise<IconItem[] | null> => {
   }
 };
 
-const registerCompanyCounter = async (companyId: number) => {
+const handleCreateCompanyCounter = async (companyId: number) => {
   const deviceId = await getDeviceIdentifier();
-
-  const {error} = await supabase.from("company_counter").insert([
-    {
+  try {
+    await createCompanyCounter({
       imei: deviceId,
-      companyId,
-    },
-  ]);
-
-  if (error) {
+      company_id: companyId,
+    });
+  } catch (error) {
     console.error("Error inserting data:", error);
   }
 };
@@ -92,8 +84,9 @@ export default function Home() {
   const [links, setLinks] = useState<any>([]);
 
   const toggleModalSocial = async (item: GridItem) => {
-    //registerCompanyCounter(+item.id)
-    const companyLinks = await fetchCompanyLinks(+item.id);
+    const companyId = +item.id;
+    await handleCreateCompanyCounter(companyId);
+    const companyLinks = await fetchCompanyLinks(companyId);
     setLinks(companyLinks);
     setModalSocialVisible(!isModalSocialVisible);
   };
@@ -180,10 +173,6 @@ export default function Home() {
     );
   }
   const render_item = (item: IconItem) => (
-    // <View style={styles.item} key={item.key}>
-    //   <Text style={styles.item_text}>{item.name}</Text>
-    // </View>
-
     <View
       style={styles.logoContainer}
       // onPress={() => handleOpenApp(item)} Se deshabilita abrir directamente la web

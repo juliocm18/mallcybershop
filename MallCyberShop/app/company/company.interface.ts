@@ -13,3 +13,8 @@ interface CompanyLink {
   identificador: string;
   companyId: number;
 }
+
+interface CompanyCounter {
+  imei: string;
+  company_id: number;
+}
