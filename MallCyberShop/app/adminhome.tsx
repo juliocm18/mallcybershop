@@ -30,7 +30,7 @@ const Home: React.FC = () => {
               size={30}
               color="white"
             />
-            <Text style={styles.label}>Panel de Cowntrol</Text>
+            <Text style={styles.label}>Panel de Control</Text>
           </View>
         </Link>
 

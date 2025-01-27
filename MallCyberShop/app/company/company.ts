@@ -42,7 +42,7 @@ export const pickImage = async (): Promise<string | null> => {
 
   // 🔍 Validar tipo de imagen
   if (!["image/jpeg", "image/png"].includes(image.mimeType || "")) {
-    Alert.alert("Error", "Only JPG, JPEG, and PNG images are allowed");
+    Alert.alert("Error", "Solo son permitidos JPG, JPEG, y PNG.");
     return null;
   }
 

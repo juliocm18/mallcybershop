@@ -35,15 +35,6 @@ interface GridItem {
 
 const STORAGE_KEY = "icon_order";
 
-const saveIconOrder = async (icons: IconItem[]): Promise<void> => {
-  try {
-    console.log("voy a guardar");
-    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(icons));
-  } catch (error) {
-    console.error("Error saving icon order:", error);
-  }
-};
-
 const getIconOrder = async (): Promise<IconItem[] | null> => {
   try {
     const storedIcons = await AsyncStorage.getItem(STORAGE_KEY);
@@ -80,7 +71,7 @@ export default function Home() {
   const [modalVisible, setModalVisible] = useState(false);
   const [isModalSocialVisible, setModalSocialVisible] = useState(false);
   const [isAllowReorder, setAllowReorder] = useState(true);
-
+  const [scrollEnabled, setScrollEnabled] = useState(true);
   const [links, setLinks] = useState<any>([]);
 
   const toggleModalSocial = async (item: GridItem) => {
@@ -89,6 +80,16 @@ export default function Home() {
     const companyLinks = await fetchCompanyLinks(companyId);
     setLinks(companyLinks);
     setModalSocialVisible(!isModalSocialVisible);
+  };
+
+  const saveIconOrder = async (icons: IconItem[]): Promise<void> => {
+    try {
+      console.log("voy a guardar");
+      setScrollEnabled(true);
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(icons));
+    } catch (error) {
+      console.error("Error saving icon order:", error);
+    }
   };
 
   useEffect(() => {
@@ -173,11 +174,7 @@ export default function Home() {
     );
   }
   const render_item = (item: IconItem) => (
-    <View
-      style={styles.logoContainer}
-      // onPress={() => handleOpenApp(item)} Se deshabilita abrir directamente la web
-      //onPress={toggleModalSocial}
-    >
+    <View style={styles.logoContainer}>
       <View style={styles.logoWrapper}>
         <Image
           source={{uri: item.logo}}
@@ -185,7 +182,9 @@ export default function Home() {
           resizeMode="cover"
         />
       </View>
-      <Text style={styles.logoLabel}>{item.name}</Text>
+      <Text style={styles.logoLabel} numberOfLines={2} ellipsizeMode="tail">
+        {item.name}
+      </Text>
     </View>
   );
 
@@ -244,21 +243,27 @@ export default function Home() {
           <Ionicons name="filter" size={24} color="#fff" />
         </TouchableOpacity>
       </View>
-      <ScrollView contentContainerStyle={{flexGrow: 1}}>
-        <DraggableGrid
-          numColumns={4}
-          renderItem={render_item}
-          // data={data} se reemplaza por filtered apps
-          data={filteredApps}
-          onItemPress={toggleModalSocial}
-          onDragRelease={(newData) => {
-            if (isAllowReorder) {
-              setData(newData);
-              saveIconOrder(newData);
-            }
-          }}
-          //onDragRelease={(newData) => setData(newData)} // Update data on drag release
-        />
+
+      <ScrollView
+        contentContainerStyle={{flexGrow: 1}}
+        keyboardShouldPersistTaps="handled"
+        scrollEnabled={scrollEnabled} // Desactiva el scroll al reordenar
+      >
+        <View style={{minHeight: 500}}>
+          <DraggableGrid
+            numColumns={4}
+            renderItem={render_item}
+            data={filteredApps}
+            onItemPress={toggleModalSocial}
+            onDragStart={() => setScrollEnabled(false)} // Deshabilita el scroll al arrastrar
+            onDragRelease={(newData) => {
+              if (isAllowReorder) {
+                setData(newData);
+                saveIconOrder(newData);
+              }
+            }}
+          />
+        </View>
       </ScrollView>
 
       <CategoryModal

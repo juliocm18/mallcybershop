@@ -170,7 +170,7 @@ const Dashboard = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Dashboard</Text>
+      <Text style={styles.title}>Panel de Control</Text>
 
       <View style={styles.datePickerContainer}>
         <TouchableOpacity style={styles.button} onPress={showStartDatePicker}>

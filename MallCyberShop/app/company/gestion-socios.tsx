@@ -112,7 +112,7 @@ const CompanyScreen = () => {
 
   const handleSave = async () => {
     if (!key || !name || !packageType || !categories) {
-      Alert.alert("Error", "Campos reequeridos");
+      Alert.alert("Error", "Campos requeridos");
       return;
     }
 
@@ -144,7 +144,7 @@ const CompanyScreen = () => {
           clearFields();
           setModalVisible(false);
           fetchCompanies();
-          Alert.alert("Success", "Registro actualizado");
+          Alert.alert("Aviso", "Registro actualizado");
         }
       } else {
         if (!logoUri) {
@@ -168,7 +168,7 @@ const CompanyScreen = () => {
         };
 
         await createCompany(newCompany);
-        Alert.alert("Success", "Empresa creada con éxito");
+        Alert.alert("Aviso", "Empresa creada con éxito");
 
         // Limpiar los campos después de un registro exitoso
         clearFields();
@@ -195,7 +195,7 @@ const CompanyScreen = () => {
 
   const handleSaveCompanyLink = async () => {
     if (!identificador || !link) {
-      Alert.alert("Error", "Campos reequeridos");
+      Alert.alert("Error", "Campos requeridos");
       return;
     }
     try {

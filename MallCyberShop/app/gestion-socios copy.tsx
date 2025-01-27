@@ -30,17 +30,16 @@ const CreateCompanyScreen = () => {
   // ✅ Validaciones antes de enviar el formulario
   const handleSubmit = async () => {
     if (!key || !name || !packageType || !url || !categories) {
-      Alert.alert("Error", "All fields are required");
+      Alert.alert("Error", "Los Campos son requeridos");
       return;
     }
     if (!logoUri) {
-      Alert.alert("Error", "Please select a logo");
+      Alert.alert("Error", "Seleccione un logotipo");
       return;
     }
 
     try {
       const uploadedUrl = await uploadImage(logoUri);
-      console.log("uploadedUrl", uploadedUrl);
       if (uploadedUrl) {
         console.log("📤 Imagen subida con éxito:", uploadedUrl);
       } else {
@@ -57,7 +56,7 @@ const CreateCompanyScreen = () => {
       };
 
       await createCompany(newCompany);
-      Alert.alert("Success", "Company created successfully");
+      Alert.alert("Aviso", "Empresa creada exitosamente");
 
       // Limpiar los campos después de un registro exitoso
       setKey("");

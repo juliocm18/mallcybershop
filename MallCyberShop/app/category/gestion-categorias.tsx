@@ -45,7 +45,7 @@ const GestionCategorias = () => {
   const handleSaveCategory = async () => {
     console.log("newCategory", newCategory);
     if (!newCategory.trim()) {
-      Alert.alert("Error", "Category name cannot be empty");
+      Alert.alert("Error", "Campos requeridos");
       return;
     }
 
@@ -59,7 +59,7 @@ const GestionCategorias = () => {
         setNewCategory("");
         setEditingCategory(null);
         loadCategories();
-        Alert.alert("Success", "Category updated");
+        Alert.alert("Aviso", "Categoría actualizada");
       }
     } else {
       // Crear categoría
@@ -68,7 +68,7 @@ const GestionCategorias = () => {
       if (createdCategory) {
         setNewCategory("");
         loadCategories();
-        Alert.alert("Success", "Category created");
+        Alert.alert("Aviso", "Categoría creada");
       }
     }
   };
@@ -78,7 +78,7 @@ const GestionCategorias = () => {
     const success = await deleteCategory(id);
     if (success) {
       loadCategories(); // Recargar categorías
-      Alert.alert("Success", "Category deleted");
+      Alert.alert("Aviso", "Categoría eliminada");
     }
   };
 
@@ -93,7 +93,7 @@ const GestionCategorias = () => {
       <TextInput
         value={newCategory}
         onChangeText={setNewCategory}
-        placeholder="Category Name"
+        placeholder="Nombre de la categoría"
         style={styles.input}
       />
       <TouchableOpacity style={styles.button} onPress={handleSaveCategory}>

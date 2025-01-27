@@ -5,6 +5,33 @@ export const styles = StyleSheet.create({
     backgroundColor: "#ff9f61",
     padding: 10,
   },
+  logoContainer: {
+    width: 80, // Ancho fijo para mantener consistencia
+    //height: 130, // Altura total del contenedor
+    alignItems: "center",
+    justifyContent: "flex-start", // Alinea el contenido en la parte superior
+    marginBottom: 15, // Aumentamos el espacio entre filas
+  },
+  logoWrapper: {
+    marginTop: 20,
+    width: 60,
+    height: 60,
+    //backgroundColor: "#fff",
+    ///borderRadius: 25,
+    marginBottom: 5, // Separación uniforme con el texto
+  },
+  logo: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 15,
+  },
+  logoLabel: {
+    fontSize: 11,
+    textAlign: "center",
+    width: "100%",
+    minHeight: 32, // Espacio para exactamente 2 líneas
+    lineHeight: 14, // Ajuste para mejorar la legibilidad
+  },
   searchContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -22,6 +49,7 @@ export const styles = StyleSheet.create({
     color: "#000",
     fontSize: 16,
   },
+
   categoryButton: {
     marginLeft: 10,
     padding: 10,
@@ -57,29 +85,7 @@ export const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "bold",
   },
-  logoContainer: {
-    marginHorizontal: 10, // Espacio horizontal entre las celdas
-    //marginBottom: 20, // Aumenta el espacio entre las filas
-    alignItems: "center",
-    justifyContent: "center",
-    height: 120, // Asegura que haya suficiente altura para el ícono y el texto
-  },
-  logoWrapper: {
-    width: 60,
-    height: 60,
-    marginBottom: 10, // Mayor espacio entre la imagen y el texto
-    backgroundColor: "#fff",
-    borderRadius: 10,
-  },
-  logo: {
-    width: "100%",
-    height: "100%",
-    borderRadius: 10,
-  },
-  logoLabel: {
-    fontSize: 14,
-    textAlign: "center",
-  },
+
   checkboxContainer: {
     marginVertical: 10, // Espacio vertical entre checkboxes
     paddingVertical: 5, // Más espacio para mejorar la interacción

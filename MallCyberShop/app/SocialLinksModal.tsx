@@ -1,8 +1,7 @@
 import React from "react";
-import {View, Text, TouchableOpacity, Image} from "react-native";
+import {View, Text, TouchableOpacity, Image, StyleSheet} from "react-native";
 import RNModal from "react-native-modal";
-import {FontAwesome, Ionicons} from "@expo/vector-icons";
-import {styles} from "./styles";
+import {iconMap} from "./constants/socialLinks";
 
 interface SocialLinksModalProps {
   visible: boolean;
@@ -10,35 +9,6 @@ interface SocialLinksModalProps {
   handleLinkPress: (link: string, onClose: () => void) => void;
   onClose: () => void;
 }
-
-const iconMap: {[key: string]: any} = {
-  comestibles: require("../assets/images/linkType/comestibles.png"),
-  facebook: require("../assets/images/linkType/facebook.png"),
-  instagram: require("../assets/images/linkType/instagram.png"),
-  line: require("../assets/images/linkType/line.png"),
-  linkedin: require("../assets/images/linkType/linkedin.png"),
-  meet: require("../assets/images/linkType/meet.png"),
-  messenger: require("../assets/images/linkType/messenger.png"),
-  online: require("../assets/images/linkType/online.png"),
-  paginaweb: require("../assets/images/linkType/paginaweb.png"),
-
-  panaderia: require("../assets/images/linkType/panaderia.png"),
-  pinterest: require("../assets/images/linkType/pinterest.png"),
-  snapchat: require("../assets/images/linkType/snapchat.png"),
-  telefono: require("../assets/images/linkType/telefono.png"),
-  telegram: require("../assets/images/linkType/telegram.png"),
-  threads: require("../assets/images/linkType/threads.png"),
-
-  tienda: require("../assets/images/linkType/tienda.png"),
-  tiktok: require("../assets/images/linkType/tiktok.png"),
-  wechat: require("../assets/images/linkType/wechat.png"),
-
-  whatssapp: require("../assets/images/linkType/whatsapp.png"),
-  whatssappb: require("../assets/images/linkType/whatssappb.png"),
-  x: require("../assets/images/linkType/x.png"),
-  youtube: require("../assets/images/linkType/youtube.png"),
-  zoom: require("../assets/images/linkType/zoom.png"),
-};
 
 const SocialLinksModal: React.FC<SocialLinksModalProps> = ({
   visible,
@@ -48,31 +18,25 @@ const SocialLinksModal: React.FC<SocialLinksModalProps> = ({
 }) => {
   const renderIcon = (key: string) => {
     const imageSource =
-      iconMap[key] || require(`../assets/images/linkType/comestibles.png`);
+      iconMap[key] || require("../assets/images/linkType/comestibles.png");
     return (
-      <Image
-        source={imageSource}
-        style={{width: 20, height: 20}}
-        resizeMode="cover"
-      />
+      <Image source={imageSource} style={styles.icon} resizeMode="cover" />
     );
   };
 
   return (
     <RNModal isVisible={visible} onBackdropPress={onClose}>
-      <View style={styles.socialModalContent}>
-        <Text style={styles.socialModaltitle}>Selecciona un enlace:</Text>
-        <View style={styles.socialModallinksContainer}>
+      <View style={styles.modalContent}>
+        <Text style={styles.title}>Seleccione un enlace:</Text>
+        <View style={styles.linksContainer}>
           {links.map((key: any) => (
             <TouchableOpacity
               key={key.key}
-              style={styles.socialModallinkButton}
+              style={styles.linkButton}
               onPress={() => handleLinkPress(key.identificador, onClose)}
             >
               {renderIcon(key.identificador)}
-              <Text style={styles.socialModallinkText}>
-                {key.identificador}
-              </Text>
+              <Text style={styles.linkText}>{key.identificador}</Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -82,3 +46,41 @@ const SocialLinksModal: React.FC<SocialLinksModalProps> = ({
 };
 
 export default SocialLinksModal;
+
+const styles = StyleSheet.create({
+  modalContent: {
+    backgroundColor: "white",
+    padding: 20,
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 10,
+  },
+  linksContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    width: "100%",
+  },
+  linkButton: {
+    width: "30%", // 4 columnas
+    padding: 10,
+    marginVertical: 5,
+    backgroundColor: "#f5f5f5",
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  icon: {
+    width: 50,
+    height: 50,
+    borderRadius: 25, // Hace los iconos redondos
+    marginBottom: 5,
+  },
+  linkText: {
+    fontSize: 12,
+    textAlign: "center",
+  },
+});

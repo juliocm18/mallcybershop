@@ -19,8 +19,8 @@ export const fetchRemoteJson = async (url: string) => {
 };
 
 export const openWhatsApp = () => {
-  const phoneNumber = "+51997528065";
-  const message = "Hola";
+  const phoneNumber = "+51982551151";
+  const message = "Hola, quisiera saber más sobre ...";
   const url = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(
     message
   )}`;
