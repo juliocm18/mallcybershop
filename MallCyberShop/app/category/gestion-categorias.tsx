@@ -7,6 +7,7 @@ import {
   Alert,
   StyleSheet,
   TouchableOpacity,
+  ActivityIndicator,
 } from "react-native";
 import {
   getCategories,
@@ -25,11 +26,8 @@ const GestionCategorias = () => {
   const [newCategory, setNewCategory] = useState<string>("");
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
 
-  const router = useRouter(); // Usamos useRouter para manejar la navegación
-
-  const handleGoBack = () => {
-    router.back(); // Navega a la pantalla anterior
-  };
+  const [loading, setLoading] = useState(false);
+  const [deleting, setDeleting] = useState<number | null>(null);
 
   // Cargar categorías
   const loadCategories = async () => {
@@ -48,6 +46,7 @@ const GestionCategorias = () => {
       Alert.alert("Error", "Campos requeridos");
       return;
     }
+    setLoading(true);
 
     if (editingCategory) {
       // Actualizar categoría
@@ -60,25 +59,33 @@ const GestionCategorias = () => {
         setEditingCategory(null);
         loadCategories();
         Alert.alert("Aviso", "Categoría actualizada");
+        setLoading(false);
       }
     } else {
-      // Crear categoría
-      console.log("crear cat");
       const createdCategory = await createCategory(newCategory);
       if (createdCategory) {
         setNewCategory("");
         loadCategories();
         Alert.alert("Aviso", "Categoría creada");
+
+        setLoading(false);
       }
     }
   };
 
   // Eliminar categoría
   const handleDeleteCategory = async (id: number) => {
-    const success = await deleteCategory(id);
-    if (success) {
-      loadCategories(); // Recargar categorías
-      Alert.alert("Aviso", "Categoría eliminada");
+    setDeleting(id);
+    try {
+      const success = await deleteCategory(id);
+      if (success) {
+        loadCategories(); // Recargar categorías
+        Alert.alert("Aviso", "Categoría eliminada");
+      }
+    } catch (error: any) {
+      Alert.alert("Error", error.message);
+    } finally {
+      setDeleting(null);
     }
   };
 
@@ -96,10 +103,18 @@ const GestionCategorias = () => {
         placeholder="Nombre de la categoría"
         style={styles.input}
       />
-      <TouchableOpacity style={styles.button} onPress={handleSaveCategory}>
-        <Text style={styles.buttonText}>
-          {editingCategory ? "Actualizar" : "Guardar"}
-        </Text>
+      <TouchableOpacity
+        style={styles.button}
+        onPress={handleSaveCategory}
+        disabled={loading}
+      >
+        {loading ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.buttonText}>
+            {editingCategory ? "Actualizar" : "Guardar"}
+          </Text>
+        )}
       </TouchableOpacity>
 
       <FlatList
@@ -117,9 +132,14 @@ const GestionCategorias = () => {
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.deleteButton}
-                onPress={() => handleDeleteCategory(item.id)}
+                onPress={() => handleDeleteCategory(item.id || 0)}
+                disabled={deleting === item.id}
               >
-                <Text style={styles.deleteButtonText}>Eliminar</Text>
+                {deleting === item.id ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={styles.deleteButtonText}>Eliminar</Text>
+                )}
               </TouchableOpacity>
             </View>
           </View>

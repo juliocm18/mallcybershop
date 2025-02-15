@@ -86,7 +86,7 @@ export const uploadImage = async (uri: string): Promise<string | null> => {
     const publicUrl = supabase.storage
       .from("company-logos")
       .getPublicUrl(filePath).data.publicUrl;
-    console.log("✅ Imagen subida con éxito:", publicUrl);
+    //console.log("✅ Imagen subida con éxito:", publicUrl);
     return publicUrl;
   } catch (error) {
     console.error("❌ Error al subir la imagen:", error);

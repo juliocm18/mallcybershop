@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   Alert,
   Image,
+  ActivityIndicator,
 } from "react-native";
 import {supabase} from "../supabase";
 import {
@@ -72,6 +73,9 @@ const CompanyScreen = () => {
   const [identificador, setIdentificador] = useState(options[0]);
   const [link, setLink] = useState("");
 
+  const [loading, setLoading] = useState(false);
+  const [deleting, setDeleting] = useState<number | null>(null);
+
   const handlePickImage = async () => {
     if (editingId) {
       setEditingImage(true);
@@ -115,6 +119,7 @@ const CompanyScreen = () => {
       Alert.alert("Error", "Campos requeridos");
       return;
     }
+    setLoading(true);
 
     try {
       if (editingId) {
@@ -123,7 +128,7 @@ const CompanyScreen = () => {
           uploadedUrl = await uploadImage(logoUri);
           console.log("uploadedUrl", uploadedUrl);
           if (uploadedUrl) {
-            console.log("📤 Imagen subida con éxito:", uploadedUrl);
+            //console.log("📤 Imagen subida con éxito:", uploadedUrl);
           } else {
             console.log("error al subir imagen");
             return;
@@ -179,6 +184,8 @@ const CompanyScreen = () => {
     } catch (error: any) {
       console.error("Error creating company:", error.message);
       Alert.alert("Error", error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -257,17 +264,31 @@ const CompanyScreen = () => {
   };
 
   const handleDeleteLink = async (companyLink: CompanyLink) => {
-    deleteCompanyLink(companyLink.id || 0);
-    const companyLinks = await fetchCompanyLinks(companyId);
-    setCompanyLinks(companyLinks);
-    setIdentificador("");
-    setLink("");
-    setEditingLinkId(null);
+    setDeleting(companyLink.id || 0);
+    try {
+      deleteCompanyLink(companyLink.id || 0);
+      const companyLinks = await fetchCompanyLinks(companyId);
+      setCompanyLinks(companyLinks);
+      setIdentificador("");
+      setLink("");
+      setEditingLinkId(null);
+    } catch (error: any) {
+      Alert.alert("Error", error.message);
+    } finally {
+      setDeleting(null);
+    }
   };
 
   const handleDelete = async (id: number) => {
-    deleteCompany(id);
-    fetchCompanies();
+    setDeleting(id);
+    try {
+      await deleteCompany(id);
+      await fetchCompanies();
+    } catch (error: any) {
+      Alert.alert("Error", error.message);
+    } finally {
+      setDeleting(null);
+    }
   };
 
   return (
@@ -299,8 +320,13 @@ const CompanyScreen = () => {
               <TouchableOpacity
                 style={styles.deleteButton}
                 onPress={() => handleDelete(item.id || 0)}
+                disabled={deleting === item.id}
               >
-                <Text style={styles.modalButtonText}>Eliminar</Text>
+                {deleting === item.id ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={styles.modalButtonText}>Eliminar</Text>
+                )}
               </TouchableOpacity>
             </View>
           </View>
@@ -350,14 +376,20 @@ const CompanyScreen = () => {
               <TouchableOpacity
                 style={styles.modalUpdateButton}
                 onPress={handleSave}
+                disabled={loading}
               >
-                <Text style={styles.modalButtonText}>
-                  {editingId ? "Actualizar" : "Guardar"}
-                </Text>
+                {loading ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={styles.modalButtonText}>
+                    {editingId ? "Actualizar" : "Guardar"}
+                  </Text>
+                )}
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.modalCancelButton}
                 onPress={() => setModalVisible(false)}
+                disabled={loading}
               >
                 <Text style={styles.modalButtonText}>Cancelar</Text>
               </TouchableOpacity>

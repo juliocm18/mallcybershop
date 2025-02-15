@@ -25,13 +25,15 @@
     },
     "plugins": [
       "expo-router",
-      [
-        "expo-splash-screen",
+       [
+        "expo-video",
         {
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff"
+          "backgroundColor": "#ffffff",
+          "supportsBackgroundPlayback": true,
+          "supportsPictureInPicture": true
         }
       ]
     ],

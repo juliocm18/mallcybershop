@@ -126,11 +126,14 @@ const Dashboard = () => {
       console.error(error);
     } else {
       // Procesar los datos para contarlos por día
-      const groupedData = data.reduce((acc: Record<string, number>, item) => {
-        const dateKey = new Date(item.created_at).toLocaleDateString();
-        acc[dateKey] = (acc[dateKey] || 0) + item.duration_seconds / 60;
-        return acc;
-      }, {});
+      const groupedData = data.reduce(
+        (acc: Record<string, number>, item: any) => {
+          const dateKey = new Date(item.created_at).toLocaleDateString();
+          acc[dateKey] = (acc[dateKey] || 0) + item.duration_seconds / 60;
+          return acc;
+        },
+        {}
+      );
 
       const totalSum = Object.values(groupedData).reduce(
         (sum, value) => sum + value,

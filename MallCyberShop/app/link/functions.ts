@@ -89,7 +89,7 @@ export default class LinkFunctions {
     // ✅ Obtener la URL pública correctamente
     const publicUrl = supabase.storage.from(storageName).getPublicUrl(filePath)
       .data.publicUrl;
-    console.log("✅ Imagen subida con éxito:", publicUrl);
+    //console.log("✅ Imagen subida con éxito:", publicUrl);
     return publicUrl;
   };
 

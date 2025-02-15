@@ -1,4 +1,5 @@
 import {StyleSheet} from "react-native";
+
 export const styles = StyleSheet.create({
   container: {padding: 20},
   row: {
@@ -95,3 +96,7 @@ export const styles = StyleSheet.create({
     width: "45%",
   },
 });
+
+export default {
+  styles,
+};
