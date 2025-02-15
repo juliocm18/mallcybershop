@@ -9,7 +9,7 @@ import {styles} from "./styles";
 const options = [
   {value: "totalIngreso", display: "Total de Ingresos"},
   {value: "totalLogs", display: "Tiempo total en la aplicación"},
-  {value: "totalByCompany", display: "Total de ingresos por Empresa"},
+  {value: "totalByCompany", display: "Total de ingresos por Socio Estratégico"},
 ];
 const Dashboard = () => {
   const [isStartDatePickerVisible, setStartDatePickerVisible] = useState(false);
@@ -63,7 +63,7 @@ const Dashboard = () => {
     } else if (reportType === "totalLogs") {
       fetchSessionLogs();
     } else if (reportType === "totalByCompany") {
-      console.log("🏢 Buscando total por empresa");
+      console.log("🏢 Buscando total por Socio Estratégico");
       fetchTotalByCompany();
     }
   };

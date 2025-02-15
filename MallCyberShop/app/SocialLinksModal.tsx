@@ -6,6 +6,7 @@ import {iconMap} from "./constants/socialLinks";
 interface SocialLinksModalProps {
   visible: boolean;
   links: any;
+  company: any;
   handleLinkPress: (link: string, onClose: () => void) => void;
   onClose: () => void;
 }
@@ -13,6 +14,7 @@ interface SocialLinksModalProps {
 const SocialLinksModal: React.FC<SocialLinksModalProps> = ({
   visible,
   links,
+  company,
   handleLinkPress,
   onClose,
 }) => {
@@ -27,13 +29,13 @@ const SocialLinksModal: React.FC<SocialLinksModalProps> = ({
   return (
     <RNModal isVisible={visible} onBackdropPress={onClose}>
       <View style={styles.modalContent}>
-        <Text style={styles.title}>Seleccione un enlace:</Text>
+        <Text style={styles.title}>{company?.name || ""}</Text>
         <View style={styles.linksContainer}>
           {links.map((key: any) => (
             <TouchableOpacity
-              key={key.key}
+              key={key.id}
               style={styles.linkButton}
-              onPress={() => handleLinkPress(key.identificador, onClose)}
+              onPress={() => handleLinkPress(key.link, onClose)}
             >
               {renderIcon(key.identificador)}
               <Text style={styles.linkText}>{key.identificador}</Text>

@@ -67,3 +67,11 @@ export const deleteCategory = async (id: number): Promise<boolean> => {
     return false;
   }
 };
+
+export default {
+  getCategories,
+  getCategoryNames,
+  createCategory,
+  updateCategory,
+  deleteCategory,
+};

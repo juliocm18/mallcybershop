@@ -106,8 +106,8 @@ const GestionCategorias = () => {
         data={categories}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({item}) => (
-          <View style={styles.categoryItem}>
-            <Text style={styles.categoryText}>{item.name}</Text>
+          <View style={styles.row}>
+            <Text style={styles.cell}>{item.name}</Text>
             <View style={styles.buttonsContainer}>
               <TouchableOpacity
                 style={styles.editButton}
@@ -154,17 +154,14 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "bold",
   },
-  categoryItem: {
+  row: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
     padding: 10,
     borderBottomWidth: 1,
-    borderColor: "#ddd",
+    borderColor: "#ccc",
   },
-  categoryText: {
-    fontSize: 16,
-  },
+  cell: {flex: 1},
   buttonsContainer: {
     flexDirection: "row",
   },

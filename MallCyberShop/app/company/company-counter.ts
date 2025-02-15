@@ -1,4 +1,4 @@
-import {supabase, SUPABASE_URL} from "../supabase";
+import {supabase} from "../supabase";
 
 export const createCompanyCounter = async (companyCounter: CompanyCounter) => {
   const {data, error} = await supabase
@@ -7,4 +7,8 @@ export const createCompanyCounter = async (companyCounter: CompanyCounter) => {
     .select();
   if (error) throw new Error(error.message);
   return data ? data[0] : null;
+};
+
+export default {
+  createCompanyCounter,
 };

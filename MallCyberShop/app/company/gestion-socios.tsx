@@ -168,7 +168,7 @@ const CompanyScreen = () => {
         };
 
         await createCompany(newCompany);
-        Alert.alert("Aviso", "Empresa creada con éxito");
+        Alert.alert("Aviso", "Registro creado con éxito");
 
         // Limpiar los campos después de un registro exitoso
         clearFields();
@@ -273,7 +273,7 @@ const CompanyScreen = () => {
   return (
     <View style={styles.container}>
       <Button
-        title="Agregar Empresa"
+        title="Agregar Socio Estratégico"
         onPress={() => handleAddCompany()}
         color="#ff9f61"
       />
@@ -310,7 +310,7 @@ const CompanyScreen = () => {
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <Text style={styles.socialModaltitle}>
-              {editingId ? "Actualizar" : "Guardar"} Empresa
+              {editingId ? "Actualizar" : "Guardar"} Socio Estratégico
             </Text>
             <Text style={styles.label}>Identificador</Text>
             <TextInput style={styles.input} value={key} onChangeText={setKey} />
@@ -322,7 +322,7 @@ const CompanyScreen = () => {
               onChangeText={setName}
             />
 
-            <Text style={styles.label}>Código de Applicación</Text>
+            <Text style={styles.label}>Código de Aplicación</Text>
             <TextInput
               style={styles.input}
               value={packageType}
@@ -378,7 +378,9 @@ const CompanyScreen = () => {
                 <View style={styles.row}>
                   <View style={{flexDirection: "column"}}>
                     <Text style={styles.cell}>Tipo: {item.identificador}</Text>
-                    <Text style={styles.cell}>{item.link}</Text>
+                    <Text style={[styles.cell, {maxWidth: 200}]}>
+                      {item.link}
+                    </Text>
                   </View>
                   <View style={styles.buttonsContainer}>
                     <TouchableOpacity

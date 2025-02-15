@@ -56,7 +56,7 @@ const CreateCompanyScreen = () => {
       };
 
       await createCompany(newCompany);
-      Alert.alert("Aviso", "Empresa creada exitosamente");
+      Alert.alert("Aviso", "Registro creado exitosamente");
 
       // Limpiar los campos después de un registro exitoso
       setKey("");

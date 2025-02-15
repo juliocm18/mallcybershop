@@ -60,7 +60,7 @@ const CompanyList: React.FC<{data: any[]}> = ({data}) => {
       renderItem={({item}: any) => (
         <View style={styles.itemContainer}>
           <Text style={styles.itemTitle}>
-            Empresa: <Text style={styles.bold}>{item.name}</Text>
+            S.E: <Text style={styles.bold}>{item.name}</Text>
           </Text>
           <Text style={styles.itemSubtitle}>
             Total: <Text style={styles.bold}>{item.total_count}</Text>

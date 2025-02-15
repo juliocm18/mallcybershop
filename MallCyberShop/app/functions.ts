@@ -30,6 +30,7 @@ export const openWhatsApp = () => {
 };
 
 export const handleLinkPress = async (url: string, toggleModal: () => void) => {
+  console.log(url);
   const supported = await Linking.canOpenURL(url);
   if (supported) {
     await Linking.openURL(url);

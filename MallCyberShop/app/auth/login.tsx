@@ -4,16 +4,17 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Alert,
 } from "react-native";
 import {useState} from "react";
 import {useAuth} from "../context/AuthContext";
 import {useRouter} from "expo-router";
+import {Ionicons, FontAwesome} from "@expo/vector-icons";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
   const {signIn} = useAuth();
   const router = useRouter();
 
@@ -25,7 +26,7 @@ export default function Login() {
 
     try {
       await signIn(email, password);
-      setError(null); // Clear any previous errors
+      setError(null);
       router.push("./adminhome");
     } catch (err) {
       setError("Credenciales incorrectas, intente nuevamente.");
@@ -44,13 +45,21 @@ export default function Login() {
         keyboardType="email-address"
       />
 
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-      />
+      <View style={styles.passwordContainer}>
+        <TextInput
+          style={styles.passwordInput}
+          placeholder="Password"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry={!showPassword}
+        />
+        <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+          <Ionicons
+            name={showPassword ? "eye-outline" : "eye-off-outline"}
+            size={24}
+          />
+        </TouchableOpacity>
+      </View>
 
       {error && <Text style={styles.errorText}>{error}</Text>}
 
@@ -64,11 +73,6 @@ export default function Login() {
       >
         <Text style={styles.buttonText}>Ir a la Tienda</Text>
       </TouchableOpacity>
-
-      {/* Uncomment to enable the Sign Up button */}
-      {/* <TouchableOpacity style={styles.button} onPress={() => router.push("./signup")}>
-        <Text style={styles.buttonText}>Go to Sign Up</Text>
-      </TouchableOpacity> */}
     </View>
   );
 }
@@ -96,6 +100,27 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     fontSize: 16,
     color: "#333",
+  },
+  passwordContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderColor: "#ddd",
+    borderWidth: 1,
+    borderRadius: 8,
+    marginBottom: 20,
+    paddingHorizontal: 10,
+  },
+  passwordInput: {
+    flex: 1,
+    height: 50,
+    fontSize: 16,
+    color: "#333",
+  },
+  eyeButton: {
+    padding: 10,
+  },
+  eyeText: {
+    fontSize: 18,
   },
   button: {
     backgroundColor: "#ff9f61",

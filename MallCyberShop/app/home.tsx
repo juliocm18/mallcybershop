@@ -73,11 +73,13 @@ export default function Home() {
   const [isAllowReorder, setAllowReorder] = useState(true);
   const [scrollEnabled, setScrollEnabled] = useState(true);
   const [links, setLinks] = useState<any>([]);
+  const [selectedCompany, setSelectedCompany] = useState<any>();
 
   const toggleModalSocial = async (item: GridItem) => {
     const companyId = +item.id;
     await handleCreateCompanyCounter(companyId);
     const companyLinks = await fetchCompanyLinks(companyId);
+    setSelectedCompany(item);
     setLinks(companyLinks);
     setModalSocialVisible(!isModalSocialVisible);
   };
@@ -277,6 +279,7 @@ export default function Home() {
       <SocialLinksModal
         visible={isModalSocialVisible}
         links={links}
+        company={selectedCompany}
         handleLinkPress={handleLinkPress}
         onClose={() => setModalSocialVisible(false)}
       />
