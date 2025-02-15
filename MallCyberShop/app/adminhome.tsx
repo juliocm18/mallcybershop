@@ -65,8 +65,8 @@ const Home: React.FC = () => {
         </Link>
 
         <Link
-          href="./administrar-datos"
-          style={[styles.button, {backgroundColor: "#ed2004"}]}
+          href="./link/"
+          style={[styles.button, {backgroundColor: "#4CAF"}]}
         >
           <View style={styles.iconLabelContainer}>
             <FontAwesome
@@ -75,7 +75,7 @@ const Home: React.FC = () => {
               size={30}
               color="white"
             />
-            <Text style={styles.label}>Administración de Datos</Text>
+            <Text style={styles.label}>Administración de Links</Text>
           </View>
         </Link>
       </View>

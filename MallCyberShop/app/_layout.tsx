@@ -49,7 +49,7 @@ function MainLayout() {
 
     // Manejar cambios de estado para calcular tiempo de uso
     const handleAppStateChange = async (nextAppState: AppStateStatus) => {
-      console.log("📢 Estado cambiado:", appState.current, "➡", nextAppState);
+      //console.log("📢 Estado cambiado:", appState.current, "➡", nextAppState);
 
       // Verificar que el estado haya cambiado realmente
       if (appState.current !== nextAppState) {
@@ -61,9 +61,9 @@ function MainLayout() {
             const timeSpent = Math.round(
               (sessionEndTime - sessionStartTime.current) / 1000
             ); // Convertir a segundos
-            console.log(
-              `⏳ Tiempo de permanencia en la app: ${timeSpent} segundos`
-            );
+            // console.log(
+            //   `⏳ Tiempo de permanencia en la app: ${timeSpent} segundos`
+            // );
 
             setTimeout(async () => {
               const deviceId = await getDeviceIdentifier();
@@ -77,7 +77,7 @@ function MainLayout() {
               if (error) {
                 console.error("❌ Error registrando tiempo de sesión:", error);
               } else {
-                console.log("✅ Tiempo de sesión registrado correctamente");
+                //console.log("✅ Tiempo de sesión registrado correctamente");
               }
 
               // Reiniciar el tiempo de sesión
