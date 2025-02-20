@@ -9,3 +9,6 @@ eas build --platform android --profile preview
 
 Estoy realizando una aplicacion en react native version mayor a > 0.76 usando expo version mayor a >52.0 y typescript, 
 analiza este código y agrégale un botón flotante con el icono de whatssApp que  al hacer click abra whatssApp para enviarle un mensaje al numero "+51997528065" con el texto predeterminado "Hola"
+
+
+cambiar el formato del video:

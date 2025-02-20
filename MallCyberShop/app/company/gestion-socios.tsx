@@ -10,6 +10,9 @@ import {
   Alert,
   Image,
   ActivityIndicator,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import {supabase} from "../supabase";
 import {
@@ -400,12 +403,19 @@ const CompanyScreen = () => {
 
       <Modal visible={modalLinkVisible} animationType="slide" transparent>
         <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.socialModaltitle}>Administrar Links</Text>
-
+          <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            style={styles.modalContent}
+          >
             <FlatList
               data={companyLinks}
               keyExtractor={(item) => (item.id || 0).toString()}
+              keyboardShouldPersistTaps="handled"
+              ListHeaderComponent={
+                <>
+                  <Text style={styles.socialModaltitle}>Administrar Links</Text>
+                </>
+              }
               renderItem={({item}) => (
                 <View style={styles.row}>
                   <View style={{flexDirection: "column"}}>
@@ -430,44 +440,49 @@ const CompanyScreen = () => {
                   </View>
                 </View>
               )}
+              ListFooterComponent={
+                <>
+                  <Text style={styles.label}>Identificador</Text>
+                  <View style={styles.input}>
+                    <Picker
+                      selectedValue={identificador}
+                      onValueChange={(itemValue) => setIdentificador(itemValue)}
+                    >
+                      {options.map((option) => (
+                        <Picker.Item
+                          key={option}
+                          label={option}
+                          value={option}
+                        />
+                      ))}
+                    </Picker>
+                  </View>
+
+                  <Text style={styles.label}>Link</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={link}
+                    onChangeText={setLink}
+                  />
+
+                  <View style={styles.modalButtonContainer}>
+                    <TouchableOpacity
+                      style={styles.modalUpdateButton}
+                      onPress={handleSaveCompanyLink}
+                    >
+                      <Text style={styles.modalButtonText}>Guardar</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.modalCancelButton}
+                      onPress={() => setModalLinkVisible(false)}
+                    >
+                      <Text style={styles.modalButtonText}>Cancelar</Text>
+                    </TouchableOpacity>
+                  </View>
+                </>
+              }
             />
-
-            <View style={styles.modalContent}>
-              <Text style={styles.label}>Identificador</Text>
-              <View style={styles.input}>
-                <Picker
-                  selectedValue={identificador}
-                  onValueChange={(itemValue) => setIdentificador(itemValue)}
-                >
-                  {options.map((option) => (
-                    <Picker.Item key={option} label={option} value={option} />
-                  ))}
-                </Picker>
-              </View>
-
-              <Text style={styles.label}>Link</Text>
-              <TextInput
-                style={styles.input}
-                value={link}
-                onChangeText={setLink}
-              />
-
-              <View style={styles.modalButtonContainer}>
-                <TouchableOpacity
-                  style={styles.modalUpdateButton}
-                  onPress={handleSaveCompanyLink}
-                >
-                  <Text style={styles.modalButtonText}>Guardar</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.modalCancelButton}
-                  onPress={() => setModalLinkVisible(false)}
-                >
-                  <Text style={styles.modalButtonText}>Cancelar</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
+          </KeyboardAvoidingView>
         </View>
       </Modal>
     </View>
