@@ -12,3 +12,6 @@ analiza este código y agrégale un botón flotante con el icono de whatssApp qu
 
 
 cambiar el formato del video:
+
+
+supabase functions deploy list-users

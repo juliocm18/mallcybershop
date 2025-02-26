@@ -57,6 +57,39 @@ const options = [
   "zoom",
 ];
 
+const CompanyItem = React.memo(
+  ({item, onEdit, onLinks, onDelete, deleting}: any) => (
+    <View style={styles.row}>
+      <Text style={styles.cell}>{item.name}</Text>
+      <View style={styles.buttonsContainer}>
+        <TouchableOpacity
+          style={styles.editButton}
+          onPress={() => onEdit(item)}
+        >
+          <Text style={styles.editButtonText}>Editar</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.LinkButton}
+          onPress={() => onLinks(item)}
+        >
+          <Text style={styles.editButtonText}>Links</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.deleteButton}
+          onPress={() => onDelete(item.id || 0)}
+          disabled={deleting === item.id}
+        >
+          {deleting === item.id ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.modalButtonText}>Eliminar</Text>
+          )}
+        </TouchableOpacity>
+      </View>
+    </View>
+  )
+);
+
 const CompanyScreen = () => {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [companyLinks, setCompanyLinks] = useState<CompanyLink[]>([]);
@@ -298,43 +331,30 @@ const CompanyScreen = () => {
     <View style={styles.container}>
       <Button
         title="Agregar Socio Estratégico"
-        onPress={() => handleAddCompany()}
+        onPress={handleAddCompany}
         color="#ff9f61"
       />
+
       <FlatList
         data={companies}
         keyExtractor={(item) => (item.id || 0).toString()}
         renderItem={({item}) => (
-          <View style={styles.row}>
-            <Text style={styles.cell}>{item.name}</Text>
-            <View style={styles.buttonsContainer}>
-              <TouchableOpacity
-                style={styles.editButton}
-                onPress={() => handleEdit(item)}
-              >
-                <Text style={styles.editButtonText}>Editar</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.LinkButton}
-                onPress={() => handleLinks(item)}
-              >
-                <Text style={styles.editButtonText}>Links</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.deleteButton}
-                onPress={() => handleDelete(item.id || 0)}
-                disabled={deleting === item.id}
-              >
-                {deleting === item.id ? (
-                  <ActivityIndicator color="#fff" />
-                ) : (
-                  <Text style={styles.modalButtonText}>Eliminar</Text>
-                )}
-              </TouchableOpacity>
-            </View>
-          </View>
+          <CompanyItem
+            item={item}
+            onEdit={handleEdit}
+            onLinks={handleLinks}
+            onDelete={handleDelete}
+            deleting={deleting}
+          />
         )}
+        getItemLayout={(data, index) => ({
+          length: 80,
+          offset: 80 * index,
+          index,
+        })}
+        windowSize={10}
       />
+
       <Modal visible={modalVisible} animationType="slide" transparent>
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
@@ -365,16 +385,14 @@ const CompanyScreen = () => {
               onChangeText={setCategories}
             />
 
-            <TouchableOpacity
-              style={styles.imagePicker}
-              onPress={handlePickImage}
-            >
+            <TouchableOpacity style={styles.imagePicker} onPress={() => {}}>
               <Text style={styles.imagePickerText}>Seleccione el logotipo</Text>
             </TouchableOpacity>
 
             {logoUri && (
               <Image source={{uri: logoUri}} style={styles.logoPreview} />
             )}
+
             <View style={styles.modalButtonContainer}>
               <TouchableOpacity
                 style={styles.modalUpdateButton}
@@ -412,18 +430,14 @@ const CompanyScreen = () => {
               keyExtractor={(item) => (item.id || 0).toString()}
               keyboardShouldPersistTaps="handled"
               ListHeaderComponent={
-                <>
-                  <Text style={styles.socialModaltitle}>Administrar Links</Text>
-                </>
+                <Text style={styles.socialModaltitle}>Administrar Links</Text>
               }
               renderItem={({item}) => (
                 <View style={styles.row}>
-                  <View style={{flexDirection: "column"}}>
-                    <Text style={styles.cell}>Tipo: {item.identificador}</Text>
-                    <Text style={[styles.cell, {maxWidth: 200}]}>
-                      {item.link}
-                    </Text>
-                  </View>
+                  <Text style={styles.cell}>Tipo: {item.identificador}</Text>
+                  <Text style={[styles.cell, {maxWidth: 200}]}>
+                    {item.link}
+                  </Text>
                   <View style={styles.buttonsContainer}>
                     <TouchableOpacity
                       style={styles.editButton}
@@ -443,20 +457,14 @@ const CompanyScreen = () => {
               ListFooterComponent={
                 <>
                   <Text style={styles.label}>Identificador</Text>
-                  <View style={styles.input}>
-                    <Picker
-                      selectedValue={identificador}
-                      onValueChange={(itemValue) => setIdentificador(itemValue)}
-                    >
-                      {options.map((option) => (
-                        <Picker.Item
-                          key={option}
-                          label={option}
-                          value={option}
-                        />
-                      ))}
-                    </Picker>
-                  </View>
+                  <Picker
+                    selectedValue={identificador}
+                    onValueChange={(itemValue) => setIdentificador(itemValue)}
+                  >
+                    {options.map((option) => (
+                      <Picker.Item key={option} label={option} value={option} />
+                    ))}
+                  </Picker>
 
                   <Text style={styles.label}>Link</Text>
                   <TextInput
@@ -464,7 +472,6 @@ const CompanyScreen = () => {
                     value={link}
                     onChangeText={setLink}
                   />
-
                   <View style={styles.modalButtonContainer}>
                     <TouchableOpacity
                       style={styles.modalUpdateButton}

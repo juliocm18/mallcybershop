@@ -10,7 +10,7 @@ import {useVideoPlayer, VideoView} from "expo-video";
 // Mantiene el splash hasta que el video termine
 //SplashScreen.preventAutoHideAsync();
 
-const videoSource = require("../assets/video/splash2.mp4"); // ✅ Importa correctamente
+const videoSource = require("../assets/video/splash3.mp4"); // ✅ Importa correctamente
 
 function MainLayout() {
   const {session, loading} = useAuth();

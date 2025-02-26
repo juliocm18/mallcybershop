@@ -78,6 +78,21 @@ const Home: React.FC = () => {
             <Text style={styles.label}>Administración de Links</Text>
           </View>
         </Link>
+
+        <Link
+          href="./user/"
+          style={[styles.button, {backgroundColor: "purple"}]}
+        >
+          <View style={styles.iconLabelContainer}>
+            <FontAwesome
+              style={styles.icon}
+              name="warning"
+              size={30}
+              color="white"
+            />
+            <Text style={styles.label}>Administración de Usuarios</Text>
+          </View>
+        </Link>
       </View>
     </View>
   );

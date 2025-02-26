@@ -9,6 +9,7 @@ import {useState} from "react";
 import {useAuth} from "../context/AuthContext";
 import {useRouter} from "expo-router";
 import {Ionicons, FontAwesome} from "@expo/vector-icons";
+import RoleFunctions from "../role/functions";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -25,7 +26,12 @@ export default function Login() {
     }
 
     try {
-      await signIn(email, password);
+      const userLogged = await signIn(email, password);
+      if (userLogged && userLogged.id) {
+        const roles = await RoleFunctions.getByUser(userLogged.id);
+        roles ? (userLogged.roles = roles) : (userLogged.roles = []);
+      }
+      //console.log("✅ Usuario logueado:", userLogged);
       setError(null);
       router.push("./adminhome");
     } catch (err) {
