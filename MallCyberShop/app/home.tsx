@@ -24,17 +24,6 @@ import {getCategoryNames} from "./category/category";
 import {createCompanyCounter} from "./company/company-counter";
 import {Link} from "./link/model";
 
-const categoriesTab = [
-  "Inicio Productos",
-  "Productos",
-  "Ofertas",
-  "Perfil",
-  "Carrito",
-  "Favoritos",
-  "Historial",
-  "Configuración",
-];
-
 type IconItem = {
   id: string;
   name: string;
@@ -85,6 +74,8 @@ const DynamicTabsScreen = () => {
   const [scrollEnabled, setScrollEnabled] = useState(true);
   const [links, setLinks] = useState<Link[]>([]);
   const [selectedCompany, setSelectedCompany] = useState<any>();
+
+  const [byCat, setByCat] = useState<any[]>([]);
 
   const [routes, setRoutes] = useState<{key: string; title: string}[]>([]);
 
@@ -144,6 +135,12 @@ const DynamicTabsScreen = () => {
           title: obj,
         }));
         setRoutes(formattedRoutes);
+
+        const gg = remoteData.filter((app) =>
+          app.categories?.includes("TIENDAS")
+        );
+        setByCat(gg);
+        //console.log("hoaaaaaaaaaaaaaaaaa", gg);
       } catch (err) {
         console.log(err);
         setError(JSON.stringify(err));
@@ -154,29 +151,13 @@ const DynamicTabsScreen = () => {
     loadRemoteJson();
   }, []);
 
-  // Filtrar aplicaciones por nombre y categoría
-  const filteredApps = data.filter((app: any) => {
-    const matchesSearch = app.name.toLowerCase().includes(search.toLowerCase());
-    const matchesCategory =
-      selectedCategories.length === 0 ||
-      app.categories?.some((category: string) =>
-        selectedCategories.includes(category)
-      );
-    return matchesSearch && matchesCategory;
-  });
-
-  // Manejo de selección de categorías
-  const toggleCategory = (category: string) => {
-    setSelectedCategories((prev) => {
-      const updatedCategories = prev.includes(category)
-        ? prev.filter((c) => c !== category)
-        : [...prev, category];
-      const allowReorder = updatedCategories.length === 0;
-      // Validar si hay categorías seleccionadas para actualizar isAllowReorder
-      setAllowReorder(allowReorder);
-      return updatedCategories;
-    });
-  };
+  if (error) {
+    return (
+      <View style={styles.container}>
+        <Text style={{color: "red", textAlign: "center"}}>{error}</Text>
+      </View>
+    );
+  }
 
   const render_item = (item: IconItem) => (
     <View style={styles.logoContainer}>
@@ -202,14 +183,11 @@ const DynamicTabsScreen = () => {
       keyboardShouldPersistTaps="handled"
       scrollEnabled={scrollEnabled}
     >
-      <View style={{minHeight: 500}}>
+      <View style={{flex: 1, backgroundColor: "#ffb77c"}}>
         <DraggableGrid
           numColumns={4}
           renderItem={render_item}
-          data={filteredApps.filter(
-            (app) =>
-              app.categories?.includes(route.title) ?? <Text>No hay Datos</Text>
-          )}
+          data={data.filter((app) => app.categories?.includes(route.title))}
           onItemPress={toggleModalSocial}
           onDragStart={() => setScrollEnabled(false)} // Deshabilita el scroll al arrastrar
           onDragRelease={(newData) => {
@@ -225,21 +203,63 @@ const DynamicTabsScreen = () => {
   /* Tabs management */
 
   return (
-    <TabView
-      navigationState={{index, routes}}
-      renderScene={renderScene}
-      onIndexChange={setIndex}
-      initialLayout={{width: layout.width}}
-      renderTabBar={(props) => (
-        <TabBar
-          {...props}
-          scrollEnabled
-          style={styles.tabBar}
-          indicatorStyle={styles.indicator}
-          tabStyle={styles.tab}
+    <View style={styles.container}>
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "flex-end",
+          paddingBottom: 5,
+        }}
+      >
+        <Text
+          style={{
+            color: "white",
+            fontSize: 16,
+            marginRight: 8,
+            fontWeight: "bold",
+          }}
+        >
+          Zona Admin
+        </Text>
+        <FontAwesome
+          name="user-circle-o"
+          size={24} // Tamaño mediano
+          color="white" // Color blanco
+          onPress={() => router.push("./auth/login")}
         />
-      )}
-    />
+      </View>
+      <TabView
+        navigationState={{index, routes}}
+        renderScene={renderScene}
+        onIndexChange={setIndex}
+        initialLayout={{width: layout.width}}
+        renderTabBar={(props) => (
+          <TabBar
+            {...props}
+            scrollEnabled
+            style={styles.tabBar}
+            indicatorStyle={styles.indicator}
+            tabStyle={styles.tab}
+          />
+        )}
+      />
+
+      <SocialLinksModal
+        visible={isModalSocialVisible}
+        companyLinks={links}
+        company={selectedCompany}
+        handleLinkPress={handleLinkPress}
+        onClose={() => setModalSocialVisible(false)}
+      />
+
+      <TouchableOpacity
+        style={styles.floatingWhatsAppButton}
+        onPress={openWhatsApp}
+      >
+        <FontAwesome name="whatsapp" size={30} color="white" />
+      </TouchableOpacity>
+    </View>
   );
 };
 

@@ -2,8 +2,8 @@ import {StyleSheet} from "react-native";
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#ff9f61",
-    padding: 10,
+    backgroundColor: "#ea822c",
+    paddingTop: 10,
   },
   logoContainer: {
     width: 80, // Ancho fijo para mantener consistencia
@@ -158,7 +158,7 @@ export const styles = StyleSheet.create({
   },
   scene: {flex: 1, justifyContent: "center", alignItems: "center", padding: 20},
   text: {fontSize: 18, fontWeight: "bold"},
-  tabBar: {backgroundColor: "#ff9f61"},
-  indicator: {backgroundColor: "white"},
-  tab: {maxWidth: 200}, // Asegura que cada tab tenga un ancho adecuado para scroll
+  tabBar: {backgroundColor: "#ea822c"},
+  indicator: {backgroundColor: "#fff"},
+  tab: {maxWidth: 400}, // Asegura que cada tab tenga un ancho adecuado para scroll
 });

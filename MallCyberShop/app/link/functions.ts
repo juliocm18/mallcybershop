@@ -54,7 +54,7 @@ export default class LinkFunctions {
         const manipResult = await manipulateAsync(
           image.uri,
           [{resize: {width: 128, height: 128}}],
-          {compress: 0.7, format: SaveFormat.JPEG}
+          {compress: 0.7, format: SaveFormat.PNG}
         );
         return manipResult.uri;
       } catch (error) {
@@ -63,8 +63,8 @@ export default class LinkFunctions {
     }
 
     // 🔍 Validar tipo de imagen
-    if (!["image/jpeg", "image/png"].includes(image.mimeType || "")) {
-      throw new Error("Solo son permitidos JPG, JPEG, y PNG.");
+    if (!["image/png"].includes(image.mimeType || "")) {
+      throw new Error("Solo son permitidos PNG.");
     }
     return image.uri; // Retornar la URI para la subida
   };
@@ -72,7 +72,7 @@ export default class LinkFunctions {
   static uploadImage = async (uri: string): Promise<string> => {
     const formData = await this.uriToFormData(uri); // ✅ Convertir URI a FormData
 
-    const fileExt = uri.split(".").pop() || "jpg";
+    const fileExt = uri.split(".").pop() || "png";
     const fileName = `${Date.now()}.${fileExt}`;
     const storageName = "link-logos";
     const filePath = `${storageName}/${fileName}`; // Ruta en Supabase
@@ -94,7 +94,7 @@ export default class LinkFunctions {
   };
 
   static uriToFormData = async (uri: string): Promise<FormData> => {
-    const fileExt = uri.split(".").pop() || "jpg"; // Extraer la extensión
+    const fileExt = uri.split(".").pop() || "png"; // Extraer la extensión
     const fileName = `${Date.now()}.${fileExt}`; // Nombre único
 
     const formData = new FormData();

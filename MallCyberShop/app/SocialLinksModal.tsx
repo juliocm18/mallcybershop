@@ -30,6 +30,7 @@ const SocialLinksModal: React.FC<SocialLinksModalProps> = ({
         <View style={styles.linksContainer}>
           {companyLinks.map((companyLink: CompanyLink) => (
             <TouchableOpacity
+              key={companyLink.id}
               style={styles.linkButton}
               onPress={() => handleLinkPress(companyLink.url || "", onClose)}
             >
