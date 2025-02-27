@@ -1,4 +1,6 @@
-interface Company {
+import {Link} from "../link/model";
+
+export interface Company {
   id?: number;
   key: string;
   name: string;
@@ -7,14 +9,14 @@ interface Company {
   categories: string[];
 }
 
-interface CompanyLink {
+export interface CompanyLink {
   id?: number;
-  link: string;
-  identificador: string;
+  url: string;
+  link?: Link;
   companyId: number;
 }
 
-interface CompanyCounter {
+export interface CompanyCounter {
   imei: string;
   company_id: number;
 }

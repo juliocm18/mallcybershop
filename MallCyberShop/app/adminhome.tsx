@@ -1,23 +1,12 @@
 import {Link, useRouter} from "expo-router";
 import React from "react";
-import {View, Text, TouchableOpacity, StyleSheet} from "react-native";
-import {FontAwesome, Ionicons} from "@expo/vector-icons";
+import {View, Text, StyleSheet, TouchableOpacity} from "react-native";
+import {FontAwesome} from "@expo/vector-icons";
 
 const Home: React.FC = () => {
-  const router = useRouter(); // Usamos useRouter para manejar la navegación
-
-  const handleGoBack = () => {
-    router.back(); // Navega a la pantalla anterior
-  };
-
+  const router = useRouter();
   return (
     <View style={styles.container}>
-      {/* Botón Atrás */}
-      <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
-        <Ionicons name="arrow-back" size={30} color="white" />
-        <Text style={styles.backButtonText}>Atrás</Text>
-      </TouchableOpacity>
-
       <View style={styles.buttonContainer}>
         <Link
           href="./dashboard/"
@@ -94,6 +83,12 @@ const Home: React.FC = () => {
           </View>
         </Link>
       </View>
+      <TouchableOpacity
+        style={styles.bottonButton}
+        onPress={() => router.push("../home")}
+      >
+        <Text style={styles.buttonText}>Ir a la Tienda</Text>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -160,6 +155,17 @@ const styles = StyleSheet.create({
   icon: {
     marginTop: 10,
     fontSize: 40,
+  },
+  buttonText: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+  bottonButton: {
+    backgroundColor: "#333",
+    padding: 10,
+    borderRadius: 5,
+    marginTop: 20,
   },
 });
 

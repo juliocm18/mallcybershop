@@ -2,6 +2,7 @@ import {Alert} from "react-native";
 import {supabase, SUPABASE_URL} from "../supabase";
 import * as ImagePicker from "expo-image-picker";
 import {manipulateAsync, SaveFormat} from "expo-image-manipulator";
+import {Company, CompanyLink} from "./company.interface";
 
 export const pickImage = async (): Promise<string | null> => {
   const result = await ImagePicker.launchImageLibraryAsync({
@@ -132,13 +133,21 @@ export const deleteCompany = async (companyId: number) => {
   return data;
 };
 
-export const fetchCompanyLinks = async (companyId: number) => {
+export const fetchCompanyLinks = async (
+  companyId: number
+): Promise<CompanyLink[]> => {
   const {data, error} = await supabase
     .from("company_link")
-    .select("*")
+    .select("id,companyId,url,link:link!inner(id, name, icon)")
     .eq("companyId", companyId);
   if (error) throw new Error(error.message);
-  return data;
+  const response = data.map((item) => ({
+    id: item.id,
+    companyId: item.companyId,
+    url: item.url,
+    link: item.link as any,
+  })) as CompanyLink[];
+  return response;
 };
 
 export const deleteCompanyLink = async (companyLinkId: number) => {

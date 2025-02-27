@@ -93,4 +93,10 @@ export const styles = StyleSheet.create({
     borderRadius: 5,
     width: "45%",
   },
+  socialModalFooterTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    marginBottom: 10,
+    marginTop: 15,
+  },
 });

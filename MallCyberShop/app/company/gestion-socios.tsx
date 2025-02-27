@@ -29,33 +29,9 @@ import {
 import {styles} from "./styles";
 import {FontAwesome} from "@expo/vector-icons";
 import {Picker} from "@react-native-picker/picker";
-
-const options = [
-  "comestibles",
-  "email",
-  "facebook",
-  "instagram",
-  "line",
-  "linkedin",
-  "meet",
-  "messenger",
-  "online",
-  "paginaweb",
-  "panaderia",
-  "pinterest",
-  "snapchat",
-  "telefono",
-  "telegram",
-  "threads",
-  "tienda",
-  "tiktok",
-  "wechat",
-  "whatssapp",
-  "whatssappb",
-  "x",
-  "youtube",
-  "zoom",
-];
+import {Link} from "../link/model";
+import LinkFunctions from "../link/functions";
+import {Company, CompanyLink} from "./company.interface";
 
 const CompanyItem = React.memo(
   ({item, onEdit, onLinks, onDelete, deleting}: any) => (
@@ -106,11 +82,14 @@ const CompanyScreen = () => {
 
   const [companyId, setCompanyId] = useState<number>(0);
   const [editingLinkId, setEditingLinkId] = useState<number | null>(null);
-  const [identificador, setIdentificador] = useState(options[0]);
-  const [link, setLink] = useState("");
-
+  const [url, setUrl] = useState("");
+  const [links, setLinks] = useState<Link[]>([]);
   const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState<number | null>(null);
+
+  const [link, setLink] = useState<Link>();
+
+  const [selectedLinkId, setSelectedLinkId] = useState<number>();
 
   const handlePickImage = async () => {
     if (editingId) {
@@ -139,7 +118,13 @@ const CompanyScreen = () => {
 
   useEffect(() => {
     fetchCompanies();
+    loadLinks();
   }, []);
+
+  const loadLinks = async () => {
+    const data = await LinkFunctions.getAll();
+    if (data) setLinks(data);
+  };
 
   const fetchCompanies = async () => {
     const {data, error} = await supabase.from("company").select("*");
@@ -237,14 +222,14 @@ const CompanyScreen = () => {
   };
 
   const handleSaveCompanyLink = async () => {
-    if (!identificador || !link) {
+    if (!link || !url) {
       Alert.alert("Error", "Campos requeridos");
       return;
     }
     try {
       if (editingLinkId) {
         const companyObj = {
-          identificador: identificador,
+          url: url,
           link: link,
         };
         const companyLinlUpdated = await updateCompanyLink(
@@ -252,22 +237,23 @@ const CompanyScreen = () => {
           companyObj
         );
         if (companyLinlUpdated) {
-          setIdentificador("");
-          setLink("");
+          setLink(undefined);
+          setUrl("");
           setEditingLinkId(null);
           const companyLinks = await fetchCompanyLinks(companyId);
           setCompanyLinks(companyLinks);
         }
       } else {
         const companyObj = {
-          identificador: identificador,
-          link: link,
+          //identificador: identificador,
+          url: url,
           companyId: companyId,
+          link: link,
         };
         const companyLinlInserted = await createCompanyLink(companyObj);
         if (companyLinlInserted) {
-          setIdentificador("");
-          setLink("");
+          setLink(undefined);
+          setUrl("");
           setEditingLinkId(null);
           const companyLinks = await fetchCompanyLinks(companyId);
           setCompanyLinks(companyLinks);
@@ -281,15 +267,16 @@ const CompanyScreen = () => {
 
   const handleEditLink = (companyLink: CompanyLink) => {
     setEditingLinkId(companyLink.id || 0);
-    setIdentificador(companyLink.identificador);
     setLink(companyLink.link);
+    setSelectedLinkId(companyLink.link?.id || 0);
+    setUrl(companyLink.url);
   };
 
   const handleLinks = async (company: Company) => {
     setModalLinkVisible(true);
     setEditingLinkId(null);
-    setIdentificador("");
-    setLink("");
+    setLink(undefined);
+    setUrl("");
     setCompanyId(company.id || 0);
     try {
       const companyLinks = await fetchCompanyLinks(company.id || 0);
@@ -305,8 +292,8 @@ const CompanyScreen = () => {
       deleteCompanyLink(companyLink.id || 0);
       const companyLinks = await fetchCompanyLinks(companyId);
       setCompanyLinks(companyLinks);
-      setIdentificador("");
-      setLink("");
+      setLink(undefined);
+      setUrl("");
       setEditingLinkId(null);
     } catch (error: any) {
       Alert.alert("Error", error.message);
@@ -385,7 +372,10 @@ const CompanyScreen = () => {
               onChangeText={setCategories}
             />
 
-            <TouchableOpacity style={styles.imagePicker} onPress={() => {}}>
+            <TouchableOpacity
+              style={styles.imagePicker}
+              onPress={handlePickImage}
+            >
               <Text style={styles.imagePickerText}>Seleccione el logotipo</Text>
             </TouchableOpacity>
 
@@ -434,10 +424,13 @@ const CompanyScreen = () => {
               }
               renderItem={({item}) => (
                 <View style={styles.row}>
-                  <Text style={styles.cell}>Tipo: {item.identificador}</Text>
-                  <Text style={[styles.cell, {maxWidth: 200}]}>
-                    {item.link}
-                  </Text>
+                  <View style={{flexDirection: "column"}}>
+                    <Text style={styles.cell}>Tipo: {item.link?.name}</Text>
+                    <Text style={[styles.cell, {maxWidth: 200}]}>
+                      {item.url}
+                    </Text>
+                  </View>
+
                   <View style={styles.buttonsContainer}>
                     <TouchableOpacity
                       style={styles.editButton}
@@ -456,21 +449,27 @@ const CompanyScreen = () => {
               )}
               ListFooterComponent={
                 <>
-                  <Text style={styles.label}>Identificador</Text>
+                  <Text style={styles.socialModalFooterTitle}>
+                    Agregar Link:
+                  </Text>
                   <Picker
-                    selectedValue={identificador}
-                    onValueChange={(itemValue) => setIdentificador(itemValue)}
+                    selectedValue={link?.id}
+                    onValueChange={(itemValue) => setSelectedLinkId(itemValue)}
                   >
-                    {options.map((option) => (
-                      <Picker.Item key={option} label={option} value={option} />
+                    {links.map((link) => (
+                      <Picker.Item
+                        key={link.id}
+                        label={link.name}
+                        value={link.id}
+                      />
                     ))}
                   </Picker>
 
                   <Text style={styles.label}>Link</Text>
                   <TextInput
                     style={styles.input}
-                    value={link}
-                    onChangeText={setLink}
+                    value={url}
+                    onChangeText={setUrl}
                   />
                   <View style={styles.modalButtonContainer}>
                     <TouchableOpacity
