@@ -175,7 +175,11 @@ export const updateCompanyLink = async (
 export const createCompanyLink = async (companyLink: CompanyLink) => {
   const {data, error} = await supabase
     .from("company_link")
-    .insert(companyLink)
+    .insert({
+      url: companyLink.url,
+      companyId: companyLink.companyId,
+      linkId: companyLink.link?.id,
+    })
     .select();
   if (error) throw new Error(error.message);
   return data ? data[0] : null;

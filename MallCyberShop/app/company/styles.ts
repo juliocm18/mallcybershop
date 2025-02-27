@@ -16,6 +16,7 @@ export const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.5)",
   },
   modalContent: {
+    flex: 1,
     backgroundColor: "#fff",
     padding: 20,
     borderRadius: 10,

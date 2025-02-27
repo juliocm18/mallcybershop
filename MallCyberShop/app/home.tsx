@@ -20,6 +20,7 @@ import {useAuth} from "./context/AuthContext";
 import {fetchCompanies, fetchCompanyLinks} from "./company/company";
 import {getCategoryNames} from "./category/category";
 import {createCompanyCounter} from "./company/company-counter";
+import {Link} from "./link/model";
 
 type IconItem = {
   id: string;
@@ -72,7 +73,7 @@ export default function Home() {
   const [isModalSocialVisible, setModalSocialVisible] = useState(false);
   const [isAllowReorder, setAllowReorder] = useState(true);
   const [scrollEnabled, setScrollEnabled] = useState(true);
-  const [links, setLinks] = useState<any>([]);
+  const [links, setLinks] = useState<Link[]>([]);
   const [selectedCompany, setSelectedCompany] = useState<any>();
 
   const toggleModalSocial = async (item: GridItem) => {
@@ -278,7 +279,7 @@ export default function Home() {
 
       <SocialLinksModal
         visible={isModalSocialVisible}
-        links={links}
+        companyLinks={links}
         company={selectedCompany}
         handleLinkPress={handleLinkPress}
         onClose={() => setModalSocialVisible(false)}

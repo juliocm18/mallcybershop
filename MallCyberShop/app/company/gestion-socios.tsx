@@ -222,7 +222,7 @@ const CompanyScreen = () => {
   };
 
   const handleSaveCompanyLink = async () => {
-    if (!link || !url) {
+    if (!selectedLinkId || !url) {
       Alert.alert("Error", "Campos requeridos");
       return;
     }
@@ -230,7 +230,7 @@ const CompanyScreen = () => {
       if (editingLinkId) {
         const companyObj = {
           url: url,
-          link: link,
+          link: {id: selectedLinkId},
         };
         const companyLinlUpdated = await updateCompanyLink(
           editingLinkId,
@@ -248,7 +248,7 @@ const CompanyScreen = () => {
           //identificador: identificador,
           url: url,
           companyId: companyId,
-          link: link,
+          link: {id: selectedLinkId},
         };
         const companyLinlInserted = await createCompanyLink(companyObj);
         if (companyLinlInserted) {
@@ -415,79 +415,74 @@ const CompanyScreen = () => {
             behavior={Platform.OS === "ios" ? "padding" : "height"}
             style={styles.modalContent}
           >
-            <FlatList
-              data={companyLinks}
-              keyExtractor={(item) => (item.id || 0).toString()}
-              keyboardShouldPersistTaps="handled"
-              ListHeaderComponent={
-                <Text style={styles.socialModaltitle}>Administrar Links</Text>
-              }
-              renderItem={({item}) => (
-                <View style={styles.row}>
-                  <View style={{flexDirection: "column"}}>
-                    <Text style={styles.cell}>Tipo: {item.link?.name}</Text>
-                    <Text style={[styles.cell, {maxWidth: 200}]}>
-                      {item.url}
-                    </Text>
-                  </View>
+            <View style={{flex: 1}}>
+              <>
+                <Text style={styles.socialModalFooterTitle}>Agregar Link:</Text>
+                <Picker
+                  selectedValue={link?.id}
+                  onValueChange={(itemValue) => setSelectedLinkId(itemValue)}
+                >
+                  {links.map((link) => (
+                    <Picker.Item
+                      key={link.id}
+                      label={link.name}
+                      value={link.id}
+                    />
+                  ))}
+                </Picker>
 
-                  <View style={styles.buttonsContainer}>
-                    <TouchableOpacity
-                      style={styles.editButton}
-                      onPress={() => handleEditLink(item)}
-                    >
-                      <FontAwesome name="edit" size={24} color="white" />
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.deleteButton}
-                      onPress={() => handleDeleteLink(item)}
-                    >
-                      <FontAwesome name="trash" size={24} color="white" />
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              )}
-              ListFooterComponent={
-                <>
-                  <Text style={styles.socialModalFooterTitle}>
-                    Agregar Link:
-                  </Text>
-                  <Picker
-                    selectedValue={link?.id}
-                    onValueChange={(itemValue) => setSelectedLinkId(itemValue)}
+                <Text style={styles.label}>Link</Text>
+                <TextInput
+                  style={styles.input}
+                  value={url}
+                  onChangeText={setUrl}
+                />
+                <View style={styles.modalButtonContainer}>
+                  <TouchableOpacity
+                    style={styles.modalUpdateButton}
+                    onPress={handleSaveCompanyLink}
                   >
-                    {links.map((link) => (
-                      <Picker.Item
-                        key={link.id}
-                        label={link.name}
-                        value={link.id}
-                      />
-                    ))}
-                  </Picker>
+                    <Text style={styles.modalButtonText}>Guardar</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.modalCancelButton}
+                    onPress={() => setModalLinkVisible(false)}
+                  >
+                    <Text style={styles.modalButtonText}>Cancelar</Text>
+                  </TouchableOpacity>
+                </View>
+              </>
+              <FlatList
+                data={companyLinks}
+                keyExtractor={(item) => (item.id || 0).toString()}
+                keyboardShouldPersistTaps="handled"
+                renderItem={({item}) => (
+                  <View style={styles.row}>
+                    <View style={{flexDirection: "column"}}>
+                      <Text style={styles.cell}>Tipo: {item.link?.name}</Text>
+                      <Text style={[styles.cell, {maxWidth: 200}]}>
+                        {item.url}
+                      </Text>
+                    </View>
 
-                  <Text style={styles.label}>Link</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={url}
-                    onChangeText={setUrl}
-                  />
-                  <View style={styles.modalButtonContainer}>
-                    <TouchableOpacity
-                      style={styles.modalUpdateButton}
-                      onPress={handleSaveCompanyLink}
-                    >
-                      <Text style={styles.modalButtonText}>Guardar</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.modalCancelButton}
-                      onPress={() => setModalLinkVisible(false)}
-                    >
-                      <Text style={styles.modalButtonText}>Cancelar</Text>
-                    </TouchableOpacity>
+                    <View style={styles.buttonsContainer}>
+                      <TouchableOpacity
+                        style={styles.editButton}
+                        onPress={() => handleEditLink(item)}
+                      >
+                        <FontAwesome name="edit" size={24} color="white" />
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.deleteButton}
+                        onPress={() => handleDeleteLink(item)}
+                      >
+                        <FontAwesome name="trash" size={24} color="white" />
+                      </TouchableOpacity>
+                    </View>
                   </View>
-                </>
-              }
-            />
+                )}
+              />
+            </View>
           </KeyboardAvoidingView>
         </View>
       </Modal>

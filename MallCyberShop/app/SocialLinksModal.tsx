@@ -2,10 +2,12 @@ import React from "react";
 import {View, Text, TouchableOpacity, Image, StyleSheet} from "react-native";
 import RNModal from "react-native-modal";
 import {iconMap} from "./constants/socialLinks";
+import {Link} from "./link/model";
+import {CompanyLink} from "./company/company.interface";
 
 interface SocialLinksModalProps {
   visible: boolean;
-  links: any;
+  companyLinks: any;
   company: any;
   handleLinkPress: (link: string, onClose: () => void) => void;
   onClose: () => void;
@@ -13,32 +15,26 @@ interface SocialLinksModalProps {
 
 const SocialLinksModal: React.FC<SocialLinksModalProps> = ({
   visible,
-  links,
+  companyLinks,
   company,
   handleLinkPress,
   onClose,
 }) => {
   const renderIcon = (key: string) => {
-    const imageSource =
-      iconMap[key] || require("../assets/images/linkType/comestibles.png");
-    return (
-      <Image source={imageSource} style={styles.icon} resizeMode="cover" />
-    );
+    return <Image source={{uri: key}} style={styles.icon} resizeMode="cover" />;
   };
-
   return (
     <RNModal isVisible={visible} onBackdropPress={onClose}>
       <View style={styles.modalContent}>
         <Text style={styles.title}>{company?.name || ""}</Text>
         <View style={styles.linksContainer}>
-          {links.map((key: any) => (
+          {companyLinks.map((companyLink: CompanyLink) => (
             <TouchableOpacity
-              key={key.id}
               style={styles.linkButton}
-              onPress={() => handleLinkPress(key.link, onClose)}
+              onPress={() => handleLinkPress(companyLink.url || "", onClose)}
             >
-              {renderIcon(key.identificador)}
-              <Text style={styles.linkText}>{key.identificador}</Text>
+              {renderIcon(companyLink.link?.icon || "")}
+              <Text style={styles.linkText}>{companyLink.link?.name}</Text>
             </TouchableOpacity>
           ))}
         </View>
