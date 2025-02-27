@@ -1,4 +1,3 @@
-import {TabView, SceneMap, TabBar} from "react-native-tab-view";
 import React, {useState, useEffect, useRef} from "react";
 import {
   View,
@@ -7,8 +6,6 @@ import {
   TouchableOpacity,
   Image,
   ActivityIndicator,
-  useWindowDimensions,
-  StyleSheet,
   ScrollView,
 } from "react-native";
 import {Ionicons, FontAwesome} from "@expo/vector-icons";
@@ -23,17 +20,6 @@ import {fetchCompanies, fetchCompanyLinks} from "./company/company";
 import {getCategoryNames} from "./category/category";
 import {createCompanyCounter} from "./company/company-counter";
 import {Link} from "./link/model";
-
-const categoriesTab = [
-  "Inicio Productos",
-  "Productos",
-  "Ofertas",
-  "Perfil",
-  "Carrito",
-  "Favoritos",
-  "Historial",
-  "Configuración",
-];
 
 type IconItem = {
   id: string;
@@ -71,7 +57,7 @@ const handleCreateCompanyCounter = async (companyId: number) => {
   }
 };
 
-const DynamicTabsScreen = () => {
+export default function Home() {
   const router = useRouter();
   const [data, setData] = useState<any[]>([]);
   const [search, setSearch] = useState("");
@@ -85,8 +71,6 @@ const DynamicTabsScreen = () => {
   const [scrollEnabled, setScrollEnabled] = useState(true);
   const [links, setLinks] = useState<Link[]>([]);
   const [selectedCompany, setSelectedCompany] = useState<any>();
-
-  const [routes, setRoutes] = useState<{key: string; title: string}[]>([]);
 
   const toggleModalSocial = async (item: GridItem) => {
     const companyId = +item.id;
@@ -139,11 +123,6 @@ const DynamicTabsScreen = () => {
 
         const uniqueCategories = await getCategoryNames();
         setCategories(uniqueCategories);
-        const formattedRoutes = uniqueCategories.map((obj, i) => ({
-          key: `tab${i}`,
-          title: obj,
-        }));
-        setRoutes(formattedRoutes);
       } catch (err) {
         console.log(err);
         setError(JSON.stringify(err));
@@ -178,6 +157,21 @@ const DynamicTabsScreen = () => {
     });
   };
 
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color="#0000ff" />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.container}>
+        <Text style={{color: "red", textAlign: "center"}}>{error}</Text>
+      </View>
+    );
+  }
   const render_item = (item: IconItem) => (
     <View style={styles.logoContainer}>
       <View style={styles.logoWrapper}>
@@ -192,55 +186,107 @@ const DynamicTabsScreen = () => {
       </Text>
     </View>
   );
-  /* Tabs management */
-  const layout = useWindowDimensions();
-  const [index, setIndex] = useState(0);
 
-  const renderScene = ({route}: {route: {key: string; title: string}}) => (
-    <ScrollView
-      contentContainerStyle={{flexGrow: 1}}
-      keyboardShouldPersistTaps="handled"
-      scrollEnabled={scrollEnabled}
-    >
-      <View style={{minHeight: 500}}>
-        <DraggableGrid
-          numColumns={4}
-          renderItem={render_item}
-          data={filteredApps.filter(
-            (app) =>
-              app.categories?.includes(route.title) ?? <Text>No hay Datos</Text>
-          )}
-          onItemPress={toggleModalSocial}
-          onDragStart={() => setScrollEnabled(false)} // Deshabilita el scroll al arrastrar
-          onDragRelease={(newData) => {
-            if (isAllowReorder) {
-              setData(newData);
-              saveIconOrder(newData);
+  return (
+    <View style={styles.container}>
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "flex-end",
+          paddingBottom: 5,
+        }}
+      >
+        <Text
+          style={{
+            color: "white",
+            fontSize: 16,
+            marginRight: 8,
+            fontWeight: "bold",
+          }}
+        >
+          Zona Admin
+        </Text>
+        <FontAwesome
+          name="user-circle-o"
+          size={24} // Tamaño mediano
+          color="white" // Color blanco
+          onPress={() => router.push("./auth/login")}
+        />
+      </View>
+      <View style={styles.searchContainer}>
+        <Ionicons
+          name="search"
+          size={24}
+          color="#ccc"
+          style={styles.searchIcon}
+        />
+        <TextInput
+          style={styles.searchBar}
+          placeholder="Buscar aplicación"
+          placeholderTextColor="#ccc"
+          value={search}
+          onChangeText={(text) => {
+            setSearch(text);
+            if (text.length > 0 || selectedCategories.length > 0) {
+              setAllowReorder(false);
+            } else {
+              setAllowReorder(true);
             }
           }}
         />
+        <TouchableOpacity
+          style={styles.categoryButton}
+          onPress={() => setModalVisible(true)}
+        >
+          <Ionicons name="filter" size={24} color="#fff" />
+        </TouchableOpacity>
       </View>
-    </ScrollView>
-  );
-  /* Tabs management */
 
-  return (
-    <TabView
-      navigationState={{index, routes}}
-      renderScene={renderScene}
-      onIndexChange={setIndex}
-      initialLayout={{width: layout.width}}
-      renderTabBar={(props) => (
-        <TabBar
-          {...props}
-          scrollEnabled
-          style={styles.tabBar}
-          indicatorStyle={styles.indicator}
-          tabStyle={styles.tab}
-        />
-      )}
-    />
-  );
-};
+      <ScrollView
+        contentContainerStyle={{flexGrow: 1}}
+        keyboardShouldPersistTaps="handled"
+        scrollEnabled={scrollEnabled} // Desactiva el scroll al reordenar
+      >
+        <View style={{minHeight: 500}}>
+          <DraggableGrid
+            numColumns={4}
+            renderItem={render_item}
+            data={filteredApps}
+            onItemPress={toggleModalSocial}
+            onDragStart={() => setScrollEnabled(false)} // Deshabilita el scroll al arrastrar
+            onDragRelease={(newData) => {
+              if (isAllowReorder) {
+                setData(newData);
+                saveIconOrder(newData);
+              }
+            }}
+          />
+        </View>
+      </ScrollView>
 
-export default DynamicTabsScreen;
+      <CategoryModal
+        visible={modalVisible}
+        categories={categories}
+        selectedCategories={selectedCategories}
+        toggleCategory={toggleCategory}
+        onClose={() => setModalVisible(false)}
+      />
+
+      <SocialLinksModal
+        visible={isModalSocialVisible}
+        companyLinks={links}
+        company={selectedCompany}
+        handleLinkPress={handleLinkPress}
+        onClose={() => setModalSocialVisible(false)}
+      />
+
+      <TouchableOpacity
+        style={styles.floatingWhatsAppButton}
+        onPress={openWhatsApp}
+      >
+        <FontAwesome name="whatsapp" size={30} color="white" />
+      </TouchableOpacity>
+    </View>
+  );
+}

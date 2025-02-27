@@ -120,7 +120,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "center",
-    width: "80%",
+    width: "100%",
     gap: 20,
     marginTop: 50,
   },
@@ -146,8 +146,8 @@ const styles = StyleSheet.create({
   label: {
     marginTop: 10,
     color: "white",
-    fontSize: 16, // Ajusté el tamaño de la fuente para que no sea tan grande
-    textAlign: "center", // Asegura que el texto esté centrado
+    fontSize: 16,
+    textAlign: "center",
     justifyContent: "center",
     alignItems: "center",
     fontWeight: "bold",

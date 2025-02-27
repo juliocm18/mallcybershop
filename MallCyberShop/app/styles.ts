@@ -156,4 +156,9 @@ export const styles = StyleSheet.create({
     fontSize: 40,
     color: "#FFFFFF",
   },
+  scene: {flex: 1, justifyContent: "center", alignItems: "center", padding: 20},
+  text: {fontSize: 18, fontWeight: "bold"},
+  tabBar: {backgroundColor: "#ff9f61"},
+  indicator: {backgroundColor: "white"},
+  tab: {maxWidth: 200}, // Asegura que cada tab tenga un ancho adecuado para scroll
 });
