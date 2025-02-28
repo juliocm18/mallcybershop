@@ -160,5 +160,5 @@ export const styles = StyleSheet.create({
   text: {fontSize: 18, fontWeight: "bold"},
   tabBar: {backgroundColor: "#ea822c"},
   indicator: {backgroundColor: "#fff"},
-  tab: {maxWidth: 400}, // Asegura que cada tab tenga un ancho adecuado para scroll
+  tab: {maxWidth: 160}, // Asegura que cada tab tenga un ancho adecuado para scroll
 });

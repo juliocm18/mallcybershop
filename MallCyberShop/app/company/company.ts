@@ -165,7 +165,10 @@ export const updateCompanyLink = async (
 ) => {
   const {data, error} = await supabase
     .from("company_link")
-    .update(updatedCompanyLink)
+    .update({
+      url: updatedCompanyLink.url,
+      linkId: updatedCompanyLink.link?.id,
+    })
     .eq("id", companyLinkId)
     .select();
   if (error) throw new Error(error.message);

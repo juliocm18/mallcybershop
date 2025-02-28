@@ -23,6 +23,7 @@ import {fetchCompanies, fetchCompanyLinks} from "./company/company";
 import {getCategoryNames} from "./category/category";
 import {createCompanyCounter} from "./company/company-counter";
 import {Link} from "./link/model";
+import AdminZone from "./adminZone";
 
 type IconItem = {
   id: string;
@@ -61,21 +62,15 @@ const handleCreateCompanyCounter = async (companyId: number) => {
 };
 
 const DynamicTabsScreen = () => {
-  const router = useRouter();
-  const [data, setData] = useState<any[]>([]);
-  const [search, setSearch] = useState("");
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [categories, setCategories] = useState<string[]>([]);
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [modalVisible, setModalVisible] = useState(false);
   const [isModalSocialVisible, setModalSocialVisible] = useState(false);
   const [isAllowReorder, setAllowReorder] = useState(true);
   const [scrollEnabled, setScrollEnabled] = useState(true);
   const [links, setLinks] = useState<Link[]>([]);
   const [selectedCompany, setSelectedCompany] = useState<any>();
-
-  const [byCat, setByCat] = useState<any[]>([]);
+  const [companyByCategory, setCompanyByCategory] = useState<
+    Map<string, any[]>
+  >(new Map());
 
   const [routes, setRoutes] = useState<{key: string; title: string}[]>([]);
 
@@ -90,7 +85,6 @@ const DynamicTabsScreen = () => {
 
   const saveIconOrder = async (icons: IconItem[]): Promise<void> => {
     try {
-      console.log("voy a guardar");
       setScrollEnabled(true);
       await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(icons));
     } catch (error) {
@@ -104,8 +98,22 @@ const DynamicTabsScreen = () => {
         const storedIcons = await getIconOrder();
         const remoteData = await fetchCompanies();
 
+        const uniqueCategories = await getCategoryNames();
+        const companyByCategory = new Map<string, any[]>();
+
+        const formattedRoutes = uniqueCategories.map((obj, i) => ({
+          key: `tab${i}`,
+          title: `${obj}`,
+        }));
+
         if (!storedIcons) {
-          setData(remoteData);
+          for (const category of uniqueCategories) {
+            const companies = remoteData.filter((app) =>
+              app.categories?.includes(category)
+            );
+            companyByCategory.set(category, companies);
+            setCompanyByCategory(companyByCategory);
+          }
         } else {
           // Crear un mapa de remoteData para acceso rápido por id
           const remoteMap = new Map(
@@ -125,27 +133,23 @@ const DynamicTabsScreen = () => {
               ])
             ).values()
           );
-          setData(mergedIcons);
+
+          const newCompanyByCategory = new Map<string, any[]>();
+          for (const category of uniqueCategories) {
+            newCompanyByCategory.set(
+              category,
+              mergedIcons.filter((app) => app.categories?.includes(category))
+            );
+          }
+          setCompanyByCategory(newCompanyByCategory);
         }
 
-        const uniqueCategories = await getCategoryNames();
-        setCategories(uniqueCategories);
-        const formattedRoutes = uniqueCategories.map((obj, i) => ({
-          key: `tab${i}`,
-          title: obj,
-        }));
         setRoutes(formattedRoutes);
-
-        const gg = remoteData.filter((app) =>
-          app.categories?.includes("TIENDAS")
-        );
-        setByCat(gg);
-        //console.log("hoaaaaaaaaaaaaaaaaa", gg);
       } catch (err) {
         console.log(err);
         setError(JSON.stringify(err));
       } finally {
-        setLoading(false);
+        //setLoading(false);
       }
     };
     loadRemoteJson();
@@ -186,13 +190,29 @@ const DynamicTabsScreen = () => {
       <View style={{flex: 1, backgroundColor: "#ffb77c"}}>
         <DraggableGrid
           numColumns={4}
-          renderItem={render_item}
-          data={data.filter((app) => app.categories?.includes(route.title))}
+          renderItem={(item: IconItem) => (
+            <View style={styles.logoContainer}>
+              <View style={styles.logoWrapper}>
+                <Image
+                  source={{uri: item.logo}}
+                  style={styles.logo}
+                  resizeMode="cover"
+                />
+              </View>
+              <Text
+                style={styles.logoLabel}
+                numberOfLines={2}
+                ellipsizeMode="tail"
+              >
+                {item.name}
+              </Text>
+            </View>
+          )}
+          data={companyByCategory.get(route.title) || []}
           onItemPress={toggleModalSocial}
           onDragStart={() => setScrollEnabled(false)} // Deshabilita el scroll al arrastrar
           onDragRelease={(newData) => {
             if (isAllowReorder) {
-              setData(newData);
               saveIconOrder(newData);
             }
           }}
@@ -204,36 +224,14 @@ const DynamicTabsScreen = () => {
 
   return (
     <View style={styles.container}>
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "flex-end",
-          paddingBottom: 5,
-        }}
-      >
-        <Text
-          style={{
-            color: "white",
-            fontSize: 16,
-            marginRight: 8,
-            fontWeight: "bold",
-          }}
-        >
-          Zona Admin
-        </Text>
-        <FontAwesome
-          name="user-circle-o"
-          size={24} // Tamaño mediano
-          color="white" // Color blanco
-          onPress={() => router.push("./auth/login")}
-        />
-      </View>
+      <AdminZone />
       <TabView
         navigationState={{index, routes}}
         renderScene={renderScene}
         onIndexChange={setIndex}
         initialLayout={{width: layout.width}}
+        lazy // Solo renderiza la pestaña activa
+        lazyPreloadDistance={1} // Precarga solo la siguiente pestaña
         renderTabBar={(props) => (
           <TabBar
             {...props}
