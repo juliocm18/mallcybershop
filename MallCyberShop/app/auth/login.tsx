@@ -8,7 +8,7 @@ import {
 import {useState} from "react";
 import {useAuth} from "../context/AuthContext";
 import {useRouter} from "expo-router";
-import {Ionicons, FontAwesome} from "@expo/vector-icons";
+import {Ionicons} from "@expo/vector-icons";
 import RoleFunctions from "../role/functions";
 
 export default function Login() {
@@ -33,7 +33,7 @@ export default function Login() {
       }
       //console.log("✅ Usuario logueado:", userLogged);
       setError(null);
-      router.push("./adminhome");
+      router.push("../adminhome");
     } catch (err) {
       setError("Credenciales incorrectas, intente nuevamente.");
     }

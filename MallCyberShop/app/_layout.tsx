@@ -22,9 +22,9 @@ function MainLayout() {
       //SplashScreen.hideAsync(); // Oculta el splash cuando termina el video
 
       if (session) {
-        router.replace("./adminhome");
+        //router.replace("/adminhome");
       } else {
-        router.replace("./home");
+        router.replace("/home");
       }
     }
   }, [session, loading, isVideoFinished]);
