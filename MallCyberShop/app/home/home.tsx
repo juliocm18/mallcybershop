@@ -3,39 +3,24 @@ import React, {useState, useEffect, useRef} from "react";
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   Image,
-  ActivityIndicator,
   useWindowDimensions,
-  StyleSheet,
   ScrollView,
 } from "react-native";
-import {Ionicons, FontAwesome} from "@expo/vector-icons";
+import {FontAwesome} from "@expo/vector-icons";
 import {DraggableGrid} from "react-native-draggable-grid";
-import {openWhatsApp, handleLinkPress, getDeviceIdentifier} from "./functions";
+import {openWhatsApp, handleLinkPress, getDeviceIdentifier} from "../functions";
 import {useRouter} from "expo-router";
-import {styles} from "./styles";
+import {styles} from "../styles";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import CategoryModal from "./CategoryModal";
-import SocialLinksModal from "./SocialLinksModal";
-import {fetchCompanies, fetchCompanyLinks} from "./company/company";
-import {getCategoryNames} from "./category/category";
-import {createCompanyCounter} from "./company/company-counter";
-import {Link} from "./link/model";
+import SocialLinksModal from "../SocialLinksModal";
+import {fetchCompanies, fetchCompanyLinks} from "../company/company";
+import {getCategoryNames, getFormattedRoutes} from "../category/functions";
+import {createCompanyCounter} from "../company/company-counter";
+import {Link} from "../link/model";
 import AdminZone from "./adminZone";
-
-type IconItem = {
-  id: string;
-  name: string;
-  logo: string;
-};
-
-interface GridItem {
-  id: string;
-  label: string;
-  color: string;
-}
+import {useLocalSearchParams} from "expo-router";
 
 const STORAGE_KEY = "icon_order";
 
@@ -73,6 +58,7 @@ const DynamicTabsScreen = () => {
   >(new Map());
 
   const [routes, setRoutes] = useState<{key: string; title: string}[]>([]);
+  const {department} = useLocalSearchParams<{department?: string}>();
 
   const toggleModalSocial = async (item: GridItem) => {
     const companyId = +item.id;
@@ -95,54 +81,56 @@ const DynamicTabsScreen = () => {
   useEffect(() => {
     const loadRemoteJson = async () => {
       try {
+        console.log("🔵 Cargando datos department...", department);
         const storedIcons = await getIconOrder();
         const remoteData = await fetchCompanies();
 
         const uniqueCategories = await getCategoryNames();
         const companyByCategory = new Map<string, any[]>();
 
-        const formattedRoutes = uniqueCategories.map((obj, i) => ({
-          key: `tab${i}`,
-          title: `${obj}`,
-        }));
+        const formattedRoutes: categoryHashMap[] = await getFormattedRoutes(
+          uniqueCategories
+        );
 
-        if (!storedIcons) {
-          for (const category of uniqueCategories) {
-            const companies = remoteData.filter((app) =>
-              app.categories?.includes(category)
-            );
-            companyByCategory.set(category, companies);
-            setCompanyByCategory(companyByCategory);
-          }
-        } else {
-          // Crear un mapa de remoteData para acceso rápido por id
-          const remoteMap = new Map(
-            remoteData.map((icon: any) => [icon.id, icon])
+        //if (!storedIcons) {
+        console.log("🔵 No hay datos almacenados, cargando datos remotos...");
+        for (const category of uniqueCategories) {
+          const companies = remoteData.filter((app) =>
+            app.categories?.includes(category)
           );
-
-          // Filtrar íconos almacenados que siguen existiendo en remoteData
-          const filteredIcons = storedIcons.filter((icon: any) =>
-            remoteMap.has(icon.id)
-          );
-          // Fusionar ambas listas sin duplicados
-          const mergedIcons = Array.from(
-            new Map(
-              [...filteredIcons, ...remoteData].map((icon: any) => [
-                icon.id,
-                icon,
-              ])
-            ).values()
-          );
-
-          const newCompanyByCategory = new Map<string, any[]>();
-          for (const category of uniqueCategories) {
-            newCompanyByCategory.set(
-              category,
-              mergedIcons.filter((app) => app.categories?.includes(category))
-            );
-          }
-          setCompanyByCategory(newCompanyByCategory);
+          companyByCategory.set(category, companies);
+          setCompanyByCategory(companyByCategory);
         }
+        // } else {
+        //   console.log("🔵 Datos almacenados, fusionando con datos remotos...");
+        //   // Crear un mapa de remoteData para acceso rápido por id
+        //   const remoteMap = new Map(
+        //     remoteData.map((icon: any) => [icon.id, icon])
+        //   );
+
+        //   // Filtrar íconos almacenados que siguen existiendo en remoteData
+        //   const filteredIcons = storedIcons.filter((icon: any) =>
+        //     remoteMap.has(icon.id)
+        //   );
+        //   // Fusionar ambas listas sin duplicados
+        //   const mergedIcons = Array.from(
+        //     new Map(
+        //       [...filteredIcons, ...remoteData].map((icon: any) => [
+        //         icon.id,
+        //         icon,
+        //       ])
+        //     ).values()
+        //   );
+
+        //   const newCompanyByCategory = new Map<string, any[]>();
+        //   for (const category of uniqueCategories) {
+        //     newCompanyByCategory.set(
+        //       category,
+        //       mergedIcons.filter((app) => app.categories?.includes(category))
+        //     );
+        //   }
+        //   setCompanyByCategory(newCompanyByCategory);
+        // }
 
         setRoutes(formattedRoutes);
       } catch (err) {
@@ -163,20 +151,6 @@ const DynamicTabsScreen = () => {
     );
   }
 
-  const render_item = (item: IconItem) => (
-    <View style={styles.logoContainer}>
-      <View style={styles.logoWrapper}>
-        <Image
-          source={{uri: item.logo}}
-          style={styles.logo}
-          resizeMode="cover"
-        />
-      </View>
-      <Text style={styles.logoLabel} numberOfLines={2} ellipsizeMode="tail">
-        {item.name}
-      </Text>
-    </View>
-  );
   /* Tabs management */
   const layout = useWindowDimensions();
   const [index, setIndex] = useState(0);

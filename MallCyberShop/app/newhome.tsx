@@ -17,7 +17,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import CategoryModal from "./CategoryModal";
 import SocialLinksModal from "./SocialLinksModal";
 import {fetchCompanies, fetchCompanyLinks} from "./company/company";
-import {getCategoryNames} from "./category/category";
+import {getCategoryNames} from "./category/functions";
 import {createCompanyCounter} from "./company/company-counter";
 import {Link} from "./link/model";
 

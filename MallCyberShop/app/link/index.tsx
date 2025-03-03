@@ -50,9 +50,9 @@ export default function Index() {
 
   const handleEdit = (link: Link) => {
     setEditingId(link.id || 0);
-    setName(link.name);
+    setName(link.name || "");
     setEditingImage(false);
-    setLogoUri(link.icon);
+    setLogoUri(link.icon || "");
     setModalVisible(true);
   };
 

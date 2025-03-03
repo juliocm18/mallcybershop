@@ -1,0 +1,11 @@
+{
+  "america": [
+    { "id": "peru", "name": "Perú" },
+    { "id": "colombia", "name": "Colombia" },
+    { "id": "chile", "name": "Chile" },
+    { "id": "argentina", "name": "Argentina" },
+    { "id": "uruguay", "name": "Uruguay" },
+    { "id": "bolivia", "name": "Bolivia" }
+  ],
+  "europa": []
+}

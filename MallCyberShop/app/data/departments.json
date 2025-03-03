@@ -1,0 +1,38 @@
+{
+  "peru": [
+    "Amazonas", "Áncash", "Apurímac", "Arequipa", "Ayacucho", "Cajamarca",
+    "Callao", "Cusco", "Huancavelica", "Huánuco", "Ica", "Junín", "La Libertad",
+    "Lambayeque", "Lima", "Loreto", "Madre de Dios", "Moquegua", "Pasco",
+    "Piura", "Puno", "San Martín", "Tacna", "Tumbes", "Ucayali"
+  ],
+  "colombia": [
+    "Amazonas", "Antioquia", "Arauca", "Atlántico", "Bolívar", "Boyacá",
+    "Caldas", "Caquetá", "Casanare", "Cauca", "Cesar", "Chocó", "Córdoba",
+    "Cundinamarca", "Guainía", "Guaviare", "Huila", "La Guajira", "Magdalena",
+    "Meta", "Nariño", "Norte de Santander", "Putumayo", "Quindío", "Risaralda",
+    "San Andrés y Providencia", "Santander", "Sucre", "Tolima", "Valle del Cauca",
+    "Vaupés", "Vichada"
+  ],
+  "chile": [
+    "Arica y Parinacota", "Tarapacá", "Antofagasta", "Atacama", "Coquimbo",
+    "Valparaíso", "Metropolitana de Santiago", "Libertador General Bernardo O'Higgins",
+    "Maule", "Ñuble", "Biobío", "La Araucanía", "Los Ríos", "Los Lagos",
+    "Aysén del General Carlos Ibáñez del Campo", "Magallanes y de la Antártica Chilena"
+  ],
+  "argentina": [
+    "Buenos Aires", "Catamarca", "Chaco", "Chubut", "Córdoba", "Corrientes",
+    "Entre Ríos", "Formosa", "Jujuy", "La Pampa", "La Rioja", "Mendoza",
+    "Misiones", "Neuquén", "Río Negro", "Salta", "San Juan", "San Luis",
+    "Santa Cruz", "Santa Fe", "Santiago del Estero", "Tierra del Fuego",
+    "Tucumán"
+  ],
+  "uruguay": [
+    "Artigas", "Canelones", "Cerro Largo", "Colonia", "Durazno", "Flores",
+    "Florida", "Lavalleja", "Maldonado", "Montevideo", "Paysandú", "Río Negro",
+    "Rivera", "Rocha", "Salto", "San José", "Soriano", "Tacuarembó", "Treinta y Tres"
+  ],
+  "bolivia": [
+    "Beni", "Chuquisaca", "Cochabamba", "La Paz", "Oruro", "Pando",
+    "Potosí", "Santa Cruz", "Tarija"
+  ]
+}

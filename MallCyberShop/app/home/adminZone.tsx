@@ -30,7 +30,7 @@ const AdminZone = () => {
         name="user-circle-o"
         size={24} // Tamaño mediano
         color="white" // Color blanco
-        onPress={() => router.push("./auth/login")}
+        onPress={() => router.push("../auth/login")}
       />
     </View>
   );

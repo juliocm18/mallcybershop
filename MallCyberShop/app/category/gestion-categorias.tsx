@@ -14,7 +14,7 @@ import {
   createCategory,
   deleteCategory,
   updateCategory, // Asumir que tienes una función para actualizar categorías
-} from "./category";
+} from "./functions";
 import {useRouter} from "expo-router";
 export type Category = {
   id: number;

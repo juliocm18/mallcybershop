@@ -7,6 +7,7 @@ export interface Company {
   package: string;
   logo: string;
   categories: string[];
+  priority: number;
 }
 
 export interface CompanyLink {

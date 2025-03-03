@@ -20,6 +20,7 @@ import {
   createCompanyLink,
   deleteCompany,
   deleteCompanyLink,
+  fetchCompanies,
   fetchCompanyLinks,
   pickImage,
   updateCompany,
@@ -32,39 +33,8 @@ import {Picker} from "@react-native-picker/picker";
 import {Link} from "../link/model";
 import LinkFunctions from "../link/functions";
 import {Company, CompanyLink} from "./company.interface";
-
-const CompanyItem = React.memo(
-  ({item, onEdit, onLinks, onDelete, deleting}: any) => (
-    <View style={styles.row}>
-      <Text style={styles.cell}>{item.name}</Text>
-      <View style={styles.buttonsContainer}>
-        <TouchableOpacity
-          style={styles.editButton}
-          onPress={() => onEdit(item)}
-        >
-          <Text style={styles.editButtonText}>Editar</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.LinkButton}
-          onPress={() => onLinks(item)}
-        >
-          <Text style={styles.editButtonText}>Links</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.deleteButton}
-          onPress={() => onDelete(item.id || 0)}
-          disabled={deleting === item.id}
-        >
-          {deleting === item.id ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.modalButtonText}>Eliminar</Text>
-          )}
-        </TouchableOpacity>
-      </View>
-    </View>
-  )
-);
+import PriorityInput from "./priority";
+import {CompanyItem} from "./company.item";
 
 const CompanyScreen = () => {
   const [companies, setCompanies] = useState<Company[]>([]);
@@ -90,6 +60,7 @@ const CompanyScreen = () => {
   const [link, setLink] = useState<Link>();
 
   const [selectedLinkId, setSelectedLinkId] = useState<number>();
+  const [priority, setPriority] = useState("");
 
   const handlePickImage = async () => {
     if (editingId) {
@@ -108,6 +79,7 @@ const CompanyScreen = () => {
     setPackageType("");
     setLogoUri(null);
     setCategories("");
+    setPriority("");
     setEditingId(null);
   };
 
@@ -117,22 +89,18 @@ const CompanyScreen = () => {
   };
 
   useEffect(() => {
-    fetchCompanies();
+    loadCompanies();
     loadLinks();
   }, []);
+
+  const loadCompanies = async () => {
+    const data = await fetchCompanies();
+    if (data) setCompanies(data);
+  };
 
   const loadLinks = async () => {
     const data = await LinkFunctions.getAll();
     if (data) setLinks(data);
-  };
-
-  const fetchCompanies = async () => {
-    const {data, error} = await supabase.from("company").select("*");
-    if (error) {
-      Alert.alert("Error", error.message);
-    } else {
-      setCompanies(data);
-    }
   };
 
   const handleSave = async () => {
@@ -147,10 +115,7 @@ const CompanyScreen = () => {
         let uploadedUrl: string | null = "";
         if (editingImage && logoUri) {
           uploadedUrl = await uploadImage(logoUri);
-          console.log("uploadedUrl", uploadedUrl);
-          if (uploadedUrl) {
-            //console.log("📤 Imagen subida con éxito:", uploadedUrl);
-          } else {
+          if (!uploadedUrl) {
             console.log("error al subir imagen");
             return;
           }
@@ -163,13 +128,14 @@ const CompanyScreen = () => {
           package: packageType,
           logo: uploadedUrl || "",
           categories: categories.split(",").map((c) => c.trim()),
+          priority: parseInt(priority),
         };
         const updatedCategory = await updateCompany(editingId, newCompany);
 
         if (updatedCategory) {
           clearFields();
           setModalVisible(false);
-          fetchCompanies();
+          loadCompanies();
           Alert.alert("Aviso", "Registro actualizado");
         }
       } else {
@@ -191,6 +157,7 @@ const CompanyScreen = () => {
           package: packageType,
           logo: uploadedUrl,
           categories: categories.split(",").map((c) => c.trim()),
+          priority: parseInt(priority),
         };
 
         await createCompany(newCompany);
@@ -200,7 +167,7 @@ const CompanyScreen = () => {
         clearFields();
 
         setModalVisible(false);
-        fetchCompanies();
+        loadCompanies();
       }
     } catch (error: any) {
       console.error("Error creating company:", error.message);
@@ -214,6 +181,7 @@ const CompanyScreen = () => {
     setEditingId(company.id || 0);
     setKey(company.key);
     setName(company.name);
+    setPriority(company.priority.toString());
     setPackageType(company.package);
     setLogoUri(company.logo);
     setCategories(company.categories.join(", "));
@@ -364,6 +332,8 @@ const CompanyScreen = () => {
               value={packageType}
               onChangeText={setPackageType}
             />
+
+            <PriorityInput priority={priority} setPriority={setPriority} />
 
             <Text style={styles.label}>Categorías (separados por coma)</Text>
             <TextInput

@@ -104,7 +104,10 @@ export const createCompany = async (company: Company) => {
 
 // 📖 Obtener empresas
 export const fetchCompanies = async () => {
-  const {data, error} = await supabase.from("company").select("*");
+  const {data, error} = await supabase
+    .from("company")
+    .select("*")
+    .order("priority", {ascending: true});
   if (error) throw new Error(error.message);
   return data;
 };
