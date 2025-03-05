@@ -26,7 +26,7 @@ import {
   updateCompany,
   updateCompanyLink,
   uploadImage,
-} from "./company";
+} from "./functions";
 import {styles} from "./styles";
 import {FontAwesome} from "@expo/vector-icons";
 import {Picker} from "@react-native-picker/picker";
@@ -94,7 +94,7 @@ const CompanyScreen = () => {
   }, []);
 
   const loadCompanies = async () => {
-    const data = await fetchCompanies();
+    const data = await fetchCompanies("name");
     if (data) setCompanies(data);
   };
 
@@ -274,7 +274,7 @@ const CompanyScreen = () => {
     setDeleting(id);
     try {
       await deleteCompany(id);
-      await fetchCompanies();
+      await fetchCompanies("name");
     } catch (error: any) {
       Alert.alert("Error", error.message);
     } finally {

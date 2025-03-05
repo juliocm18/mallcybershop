@@ -18,7 +18,7 @@ const Select: React.FC<SelectProps> = ({
 }) => {
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>{label}</Text>
+      {/* <Text style={styles.label}>{label}</Text> */}
       <Picker
         selectedValue={selectedValue}
         onValueChange={onValueChange}
@@ -29,9 +29,9 @@ const Select: React.FC<SelectProps> = ({
           <Picker.Item key={item.id} label={item.name} value={item.id} />
         ))}
       </Picker>
-      <HelperText type="info" visible={!selectedValue}>
+      {/* <HelperText type="info" visible={!selectedValue}>
         Por favor selecciona {label.toLowerCase()}.
-      </HelperText>
+      </HelperText> */}
     </View>
   );
 };

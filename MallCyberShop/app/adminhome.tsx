@@ -1,87 +1,139 @@
 import {Link, useRouter} from "expo-router";
-import React from "react";
+import React, {useEffect, useState} from "react";
 import {View, Text, StyleSheet, TouchableOpacity} from "react-native";
 import {FontAwesome} from "@expo/vector-icons";
+import {useAuth} from "./context/AuthContext";
+import RoleFunctions from "./role/functions";
+import {Role} from "./role/model";
 
 const Home: React.FC = () => {
   const router = useRouter();
+  const {session} = useAuth();
+  const [roles, setRoles] = useState<Role[]>([]);
+  useEffect(() => {
+    loadRoles();
+  }, []);
+
+  const loadRoles = async () => {
+    const data = await RoleFunctions.getByUser(session?.user?.id || "");
+    if (data) setRoles(data);
+  };
   return (
     <View style={styles.container}>
       <View style={styles.buttonContainer}>
-        <Link
-          href="./dashboard/"
-          style={[styles.button, {backgroundColor: "#2196F3"}]}
-        >
-          <View style={styles.iconLabelContainer}>
-            <FontAwesome
-              style={styles.icon}
-              name="dashboard"
-              size={30}
-              color="white"
-            />
-            <Text style={styles.label}>Panel de Control</Text>
-          </View>
-        </Link>
+        {roles.some(
+          (role) => role.name === "CEO" || role.name === "Superadministrador"
+        ) && (
+          <Link
+            href="./dashboard/"
+            style={[styles.button, {backgroundColor: "#2196F3"}]}
+          >
+            <View style={styles.iconLabelContainer}>
+              <FontAwesome
+                style={styles.icon}
+                name="dashboard"
+                size={30}
+                color="white"
+              />
+              <Text style={styles.label}>Panel de Control</Text>
+            </View>
+          </Link>
+        )}
 
-        <Link
-          href="./category/gestion-categorias"
-          style={[styles.button, {backgroundColor: "#4CAF50"}]}
-        >
-          <View style={styles.iconLabelContainer}>
-            <FontAwesome
-              style={styles.icon}
-              name="edit"
-              size={24}
-              color="white"
-            />
-            <Text style={styles.label}>Administración de Categorías</Text>
-          </View>
-        </Link>
+        {roles.some(
+          (role) =>
+            role.name === "CEO" ||
+            role.name === "Superadministrador" ||
+            role.name === "Administrador" ||
+            role.name === "Operador"
+        ) && (
+          <>
+            <Link
+              href="./category/gestion-categorias"
+              style={[styles.button, {backgroundColor: "#4CAF50"}]}
+            >
+              <View style={styles.iconLabelContainer}>
+                <FontAwesome
+                  style={styles.icon}
+                  name="edit"
+                  size={24}
+                  color="white"
+                />
+                <Text style={styles.label}>Administración de Categorías</Text>
+              </View>
+            </Link>
 
-        <Link
-          href="./company/gestion-socios"
-          style={[styles.button, {backgroundColor: "#FF9800"}]}
-        >
-          <View style={styles.iconLabelContainer}>
-            <FontAwesome
-              style={styles.icon}
-              name="users"
-              size={30}
-              color="white"
-            />
-            <Text style={styles.label}>Administración de Socios</Text>
-          </View>
-        </Link>
+            <Link
+              href="./company/gestion-socios"
+              style={[styles.button, {backgroundColor: "#FF9800"}]}
+            >
+              <View style={styles.iconLabelContainer}>
+                <FontAwesome
+                  style={styles.icon}
+                  name="users"
+                  size={30}
+                  color="white"
+                />
+                <Text style={styles.label}>
+                  Administración de Socios Estratégicos
+                </Text>
+              </View>
+            </Link>
 
-        <Link
-          href="./link/"
-          style={[styles.button, {backgroundColor: "#4CAF"}]}
-        >
-          <View style={styles.iconLabelContainer}>
-            <FontAwesome
-              style={styles.icon}
-              name="warning"
-              size={30}
-              color="white"
-            />
-            <Text style={styles.label}>Administración de Links</Text>
-          </View>
-        </Link>
+            <Link
+              href="./link/"
+              style={[styles.button, {backgroundColor: "#4CAF"}]}
+            >
+              <View style={styles.iconLabelContainer}>
+                <FontAwesome
+                  style={styles.icon}
+                  name="warning"
+                  size={30}
+                  color="white"
+                />
+                <Text style={styles.label}>Administración de Links</Text>
+              </View>
+            </Link>
+          </>
+        )}
 
-        <Link
-          href="./user/"
-          style={[styles.button, {backgroundColor: "purple"}]}
-        >
-          <View style={styles.iconLabelContainer}>
-            <FontAwesome
-              style={styles.icon}
-              name="warning"
-              size={30}
-              color="white"
-            />
-            <Text style={styles.label}>Administración de Usuarios</Text>
-          </View>
-        </Link>
+        {roles.some(
+          (role) =>
+            role.name === "CEO" ||
+            role.name === "Superadministrador" ||
+            role.name === "Administrador"
+        ) && (
+          <>
+            <Link
+              href="./company/gestion-socios"
+              style={[styles.button, {backgroundColor: "#FF9800"}]}
+            >
+              <View style={styles.iconLabelContainer}>
+                <FontAwesome
+                  style={styles.icon}
+                  name="users"
+                  size={30}
+                  color="white"
+                />
+                <Text style={styles.label}>Asignación de Territorios</Text>
+              </View>
+            </Link>
+            <Link
+              href="./user/"
+              style={[styles.button, {backgroundColor: "purple"}]}
+            >
+              <View style={styles.iconLabelContainer}>
+                <FontAwesome
+                  style={styles.icon}
+                  name="warning"
+                  size={30}
+                  color="white"
+                />
+                <Text style={styles.label}>Administración de Usuarios</Text>
+              </View>
+            </Link>
+          </>
+        )}
       </View>
       <TouchableOpacity
         style={styles.bottonButton}

@@ -1,4 +1,5 @@
 import {supabase} from "../supabase";
+import {CompanyCounter} from "./company.interface";
 
 export const createCompanyCounter = async (companyCounter: CompanyCounter) => {
   const {data, error} = await supabase

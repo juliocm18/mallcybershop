@@ -4,7 +4,7 @@ eas build:configure
 
 
 
-Generra APK con EXPP
+Generra APK con EXPO
 eas build --platform android --profile preview
 
 Estoy realizando una aplicacion en react native version mayor a > 0.76 usando expo version mayor a >52.0 y typescript, 
@@ -15,3 +15,5 @@ cambiar el formato del video:
 
 
 supabase functions deploy list-users
+
+me quede en agreegar las locations para cada empresa

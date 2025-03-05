@@ -103,11 +103,11 @@ export const createCompany = async (company: Company) => {
 };
 
 // 📖 Obtener empresas
-export const fetchCompanies = async () => {
+export const fetchCompanies = async (order: string) => {
   const {data, error} = await supabase
     .from("company")
     .select("*")
-    .order("priority", {ascending: true});
+    .order(order, {ascending: true});
   if (error) throw new Error(error.message);
   return data;
 };

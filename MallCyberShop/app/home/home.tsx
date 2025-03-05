@@ -15,7 +15,7 @@ import {useRouter} from "expo-router";
 import {styles} from "../styles";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import SocialLinksModal from "../SocialLinksModal";
-import {fetchCompanies, fetchCompanyLinks} from "../company/company";
+import {fetchCompanies, fetchCompanyLinks} from "../company/functions";
 import {getCategoryNames, getFormattedRoutes} from "../category/functions";
 import {createCompanyCounter} from "../company/company-counter";
 import {Link} from "../link/model";
@@ -83,7 +83,7 @@ const DynamicTabsScreen = () => {
       try {
         console.log("🔵 Cargando datos department...", department);
         const storedIcons = await getIconOrder();
-        const remoteData = await fetchCompanies();
+        const remoteData = await fetchCompanies("priority");
 
         const uniqueCategories = await getCategoryNames();
         const companyByCategory = new Map<string, any[]>();
@@ -93,7 +93,6 @@ const DynamicTabsScreen = () => {
         );
 
         //if (!storedIcons) {
-        console.log("🔵 No hay datos almacenados, cargando datos remotos...");
         for (const category of uniqueCategories) {
           const companies = remoteData.filter((app) =>
             app.categories?.includes(category)
@@ -102,7 +101,6 @@ const DynamicTabsScreen = () => {
           setCompanyByCategory(companyByCategory);
         }
         // } else {
-        //   console.log("🔵 Datos almacenados, fusionando con datos remotos...");
         //   // Crear un mapa de remoteData para acceso rápido por id
         //   const remoteMap = new Map(
         //     remoteData.map((icon: any) => [icon.id, icon])

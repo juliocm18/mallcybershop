@@ -5,6 +5,7 @@ import {AppState, AppStateStatus, View, StyleSheet} from "react-native";
 import {useVideoPlayer, VideoView} from "expo-video";
 import {getDeviceIdentifier} from "./functions";
 import {supabase} from "./supabase";
+import RoleFunctions from "./role/functions";
 
 //import * as SplashScreen from "expo-splash-screen";
 

@@ -17,7 +17,7 @@ const PriorityInput: React.FC<PriorityInputProps> = ({
 
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>Priority:</Text>
+      <Text style={styles.label}>Prioridad:</Text>
       <TextInput
         style={styles.input}
         keyboardType="numeric"

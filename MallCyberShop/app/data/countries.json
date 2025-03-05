@@ -7,5 +7,12 @@
     { "id": "uruguay", "name": "Uruguay" },
     { "id": "bolivia", "name": "Bolivia" }
   ],
-  "europa": []
+  "europa": [],
+  "asia": [
+    { "id": "china", "name": "China" },
+    { "id": "india", "name": "india" },
+    { "id": "japon", "name": "Japón" },
+    { "id": "korea", "name": "Korea" }
+  ],
+  "oceania": []
 }

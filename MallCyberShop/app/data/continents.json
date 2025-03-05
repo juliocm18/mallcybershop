@@ -1,4 +1,7 @@
 [
   { "id": "america", "name": "América" },
-  { "id": "europa", "name": "Europa" }
+  { "id": "europa", "name": "Europa" },
+  { "id": "asia", "name": "Asia" },
+  { "id": "oceania", "name": "Oceanía" },
+  { "id": "africa", "name": "África" }
 ]
