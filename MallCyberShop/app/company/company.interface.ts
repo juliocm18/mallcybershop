@@ -8,6 +8,7 @@ export interface Company {
   logo: string;
   categories: string[];
   priority: number;
+  departments?: string[];
 }
 
 export interface CompanyLink {

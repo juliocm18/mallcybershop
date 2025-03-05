@@ -13,14 +13,15 @@ export const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(0,0,0,0.5)",
+    backgroundColor: "rgba(0, 0, 0, 0.24)",
   },
   modalContent: {
-    flex: 1,
     backgroundColor: "#fff",
     padding: 20,
     borderRadius: 10,
-    width: "90%",
+    width: "90%", // Ajusta el ancho del modal
+    minHeight: 200, // Altura mínima
+    //maxHeight: "90%", // No sobrepasar el 80% de la pantalla
   },
   label: {fontSize: 16, marginBottom: 5, color: "#898989"},
   input: {
@@ -78,6 +79,7 @@ export const styles = StyleSheet.create({
   modalButtonContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
+    paddingTop: 10,
   },
   modalCancelButton: {
     backgroundColor: "#898989",
@@ -99,5 +101,13 @@ export const styles = StyleSheet.create({
     fontWeight: "bold",
     marginBottom: 10,
     marginTop: 15,
+  },
+  title: {
+    fontSize: 20,
+    marginBottom: 5,
+    color: "#ff9f61",
+    textAlign: "center",
+    fontWeight: "bold",
+    padding: 10,
   },
 });

@@ -70,7 +70,7 @@ const Home: React.FC = () => {
               <View style={styles.iconLabelContainer}>
                 <FontAwesome
                   style={styles.icon}
-                  name="users"
+                  name="building-o"
                   size={30}
                   color="white"
                 />
@@ -87,7 +87,7 @@ const Home: React.FC = () => {
               <View style={styles.iconLabelContainer}>
                 <FontAwesome
                   style={styles.icon}
-                  name="warning"
+                  name="link"
                   size={30}
                   color="white"
                 />
@@ -105,13 +105,13 @@ const Home: React.FC = () => {
         ) && (
           <>
             <Link
-              href="./company/gestion-socios"
-              style={[styles.button, {backgroundColor: "#FF9800"}]}
+              href="./company/gestion-territorios"
+              style={[styles.button, {backgroundColor: "#9f2cea"}]}
             >
               <View style={styles.iconLabelContainer}>
                 <FontAwesome
                   style={styles.icon}
-                  name="users"
+                  name="globe"
                   size={30}
                   color="white"
                 />
@@ -125,7 +125,7 @@ const Home: React.FC = () => {
               <View style={styles.iconLabelContainer}>
                 <FontAwesome
                   style={styles.icon}
-                  name="warning"
+                  name="users"
                   size={30}
                   color="white"
                 />

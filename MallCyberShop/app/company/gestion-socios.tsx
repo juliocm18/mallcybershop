@@ -10,11 +10,9 @@ import {
   Alert,
   Image,
   ActivityIndicator,
-  ScrollView,
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
-import {supabase} from "../supabase";
 import {
   createCompany,
   createCompanyLink,
@@ -383,7 +381,7 @@ const CompanyScreen = () => {
         <View style={styles.modalContainer}>
           <KeyboardAvoidingView
             behavior={Platform.OS === "ios" ? "padding" : "height"}
-            style={styles.modalContent}
+            style={[styles.modalContent, {flex: 1}]}
           >
             <View style={{flex: 1}}>
               <>
@@ -400,13 +398,13 @@ const CompanyScreen = () => {
                     />
                   ))}
                 </Picker>
-
                 <Text style={styles.label}>Link</Text>
                 <TextInput
                   style={styles.input}
                   value={url}
                   onChangeText={setUrl}
                 />
+                v
                 <View style={styles.modalButtonContainer}>
                   <TouchableOpacity
                     style={styles.modalUpdateButton}
