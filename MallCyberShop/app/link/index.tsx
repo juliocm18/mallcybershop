@@ -15,6 +15,7 @@ import {
 import {Link} from "./model";
 import LinkFunctions from "./functions";
 import {styles} from "./styles";
+import {FontAwesome} from "@expo/vector-icons";
 
 export default function Index() {
   const [links, setLinks] = useState<Link[]>([]);
@@ -164,7 +165,7 @@ export default function Index() {
                 style={styles.editButton}
                 onPress={() => handleEdit(item)}
               >
-                <Text style={styles.editButtonText}>Editar</Text>
+                <FontAwesome name="edit" size={24} color="white" />
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.deleteButton}
@@ -174,7 +175,7 @@ export default function Index() {
                 {deleting === item.id ? (
                   <ActivityIndicator color="#fff" />
                 ) : (
-                  <Text style={styles.modalButtonText}>Eliminar</Text>
+                  <FontAwesome name="trash" size={24} color="white" />
                 )}
               </TouchableOpacity>
             </View>

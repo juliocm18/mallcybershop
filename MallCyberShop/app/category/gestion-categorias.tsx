@@ -16,6 +16,7 @@ import {
   updateCategory, // Asumir que tienes una función para actualizar categorías
 } from "./functions";
 import {useRouter} from "expo-router";
+import {FontAwesome} from "@expo/vector-icons";
 export type Category = {
   id: number;
   name: string;
@@ -128,7 +129,7 @@ const GestionCategorias = () => {
                 style={styles.editButton}
                 onPress={() => handleEditCategory(item)}
               >
-                <Text style={styles.editButtonText}>Editar</Text>
+                <FontAwesome name="edit" size={24} color="white" />
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.deleteButton}
@@ -138,7 +139,7 @@ const GestionCategorias = () => {
                 {deleting === item.id ? (
                   <ActivityIndicator color="#fff" />
                 ) : (
-                  <Text style={styles.deleteButtonText}>Eliminar</Text>
+                  <FontAwesome name="trash" size={24} color="white" />
                 )}
               </TouchableOpacity>
             </View>

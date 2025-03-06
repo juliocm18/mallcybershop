@@ -10,6 +10,8 @@ import {
   Modal,
   Alert,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 
 import {User} from "./model";
@@ -20,7 +22,10 @@ import {FontAwesome, Ionicons} from "@expo/vector-icons";
 import {Picker} from "@react-native-picker/picker";
 import {Role} from "../role/model";
 import RoleFunctions from "../role/functions";
-
+import Select from "../components/select";
+import continentsData from "../data/continents.json";
+import countriesData from "../data/countries.json";
+import departmentsData from "../data/departments.json";
 export default function Index() {
   const [users, setUsers] = useState<User[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -39,6 +44,43 @@ export default function Index() {
     loadUsers();
     loadRoles();
   }, []);
+
+  const [modalTerritoryVisible, setModalTerritoryVisible] = useState(false);
+  const [continent, setContinent] = useState("");
+  const [country, setCountry] = useState("");
+  const [countries, setCountries] = useState<{id: string; name: string}[]>([]);
+  const [departments, setDepartments] = useState<string[]>([]);
+
+  const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
+
+  const toggleSelection = (department: string) => {
+    setSelectedDepartments(
+      (prevSelected) =>
+        prevSelected.includes(department)
+          ? prevSelected.filter((dep) => dep !== department) // Quita si está seleccionado
+          : [...prevSelected, department] // Agrega si no está seleccionado
+    );
+  };
+
+  useEffect(() => {
+    if (continent) {
+      setCountries(
+        (countriesData as Record<string, {id: string; name: string}[]>)[
+          continent
+        ] || []
+      );
+      setCountry("");
+      setDepartments([]);
+    }
+  }, [continent]);
+
+  useEffect(() => {
+    if (country) {
+      setDepartments(
+        (departmentsData as Record<string, string[]>)[country] || []
+      );
+    }
+  }, [country]);
 
   const loadUsers = async () => {
     const data = await UserFunctions.getAll();
@@ -68,7 +110,6 @@ export default function Index() {
 
     const tmpRoleId =
       user.roles && user.roles.length > 0 ? user.roles[0].id ?? 0 : 0;
-    console.log("tmpRoleId", tmpRoleId);
     setRoleId(tmpRoleId);
     setModalVisible(true);
   };
@@ -90,7 +131,7 @@ export default function Index() {
 
     try {
       if (editingId) {
-        const responseUpdate = await UserFunctions.update(
+        const responseUpdate = await UserFunctions.updateRole(
           editingId,
           roleId || 0
         );
@@ -123,6 +164,33 @@ export default function Index() {
     }
   };
 
+  const handleSaveTerritory = async () => {
+    try {
+      if (editingId) {
+        const updatedCompany = await UserFunctions.updateDepartments(
+          editingId,
+          selectedDepartments
+        );
+        if (updatedCompany) {
+          clearFields();
+          setModalTerritoryVisible(false);
+          loadUsers();
+          Alert.alert("Aviso", "Registro actualizado");
+        }
+      }
+    } catch (error: any) {
+      console.error("Error al agregar territorios", error.message);
+      Alert.alert("Error", error.message);
+    }
+  };
+
+  const handleTerritory = async (user: User) => {
+    clearFields();
+    setModalTerritoryVisible(true);
+    setSelectedDepartments(user.departments || []);
+    setEditingId(user.id || null);
+  };
+
   return (
     <View style={styles.container}>
       <Button
@@ -137,7 +205,7 @@ export default function Index() {
         }
         renderItem={({item}) => (
           <View style={styles.row}>
-            <View style={{flexDirection: "column"}}>
+            <View style={{flexDirection: "column", maxWidth: 200}}>
               <Text style={styles.cell}>{item.email}</Text>
               {item.roles && item.roles.length > 0 ? (
                 <Text style={styles.cell}>{item.roles[0].name}</Text>
@@ -152,6 +220,12 @@ export default function Index() {
                 onPress={() => handleEdit(item)}
               >
                 <FontAwesome name="edit" size={24} color="white" />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.LinkButton}
+                onPress={() => handleTerritory(item)}
+              >
+                <FontAwesome name="globe" size={24} color="white" />
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.deleteButton}
@@ -250,6 +324,114 @@ export default function Index() {
               </TouchableOpacity>
             </View>
           </View>
+        </View>
+      </Modal>
+
+      <Modal visible={modalTerritoryVisible} animationType="slide" transparent>
+        <View style={styles.modalContainer}>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            style={styles.modalContent}
+          >
+            <View>
+              <Text style={styles.title}>Asignar Territorios</Text>
+              <>
+                <Select
+                  label="Continente"
+                  selectedValue={continent}
+                  onValueChange={setContinent}
+                  items={continentsData}
+                />
+                <Select
+                  label="País"
+                  selectedValue={country}
+                  onValueChange={setCountry}
+                  items={countries}
+                />
+
+                <View
+                  style={{
+                    minHeight: 120,
+                    borderWidth: 1,
+                    borderColor: "#ddd",
+                    borderRadius: 5,
+                    padding: 20,
+                    maxHeight: 500,
+                  }}
+                >
+                  {departments.length === 0 ? (
+                    <Text style={{color: "#ccc"}}>
+                      Lista de Departamentos...
+                    </Text>
+                  ) : (
+                    <FlatList
+                      data={departments}
+                      keyExtractor={(item) => item}
+                      showsHorizontalScrollIndicator={true}
+                      renderItem={({item}) => {
+                        const isSelected = selectedDepartments.includes(item);
+                        return (
+                          <TouchableOpacity
+                            onPress={() => toggleSelection(item)}
+                            style={{
+                              flexDirection: "row",
+                              alignItems: "center",
+                              paddingVertical: 8,
+                            }}
+                          >
+                            <View
+                              style={{
+                                width: 24,
+                                height: 24,
+                                borderRadius: 4,
+                                borderWidth: 2,
+                                borderColor: "#ff9f61",
+                                justifyContent: "center",
+                                alignItems: "center",
+                                backgroundColor: isSelected
+                                  ? "#ff9f61"
+                                  : "transparent",
+                              }}
+                            >
+                              {isSelected && (
+                                <Text
+                                  style={{color: "white", fontWeight: "bold"}}
+                                >
+                                  ✔
+                                </Text>
+                              )}
+                            </View>
+                            <Text style={{marginLeft: 10, fontSize: 16}}>
+                              {item}
+                            </Text>
+                          </TouchableOpacity>
+                        );
+                      }}
+                    />
+                  )}
+
+                  <Text style={{marginTop: 20, fontWeight: "bold"}}>
+                    Seleccionados: {selectedDepartments.join(", ")}
+                  </Text>
+                </View>
+
+                <View style={styles.modalButtonContainer}>
+                  <TouchableOpacity
+                    style={styles.modalUpdateButton}
+                    onPress={handleSaveTerritory}
+                  >
+                    <Text style={styles.modalButtonText}>Guardar</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.modalCancelButton}
+                    onPress={() => setModalTerritoryVisible(false)}
+                  >
+                    <Text style={styles.modalButtonText}>Cancelar</Text>
+                  </TouchableOpacity>
+                </View>
+              </>
+            </View>
+          </KeyboardAvoidingView>
         </View>
       </Modal>
     </View>

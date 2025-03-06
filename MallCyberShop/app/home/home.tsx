@@ -21,6 +21,7 @@ import {createCompanyCounter} from "../company/company-counter";
 import {Link} from "../link/model";
 import AdminZone from "./adminZone";
 import {useLocalSearchParams} from "expo-router";
+import {confirmButtonStyles} from "react-native-modal-datetime-picker";
 
 const STORAGE_KEY = "icon_order";
 
@@ -56,9 +57,9 @@ const DynamicTabsScreen = () => {
   const [companyByCategory, setCompanyByCategory] = useState<
     Map<string, any[]>
   >(new Map());
-
+  const [initialized, setInitialized] = useState(false);
   const [routes, setRoutes] = useState<{key: string; title: string}[]>([]);
-  const {department} = useLocalSearchParams<{department?: string}>();
+  let {department} = useLocalSearchParams<{department?: string}>();
 
   const toggleModalSocial = async (item: GridItem) => {
     const companyId = +item.id;
@@ -79,27 +80,41 @@ const DynamicTabsScreen = () => {
   };
 
   useEffect(() => {
+    if (initialized) return; // Evita múltiples ejecuciones
     const loadRemoteJson = async () => {
       try {
-        console.log("🔵 Cargando datos department...", department);
+        if (!department) {
+          department = (await AsyncStorage.getItem("department")) || "";
+        }
         const storedIcons = await getIconOrder();
         const remoteData = await fetchCompanies("priority");
 
         const uniqueCategories = await getCategoryNames();
         const companyByCategory = new Map<string, any[]>();
 
-        const formattedRoutes: categoryHashMap[] = await getFormattedRoutes(
-          uniqueCategories
+        const companiesByDepartment = remoteData.filter((app) =>
+          app.departments?.includes(department)
         );
 
         //if (!storedIcons) {
-        for (const category of uniqueCategories) {
-          const companies = remoteData.filter((app) =>
-            app.categories?.includes(category)
-          );
-          companyByCategory.set(category, companies);
-          setCompanyByCategory(companyByCategory);
-        }
+        let formattedRoutes: categoryHashMap[] = [];
+        const usedCategories: string[] = [];
+
+        await Promise.all(
+          uniqueCategories.map(async (category) => {
+            const companies = companiesByDepartment.filter((app) =>
+              app.categories?.includes(category)
+            );
+
+            if (companies.length > 0) {
+              usedCategories.push(category);
+              companyByCategory.set(category, companies);
+              setCompanyByCategory(new Map(companyByCategory)); // Clonamos el Map para actualizar el estado correctamente
+            }
+          })
+        );
+
+        formattedRoutes = await getFormattedRoutes(usedCategories);
         // } else {
         //   // Crear un mapa de remoteData para acceso rápido por id
         //   const remoteMap = new Map(
@@ -139,6 +154,7 @@ const DynamicTabsScreen = () => {
       }
     };
     loadRemoteJson();
+    setInitialized(true);
   }, []);
 
   if (error) {

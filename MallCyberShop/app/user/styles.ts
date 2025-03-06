@@ -54,6 +54,14 @@ export const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "bold",
   },
+  LinkButton: {
+    backgroundColor: "#0087ff",
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    marginRight: 10,
+    borderRadius: 5,
+    height: 40,
+  },
   deleteButton: {
     backgroundColor: "#e74c3c",
     paddingVertical: 5,
@@ -115,6 +123,14 @@ export const styles = StyleSheet.create({
   },
   eyeText: {
     fontSize: 18,
+  },
+  title: {
+    fontSize: 20,
+    marginBottom: 5,
+    color: "#ff9f61",
+    textAlign: "center",
+    fontWeight: "bold",
+    padding: 10,
   },
 });
 

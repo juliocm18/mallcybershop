@@ -7,6 +7,7 @@ import countriesData from "./data/countries.json";
 import departmentsData from "./data/departments.json";
 import Select from "./components/select";
 import {useRouter} from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const LocationHome = () => {
   const router = useRouter();
@@ -38,8 +39,9 @@ const LocationHome = () => {
     }
   }, [country]);
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     if (department) {
+      await AsyncStorage.setItem("department", department);
       router.push({
         pathname: "/home/home",
         params: {department},

@@ -8,6 +8,7 @@ export type User = {
   phone?: string;
   roles?: Role[];
   password?: string;
+  departments?: string[];
 };
 
 // aud: string;
