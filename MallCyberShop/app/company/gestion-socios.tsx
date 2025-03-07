@@ -19,6 +19,8 @@ import {
   deleteCompany,
   deleteCompanyLink,
   fetchCompanies,
+  fetchCompaniesByDepartments,
+  fetchCompaniesByDepartmentsOrNull,
   fetchCompanyLinks,
   pickImage,
   updateCompany,
@@ -33,6 +35,9 @@ import LinkFunctions from "../link/functions";
 import {Company, CompanyLink} from "./company.interface";
 import PriorityInput from "./priority";
 import {CompanyItem} from "./company.item";
+import {useAuth} from "../context/AuthContext";
+import UserFunctions from "../user/functions";
+import RoleFunctions from "../role/functions";
 
 const CompanyScreen = () => {
   const [companies, setCompanies] = useState<Company[]>([]);
@@ -59,7 +64,7 @@ const CompanyScreen = () => {
 
   const [selectedLinkId, setSelectedLinkId] = useState<number>();
   const [priority, setPriority] = useState("");
-
+  const {session} = useAuth();
   const handlePickImage = async () => {
     if (editingId) {
       setEditingImage(true);
@@ -92,8 +97,21 @@ const CompanyScreen = () => {
   }, []);
 
   const loadCompanies = async () => {
-    const data = await fetchCompanies("name");
-    if (data) setCompanies(data);
+    const userDepartments = await UserFunctions.getDepartmentsByUser(
+      session?.user?.id || ""
+    );
+    const userRoles = await RoleFunctions.getByUser(session?.user?.id || "");
+    if (
+      userRoles?.some(
+        (role) => role.name === "CEO" || role.name === "Superadministrador"
+      )
+    ) {
+      const data = await fetchCompanies("name");
+      if (data) setCompanies(data);
+    } else {
+      const data = await fetchCompaniesByDepartments("name", userDepartments);
+      if (data) setCompanies(data);
+    }
   };
 
   const loadLinks = async () => {

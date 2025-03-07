@@ -1,5 +1,6 @@
 import {useAuth} from "../context/AuthContext";
 import RoleFunctions from "../role/functions";
+import {Role} from "../role/model";
 import {supabase} from "../supabase";
 import {User} from "./model";
 
@@ -35,16 +36,6 @@ export default class UserFunctions {
       }
     );
     const users = await usersFetch.json();
-    //if (error) throw new Error(error.message);
-    //if (!data) throw new Error("No hay data de usuario");
-    // const response1 = await Promise.all(
-    //   users.users.map(async (user: any) => ({
-    //     id: user.id,
-    //     email: user.email,
-    //     roles: await RoleFunctions.getByUser(user.id),
-    //     departments: await UserFunctions.getDepartmentsByUser(user.id),
-    //   }))
-    // );
     const response1 = await Promise.all(
       users.users.map(async (user: any) => {
         const [roles, departments] = await Promise.all([
@@ -72,8 +63,13 @@ export default class UserFunctions {
   // Por el momento solo hay un Rol, se modifica un solo rol
   static updateRole = async (
     userId: string,
-    roleId: number
+    roleId: number,
+    userRoles: Role[]
   ): Promise<User | null> => {
+    console.log("userRoles", userRoles);
+    if (!userRoles || (userRoles[0].id || 0) < roleId) {
+      throw new Error("No tienes permisos para realizar esta acción");
+    }
     const {data, error} = await supabase
       .from("user_role")
       .update({role_id: roleId})
@@ -83,7 +79,9 @@ export default class UserFunctions {
     return data ? data[0] : null;
   };
 
-  static getDepartmentsByUser = async (userId: string): Promise<any> => {
+  static getDepartmentsByUser = async (
+    userId: string
+  ): Promise<string[] | []> => {
     const {data, error} = await supabase
       .from("profile")
       .select("departments")

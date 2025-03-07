@@ -7,7 +7,7 @@ import {FontAwesome} from "@expo/vector-icons";
 export const CompanyItem = React.memo(
   ({item, onEdit, onLinks, onDelete, deleting}: any) => (
     <View style={styles.row}>
-      <Text style={styles.cell}>{item.name}</Text>
+      <Text style={(styles.cell, {width: 200})}>{item.name}</Text>
       <View style={styles.buttonsContainer}>
         <TouchableOpacity
           style={styles.editButton}

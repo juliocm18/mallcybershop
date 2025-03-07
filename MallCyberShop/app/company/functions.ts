@@ -112,6 +112,40 @@ export const fetchCompanies = async (order: string) => {
   return data;
 };
 
+export const fetchCompaniesByDepartments = async (
+  order: string,
+  departments: string[]
+): Promise<Company[]> => {
+  const {data, error} = await supabase
+    .from("company")
+    .select("*")
+    .filter("departments", "overlaps", departments)
+    .order(order, {ascending: true});
+  if (error) throw new Error(error.message);
+  return data;
+};
+
+export const fetchCompaniesByDepartmentsOrNull = async (
+  order: string,
+  departments: string[]
+): Promise<Company[]> => {
+  const {data: matchData, error: matchError} = await supabase
+    .from("company")
+    .select("*")
+    .overlaps("departments", departments);
+
+  const {data: nullData, error: nullError} = await supabase
+    .from("company")
+    .select("*")
+    .or("departments.is.null");
+
+  const data = [...(matchData || []), ...(nullData || [])];
+
+  if (matchError || nullError)
+    throw new Error(matchError?.message || nullError?.message);
+  return data;
+};
+
 // ✏️ Actualizar empresa
 export const updateCompany = async (
   companyId: number,

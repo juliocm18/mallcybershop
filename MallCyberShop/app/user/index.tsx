@@ -26,6 +26,7 @@ import Select from "../components/select";
 import continentsData from "../data/continents.json";
 import countriesData from "../data/countries.json";
 import departmentsData from "../data/departments.json";
+import {useAuth} from "../context/AuthContext";
 export default function Index() {
   const [users, setUsers] = useState<User[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -50,7 +51,7 @@ export default function Index() {
   const [country, setCountry] = useState("");
   const [countries, setCountries] = useState<{id: string; name: string}[]>([]);
   const [departments, setDepartments] = useState<string[]>([]);
-
+  const {session} = useAuth();
   const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
 
   const toggleSelection = (department: string) => {
@@ -131,9 +132,13 @@ export default function Index() {
 
     try {
       if (editingId) {
+        const userRoles = await RoleFunctions.getByUser(
+          session?.user?.id || ""
+        );
         const responseUpdate = await UserFunctions.updateRole(
           editingId,
-          roleId || 0
+          roleId || 0,
+          userRoles || []
         );
 
         if (responseUpdate) {
@@ -208,7 +213,9 @@ export default function Index() {
             <View style={{flexDirection: "column", maxWidth: 200}}>
               <Text style={styles.cell}>{item.email}</Text>
               {item.roles && item.roles.length > 0 ? (
-                <Text style={styles.cell}>{item.roles[0].name}</Text>
+                <Text style={[styles.cell, {fontWeight: "bold"}]}>
+                  {item.roles[0].name}
+                </Text>
               ) : (
                 <Text style={styles.cell}>Rol sin asignar</Text>
               )}

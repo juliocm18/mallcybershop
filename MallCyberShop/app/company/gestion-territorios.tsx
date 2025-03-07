@@ -15,6 +15,8 @@ import {
 } from "react-native";
 import {
   fetchCompanies,
+  fetchCompaniesByDepartments,
+  fetchCompaniesByDepartmentsOrNull,
   fetchCompanyLinks,
   pickImage,
   updateCompany,
@@ -26,6 +28,8 @@ import continentsData from "../data/continents.json";
 import countriesData from "../data/countries.json";
 import departmentsData from "../data/departments.json";
 import Select from "../components/select";
+import UserFunctions from "../user/functions";
+import {useAuth} from "../context/AuthContext";
 const GestionTerritorios = () => {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [modalTerritoryVisible, setModalTerritoryVisible] = useState(false);
@@ -37,7 +41,7 @@ const GestionTerritorios = () => {
   const [departments, setDepartments] = useState<string[]>([]);
 
   const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
-
+  const {session} = useAuth();
   const toggleSelection = (department: string) => {
     setSelectedDepartments(
       (prevSelected) =>
@@ -72,7 +76,13 @@ const GestionTerritorios = () => {
   }, []);
 
   const loadCompanies = async () => {
-    const data = await fetchCompanies("name");
+    const userDepartments = await UserFunctions.getDepartmentsByUser(
+      session?.user?.id || ""
+    );
+    const data = await fetchCompaniesByDepartmentsOrNull(
+      "name",
+      userDepartments
+    );
     if (data) setCompanies(data);
   };
 
@@ -84,11 +94,11 @@ const GestionTerritorios = () => {
   };
 
   const clearFields = () => {
-    setSelectedDepartments([]);
     setContinent("");
     setCountry("");
     setDepartments([]);
     setEditingId(null);
+    setSelectedDepartments([]);
   };
 
   const handleSaveTerritory = async () => {
@@ -114,7 +124,9 @@ const GestionTerritorios = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Gestión de Territorios</Text>
+      <Text style={styles.title}>
+        Gestión de Territorios de Socios Estratégicos
+      </Text>
       <FlatList
         data={companies}
         keyExtractor={(item) => (item.id || 0).toString()}
