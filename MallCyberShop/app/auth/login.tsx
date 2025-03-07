@@ -31,7 +31,6 @@ export default function Login() {
         const roles = await RoleFunctions.getByUser(userLogged.id);
         roles ? (userLogged.roles = roles) : (userLogged.roles = []);
       }
-      //console.log("✅ Usuario logueado:", userLogged);
       setError(null);
       router.push("../adminhome");
     } catch (err) {
@@ -41,11 +40,11 @@ export default function Login() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Login</Text>
+      <Text style={styles.title}>Inicio de Sesión</Text>
 
       <TextInput
         style={styles.input}
-        placeholder="Email"
+        placeholder="correo"
         value={email}
         onChangeText={setEmail}
         keyboardType="email-address"
@@ -54,7 +53,7 @@ export default function Login() {
       <View style={styles.passwordContainer}>
         <TextInput
           style={styles.passwordInput}
-          placeholder="Password"
+          placeholder="contraseña"
           value={password}
           onChangeText={setPassword}
           secureTextEntry={!showPassword}
@@ -70,14 +69,14 @@ export default function Login() {
       {error && <Text style={styles.errorText}>{error}</Text>}
 
       <TouchableOpacity style={styles.button} onPress={handleLogin}>
-        <Text style={styles.buttonText}>Login</Text>
+        <Text style={styles.buttonText}>ingresar</Text>
       </TouchableOpacity>
 
       <TouchableOpacity
         style={styles.button}
         onPress={() => router.push("../home/home")}
       >
-        <Text style={styles.buttonText}>Ir a la Tienda</Text>
+        <Text style={styles.buttonText}>ir a la Tienda</Text>
       </TouchableOpacity>
     </View>
   );
@@ -95,7 +94,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     textAlign: "center",
     marginBottom: 40,
-    color: "#333",
+    color: "#fb8436",
   },
   input: {
     height: 50,

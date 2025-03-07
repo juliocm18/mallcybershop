@@ -23,7 +23,7 @@ const PriorityInput: React.FC<PriorityInputProps> = ({
         keyboardType="numeric"
         value={priority}
         onChangeText={handleChange}
-        placeholder="Enter priority"
+        placeholder="Ingresa la proiridad"
       />
     </View>
   );

@@ -20,7 +20,6 @@ import {
   deleteCompanyLink,
   fetchCompanies,
   fetchCompaniesByDepartments,
-  fetchCompaniesByDepartmentsOrNull,
   fetchCompanyLinks,
   pickImage,
   updateCompany,
@@ -300,6 +299,7 @@ const CompanyScreen = () => {
 
   return (
     <View style={styles.container}>
+      <Text style={styles.title}>Administración de Socios Estratégicos</Text>
       <Button
         title="Agregar Socio Estratégico"
         onPress={handleAddCompany}
@@ -399,11 +399,18 @@ const CompanyScreen = () => {
         <View style={styles.modalContainer}>
           <KeyboardAvoidingView
             behavior={Platform.OS === "ios" ? "padding" : "height"}
-            style={[styles.modalContent, {flex: 1}]}
+            style={[styles.modalContent]}
           >
-            <View style={{flex: 1}}>
+            <View
+              style={{
+                minHeight: 300,
+                maxHeight: 600,
+              }}
+            >
               <>
-                <Text style={styles.socialModalFooterTitle}>Agregar Link:</Text>
+                <Text style={styles.socialModalFooterTitle}>
+                  Agregar Contacto:
+                </Text>
                 <Picker
                   selectedValue={link?.id}
                   onValueChange={(itemValue) => setSelectedLinkId(itemValue)}
@@ -416,14 +423,15 @@ const CompanyScreen = () => {
                     />
                   ))}
                 </Picker>
-                <Text style={styles.label}>Link</Text>
+                <Text style={styles.label}>Enlace</Text>
                 <TextInput
                   style={styles.input}
                   value={url}
                   onChangeText={setUrl}
                 />
-                v
-                <View style={styles.modalButtonContainer}>
+                <View
+                  style={[styles.modalButtonContainer, {paddingBottom: 10}]}
+                >
                   <TouchableOpacity
                     style={styles.modalUpdateButton}
                     onPress={handleSaveCompanyLink}

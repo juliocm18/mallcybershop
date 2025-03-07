@@ -75,7 +75,7 @@ export const styles = StyleSheet.create({
     marginBottom: 10,
   },
   imagePickerText: {color: "#fff"},
-  logoPreview: {width: 100, height: 100, marginBottom: 15},
+  logoPreview: {width: 50, height: 50},
   modalButtonContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -94,6 +94,13 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 10,
     borderRadius: 5,
     width: "45%",
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    textAlign: "center",
+    marginBottom: 10,
+    color: "#fb8436",
   },
 });
 

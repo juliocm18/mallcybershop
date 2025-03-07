@@ -117,16 +117,13 @@ const GestionTerritorios = () => {
         }
       }
     } catch (error: any) {
-      console.error("Error al agregar territorios", error.message);
       Alert.alert("Error", error.message);
     }
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>
-        Gestión de Territorios de Socios Estratégicos
-      </Text>
+      <Text style={styles.title}>Asignación de Territorios a S.E</Text>
       <FlatList
         data={companies}
         keyExtractor={(item) => (item.id || 0).toString()}

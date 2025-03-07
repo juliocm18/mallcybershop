@@ -140,7 +140,6 @@ const Dashboard = () => {
         0
       );
       setTotalCounter(totalSum);
-      console.log("📊 Datos agrupados:", groupedData);
       setLabels(Object.keys(groupedData));
       setData(Object.values(groupedData));
     }

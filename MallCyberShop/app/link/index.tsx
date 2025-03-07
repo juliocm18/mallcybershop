@@ -143,8 +143,9 @@ export default function Index() {
 
   return (
     <View style={styles.container}>
+      <Text style={styles.title}>Administración de Contactos</Text>
       <Button
-        title="Agregar Social Link"
+        title="Agregar Contacto"
         onPress={() => handleAdd()}
         color="#ff9f61"
       />
@@ -187,7 +188,7 @@ export default function Index() {
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <Text style={styles.socialModaltitle}>
-              {editingId ? "Actualizar" : "Guardar"} Social Link
+              {editingId ? "Actualizar" : "Guardar"} Contacto
             </Text>
 
             <Text style={styles.label}>Nombre</Text>
@@ -213,7 +214,7 @@ export default function Index() {
                 resizeMode="contain" // Opcional, ajusta la forma en que se muestra la imagen
               />
             )}
-            <View style={styles.modalButtonContainer}>
+            <View style={[styles.modalButtonContainer, {paddingTop: 10}]}>
               <TouchableOpacity
                 style={styles.modalUpdateButton}
                 onPress={handleSave}

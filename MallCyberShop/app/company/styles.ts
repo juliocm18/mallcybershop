@@ -101,11 +101,12 @@ export const styles = StyleSheet.create({
     fontWeight: "bold",
     marginBottom: 10,
     marginTop: 15,
+    color: "#fb8436",
   },
   title: {
     fontSize: 20,
     marginBottom: 5,
-    color: "#ff9f61",
+    color: "#fb8436",
     textAlign: "center",
     fontWeight: "bold",
     padding: 10,

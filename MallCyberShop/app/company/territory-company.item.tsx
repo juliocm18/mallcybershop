@@ -13,7 +13,7 @@ export const TerritoryCompanyItem = React.memo(
           style={styles.LinkButton}
           onPress={() => onOpenTerritory(item)}
         >
-          <FontAwesome name="link" size={24} color="white" />
+          <FontAwesome name="globe" size={24} color="white" />
         </TouchableOpacity>
       </View>
     </View>

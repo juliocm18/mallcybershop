@@ -66,7 +66,6 @@ export default class UserFunctions {
     roleId: number,
     userRoles: Role[]
   ): Promise<User | null> => {
-    console.log("userRoles", userRoles);
     if (!userRoles || (userRoles[0].id || 0) < roleId) {
       throw new Error("No tienes permisos para realizar esta acción");
     }
@@ -88,7 +87,7 @@ export default class UserFunctions {
       .eq("user_id", userId)
       .maybeSingle();
     if (error) throw new Error(error.message);
-    return data ? data.departments : [];
+    return data?.departments ? data.departments : [];
   };
 
   static updateDepartments = async (

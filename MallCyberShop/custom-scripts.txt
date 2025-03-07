@@ -17,3 +17,7 @@ cambiar el formato del video:
 supabase functions deploy list-users
 
 me quede en agreegar las locations para cada empresa
+
+
+Color primario para letras:
+#fb8436

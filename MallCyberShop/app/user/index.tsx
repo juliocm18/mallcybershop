@@ -198,6 +198,7 @@ export default function Index() {
 
   return (
     <View style={styles.container}>
+      <Text style={styles.title}>Administración de Usuarios</Text>
       <Button
         title="Agregar Usuario"
         onPress={() => handleAdd()}
@@ -210,7 +211,7 @@ export default function Index() {
         }
         renderItem={({item}) => (
           <View style={styles.row}>
-            <View style={{flexDirection: "column", maxWidth: 200}}>
+            <View style={{flexDirection: "column", maxWidth: 180}}>
               <Text style={styles.cell}>{item.email}</Text>
               {item.roles && item.roles.length > 0 ? (
                 <Text style={[styles.cell, {fontWeight: "bold"}]}>

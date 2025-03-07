@@ -20,6 +20,7 @@ const Home: React.FC = () => {
   };
   return (
     <View style={styles.container}>
+      <Text style={styles.title}>Tablero de Control</Text>
       <View style={styles.buttonContainer}>
         {roles.some(
           (role) => role.name === "CEO" || role.name === "Superadministrador"
@@ -35,7 +36,7 @@ const Home: React.FC = () => {
                 size={30}
                 color="white"
               />
-              <Text style={styles.label}>Panel de Control</Text>
+              <Text style={styles.label}>Indicadores de Gestión</Text>
             </View>
           </Link>
         )}
@@ -74,9 +75,7 @@ const Home: React.FC = () => {
                   size={30}
                   color="white"
                 />
-                <Text style={styles.label}>
-                  Administración de Socios Estratégicos
-                </Text>
+                <Text style={styles.label}>Administración de S.E</Text>
               </View>
             </Link>
 
@@ -91,7 +90,7 @@ const Home: React.FC = () => {
                   size={30}
                   color="white"
                 />
-                <Text style={styles.label}>Administración de Links</Text>
+                <Text style={styles.label}>Administración de Contactos</Text>
               </View>
             </Link>
           </>
@@ -115,7 +114,9 @@ const Home: React.FC = () => {
                   size={30}
                   color="white"
                 />
-                <Text style={styles.label}>Asignación de Territorios</Text>
+                <Text style={styles.label}>
+                  Asignación de Territorios a S.E
+                </Text>
               </View>
             </Link>
             <Link
@@ -218,6 +219,13 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 5,
     marginTop: 20,
+  },
+  title: {
+    fontSize: 32,
+    fontWeight: "bold",
+    textAlign: "center",
+    marginBottom: 40,
+    color: "#fb8436",
   },
 });
 

@@ -127,7 +127,7 @@ export const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     marginBottom: 5,
-    color: "#ff9f61",
+    color: "#fb8436",
     textAlign: "center",
     fontWeight: "bold",
     padding: 10,

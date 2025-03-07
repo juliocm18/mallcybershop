@@ -98,6 +98,7 @@ const GestionCategorias = () => {
 
   return (
     <View style={styles.container}>
+      <Text style={styles.title}>Administración de Contactos</Text>
       <TextInput
         value={newCategory}
         onChangeText={setNewCategory}
@@ -206,6 +207,13 @@ const styles = StyleSheet.create({
   deleteButtonText: {
     color: "#fff",
     fontWeight: "bold",
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    textAlign: "center",
+    marginBottom: 10,
+    color: "#fb8436",
   },
 });
 

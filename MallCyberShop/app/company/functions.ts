@@ -72,7 +72,6 @@ export const uploadImage = async (uri: string): Promise<string | null> => {
     const fileExt = uri.split(".").pop() || "jpg";
     const fileName = `${Date.now()}.${fileExt}`;
     const filePath = `company-logos/${fileName}`; // Ruta en Supabase
-    console.log("📤 Subiendo imagen a:", filePath);
     const {data, error} = await supabase.storage
       .from("company-logos")
       .upload(filePath, formData, {
@@ -138,9 +137,7 @@ export const fetchCompaniesByDepartmentsOrNull = async (
     .from("company")
     .select("*")
     .or("departments.is.null");
-
   const data = [...(matchData || []), ...(nullData || [])];
-
   if (matchError || nullError)
     throw new Error(matchError?.message || nullError?.message);
   return data;
