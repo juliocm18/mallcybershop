@@ -10,7 +10,7 @@ import {useAuth} from "../context/AuthContext";
 import {useRouter} from "expo-router";
 import {Ionicons} from "@expo/vector-icons";
 import RoleFunctions from "../role/functions";
-
+import {globalStyles} from "../styles";
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -40,7 +40,7 @@ export default function Login() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Inicio de Sesión</Text>
+      <Text style={globalStyles.pageTitle}>Inicio de Sesión</Text>
 
       <TextInput
         style={styles.input}
@@ -88,13 +88,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingHorizontal: 20,
     backgroundColor: "#fff",
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: "bold",
-    textAlign: "center",
-    marginBottom: 40,
-    color: "#fb8436",
   },
   input: {
     height: 50,

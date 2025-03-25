@@ -150,6 +150,7 @@ export default function Index() {
         color="#ff9f61"
       />
       <FlatList
+        style={{height: "92%"}}
         data={links}
         keyExtractor={(item) =>
           item.id ? item.id.toString() : Math.random().toString()

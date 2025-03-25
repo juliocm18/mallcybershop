@@ -20,7 +20,7 @@ const Home: React.FC = () => {
   };
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Tablero de Control</Text>
+      <Text style={styles.title}>Panel de Control</Text>
       <View style={styles.buttonContainer}>
         {roles.some(
           (role) => role.name === "CEO" || role.name === "Superadministrador"

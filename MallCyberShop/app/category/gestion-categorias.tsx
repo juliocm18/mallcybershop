@@ -17,6 +17,7 @@ import {
 } from "./functions";
 import {useRouter} from "expo-router";
 import {FontAwesome} from "@expo/vector-icons";
+import { globalStyles } from "../styles";
 export type Category = {
   id: number;
   name: string;
@@ -98,7 +99,7 @@ const GestionCategorias = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Administración de Contactos</Text>
+      <Text style={globalStyles.pageTitle}>Administración de Contactos</Text>
       <TextInput
         value={newCategory}
         onChangeText={setNewCategory}
@@ -120,6 +121,7 @@ const GestionCategorias = () => {
       </TouchableOpacity>
 
       <FlatList
+        style={{height: "92%"}}
         data={categories}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({item}) => (

@@ -12,7 +12,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 const LocationHome = () => {
   const router = useRouter();
   const [continent, setContinent] = useState("");
-  const [country, setCountry] = useState("");
+  const [country, setCountry] = useState<{id: string; name: string} | null>(null);
   const [department, setDepartment] = useState("");
 
   const [countries, setCountries] = useState<{id: string; name: string}[]>([]);
@@ -25,7 +25,7 @@ const LocationHome = () => {
           continent
         ] || []
       );
-      setCountry("");
+      setCountry(null);
       setDepartments([]);
     }
   }, [continent]);
@@ -33,7 +33,7 @@ const LocationHome = () => {
   useEffect(() => {
     if (country) {
       setDepartments(
-        (departmentsData as Record<string, string[]>)[country] || []
+        (departmentsData as unknown as Record<string, string[]>)[country.id] || []
       );
       setDepartment("");
     }
@@ -44,7 +44,7 @@ const LocationHome = () => {
       await AsyncStorage.setItem("department", department);
       router.push({
         pathname: "/home/home",
-        params: {department},
+        params: {country: country?.name || "", department},
       });
     } else {
       alert("Por favor, selecciona un departamento");
@@ -63,8 +63,11 @@ const LocationHome = () => {
       />
       <Select
         label="País"
-        selectedValue={country}
-        onValueChange={setCountry}
+        selectedValue={country?.id || ""}
+        onValueChange={(value) => {
+          const selectedCountry = countries.find(c => c.id === value);
+          setCountry(selectedCountry || null);
+        }}
         items={countries}
       />
 
@@ -83,7 +86,15 @@ const LocationHome = () => {
         disabled={!department}
         onPress={handleConfirm}
       >
-        Confirmar
+        Ingresar
+      </Button>
+
+      <Button
+        mode="contained"
+        style={styles.button}
+        onPress={() => router.push("/auth/login")}
+      >
+        Ir al Inicio de Sesión
       </Button>
     </View>
   );

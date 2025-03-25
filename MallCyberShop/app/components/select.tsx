@@ -24,7 +24,11 @@ const Select: React.FC<SelectProps> = ({
         onValueChange={onValueChange}
         style={styles.picker}
       >
-        <Picker.Item label={`Selecciona ${label.toLowerCase()}`} value="" />
+        <Picker.Item
+          style={{color: ""}}
+          label={`Selecciona ${label.toLowerCase()}`}
+          value=""
+        />
         {items.map((item) => (
           <Picker.Item key={item.id} label={item.name} value={item.id} />
         ))}

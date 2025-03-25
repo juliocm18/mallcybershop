@@ -12,7 +12,7 @@ import {FontAwesome} from "@expo/vector-icons";
 import {DraggableGrid} from "react-native-draggable-grid";
 import {openWhatsApp, handleLinkPress, getDeviceIdentifier} from "../functions";
 import {useRouter} from "expo-router";
-import {styles} from "../styles";
+import {globalStyles} from "../styles";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import SocialLinksModal from "../SocialLinksModal";
 import {fetchCompanies, fetchCompanyLinks} from "../company/functions";
@@ -22,6 +22,8 @@ import {Link} from "../link/model";
 import AdminZone from "./adminZone";
 import {useLocalSearchParams} from "expo-router";
 import {confirmButtonStyles} from "react-native-modal-datetime-picker";
+import LocationHome from "../locationhome";
+import LocationZoneHome from "./location-home";
 
 const STORAGE_KEY = "icon_order";
 
@@ -60,6 +62,7 @@ const DynamicTabsScreen = () => {
   const [initialized, setInitialized] = useState(false);
   const [routes, setRoutes] = useState<{key: string; title: string}[]>([]);
   let {department} = useLocalSearchParams<{department?: string}>();
+  let {country} = useLocalSearchParams<{country?: string}>();
 
   const toggleModalSocial = async (item: GridItem) => {
     const companyId = +item.id;
@@ -159,7 +162,7 @@ const DynamicTabsScreen = () => {
 
   if (error) {
     return (
-      <View style={styles.container}>
+      <View style={globalStyles.container}>
         <Text style={{color: "red", textAlign: "center"}}>{error}</Text>
       </View>
     );
@@ -175,20 +178,20 @@ const DynamicTabsScreen = () => {
       keyboardShouldPersistTaps="handled"
       scrollEnabled={scrollEnabled}
     >
-      <View style={{flex: 1, backgroundColor: "#ffb77c"}}>
+      <View style={{flex: 1, backgroundColor: "#ffdcbf"}}>
         <DraggableGrid
           numColumns={4}
           renderItem={(item: IconItem) => (
-            <View style={styles.logoContainer}>
-              <View style={styles.logoWrapper}>
+            <View style={globalStyles.logoContainer}>
+              <View style={globalStyles.logoWrapper}>
                 <Image
                   source={{uri: item.logo}}
-                  style={styles.logo}
+                  style={globalStyles.logo}
                   resizeMode="cover"
                 />
               </View>
               <Text
-                style={styles.logoLabel}
+                style={globalStyles.logoLabel}
                 numberOfLines={2}
                 ellipsizeMode="tail"
               >
@@ -211,8 +214,8 @@ const DynamicTabsScreen = () => {
   /* Tabs management */
 
   return (
-    <View style={styles.container}>
-      <AdminZone />
+    <View style={globalStyles.container}>
+      <LocationZoneHome country={country || ""} department={department || ""} />
       <TabView
         navigationState={{index, routes}}
         renderScene={renderScene}
@@ -224,9 +227,9 @@ const DynamicTabsScreen = () => {
           <TabBar
             {...props}
             scrollEnabled
-            style={styles.tabBar}
-            indicatorStyle={styles.indicator}
-            tabStyle={styles.tab}
+            style={globalStyles.tabBar}
+            indicatorStyle={globalStyles.indicator}
+            tabStyle={globalStyles.tab}
           />
         )}
       />
@@ -239,12 +242,12 @@ const DynamicTabsScreen = () => {
         onClose={() => setModalSocialVisible(false)}
       />
 
-      <TouchableOpacity
+      {/* <TouchableOpacity
         style={styles.floatingWhatsAppButton}
         onPress={openWhatsApp}
       >
         <FontAwesome name="whatsapp" size={30} color="white" />
-      </TouchableOpacity>
+      </TouchableOpacity> */}
     </View>
   );
 };

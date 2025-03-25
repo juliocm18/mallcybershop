@@ -1,5 +1,12 @@
 import {StyleSheet} from "react-native";
-export const styles = StyleSheet.create({
+export const globalStyles = StyleSheet.create({
+  pageTitle: {
+    fontSize: 32,
+    fontWeight: "bold",
+    textAlign: "center",
+    marginBottom: 40,
+    color: "#fb8436",
+  },
   container: {
     flex: 1,
     backgroundColor: "#ea822c",

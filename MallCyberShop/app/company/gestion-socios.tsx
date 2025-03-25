@@ -299,7 +299,7 @@ const CompanyScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Administración de Socios Estratégicos</Text>
+      <Text style={styles.title}>Administración de S.E</Text>
       <Button
         title="Agregar Socio Estratégico"
         onPress={handleAddCompany}
@@ -307,6 +307,7 @@ const CompanyScreen = () => {
       />
 
       <FlatList
+        style={{height: "92%"}}
         data={companies}
         keyExtractor={(item) => (item.id || 0).toString()}
         renderItem={({item}) => (
@@ -330,7 +331,7 @@ const CompanyScreen = () => {
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <Text style={styles.socialModaltitle}>
-              {editingId ? "Actualizar" : "Guardar"} Socio Estratégico
+              {editingId ? "Actualizar" : "Guardar"} S.E
             </Text>
             <Text style={styles.label}>Identificador</Text>
             <TextInput style={styles.input} value={key} onChangeText={setKey} />

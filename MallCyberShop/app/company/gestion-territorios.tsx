@@ -125,6 +125,7 @@ const GestionTerritorios = () => {
     <View style={styles.container}>
       <Text style={styles.title}>Asignación de Territorios a S.E</Text>
       <FlatList
+        style={{height: "92%"}}
         data={companies}
         keyExtractor={(item) => (item.id || 0).toString()}
         renderItem={({item}) => (
