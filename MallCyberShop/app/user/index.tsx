@@ -171,6 +171,7 @@ export default function Index() {
 
   const handleSaveTerritory = async () => {
     try {
+      setLoading(true);
       if (editingId) {
         const updatedCompany = await UserFunctions.updateDepartments(
           editingId,
@@ -186,6 +187,8 @@ export default function Index() {
     } catch (error: any) {
       console.error("Error al agregar territorios", error.message);
       Alert.alert("Error", error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -423,20 +426,29 @@ export default function Index() {
                   </Text>
                 </View>
 
-                <View style={styles.modalButtonContainer}>
+                <View style={[styles.modalButtonContainer, {paddingTop: 10}]}>
                   <TouchableOpacity
                     style={styles.modalUpdateButton}
                     onPress={handleSaveTerritory}
+                    disabled={loading}
                   >
-                    <Text style={styles.modalButtonText}>Guardar</Text>
+                    {loading ? (
+                      <ActivityIndicator color="#fff" />
+                    ) : (
+                      <Text style={styles.modalButtonText}>
+                        {editingId ? "Actualizar" : "Guardar"}
+                      </Text>
+                    )}
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={styles.modalCancelButton}
                     onPress={() => setModalTerritoryVisible(false)}
+                    disabled={loading}
                   >
                     <Text style={styles.modalButtonText}>Cancelar</Text>
                   </TouchableOpacity>
                 </View>
+
               </>
             </View>
           </KeyboardAvoidingView>

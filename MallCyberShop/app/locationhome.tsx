@@ -42,6 +42,7 @@ const LocationHome = () => {
   const handleConfirm = async () => {
     if (department) {
       await AsyncStorage.setItem("department", department);
+      await AsyncStorage.setItem("country", country?.name || "");
       router.push({
         pathname: "/home/home",
         params: {country: country?.name || "", department},

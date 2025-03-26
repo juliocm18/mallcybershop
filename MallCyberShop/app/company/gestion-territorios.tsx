@@ -30,13 +30,15 @@ import departmentsData from "../data/departments.json";
 import Select from "../components/select";
 import UserFunctions from "../user/functions";
 import {useAuth} from "../context/AuthContext";
+import { globalStyles } from "../styles";
 const GestionTerritorios = () => {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [modalTerritoryVisible, setModalTerritoryVisible] = useState(false);
   const [continent, setContinent] = useState("");
   const [country, setCountry] = useState("");
   const [editingId, setEditingId] = useState<number | null>(null);
-
+  const [companyName, setCompanyName] = useState("");
+  const [loading, setLoading] = useState(false);
   const [countries, setCountries] = useState<{id: string; name: string}[]>([]);
   const [departments, setDepartments] = useState<string[]>([]);
 
@@ -91,6 +93,7 @@ const GestionTerritorios = () => {
     setModalTerritoryVisible(true);
     setSelectedDepartments(company.departments || []);
     setEditingId(company.id || null);
+    setCompanyName(company.name || "");
   };
 
   const clearFields = () => {
@@ -103,6 +106,7 @@ const GestionTerritorios = () => {
 
   const handleSaveTerritory = async () => {
     try {
+      setLoading(true);
       if (editingId) {
         const companyObj: Partial<Company> = {
           departments: selectedDepartments,
@@ -118,12 +122,14 @@ const GestionTerritorios = () => {
       }
     } catch (error: any) {
       Alert.alert("Error", error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Asignación de Territorios a S.E</Text>
+      <Text style={globalStyles.pageTitle}>Asignación de Territorios a S.E</Text>
       <FlatList
         style={{height: "92%"}}
         data={companies}
@@ -146,7 +152,7 @@ const GestionTerritorios = () => {
             style={styles.modalContent}
           >
             <View>
-              <Text style={styles.title}>Asignar Territorios</Text>
+              <Text style={styles.title}>{companyName}</Text>
               <>
                 <Select
                   label="Continente"
@@ -228,18 +234,27 @@ const GestionTerritorios = () => {
                 </View>
 
                 <View style={styles.modalButtonContainer}>
-                  <TouchableOpacity
-                    style={styles.modalUpdateButton}
-                    onPress={handleSaveTerritory}
-                  >
-                    <Text style={styles.modalButtonText}>Guardar</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.modalCancelButton}
-                    onPress={() => setModalTerritoryVisible(false)}
-                  >
-                    <Text style={styles.modalButtonText}>Cancelar</Text>
-                  </TouchableOpacity>
+
+                <TouchableOpacity
+                style={styles.modalUpdateButton}
+                onPress={handleSaveTerritory}
+                disabled={loading}
+              >
+                {loading ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={styles.modalButtonText}>
+                    {editingId ? "Actualizar" : "Guardar"}
+                  </Text>
+                )}
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalCancelButton}
+                onPress={() => setModalTerritoryVisible(false)}
+                disabled={loading}
+              >
+                <Text style={styles.modalButtonText}>Cancelar</Text>
+              </TouchableOpacity>
                 </View>
               </>
             </View>

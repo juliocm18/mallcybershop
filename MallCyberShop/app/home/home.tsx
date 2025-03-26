@@ -50,6 +50,7 @@ const handleCreateCompanyCounter = async (companyId: number) => {
 };
 
 const DynamicTabsScreen = () => {
+  const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [isModalSocialVisible, setModalSocialVisible] = useState(false);
   const [isAllowReorder, setAllowReorder] = useState(true);
@@ -61,6 +62,10 @@ const DynamicTabsScreen = () => {
   >(new Map());
   const [initialized, setInitialized] = useState(false);
   const [routes, setRoutes] = useState<{key: string; title: string}[]>([]);
+ const [currentDepartment, setCurrentDepartment] = useState<string>("");
+ const [currentCountry, setCurrentCountry] = useState<string>("");
+ const [clickCount, setClickCount] = useState(0);
+
   let {department} = useLocalSearchParams<{department?: string}>();
   let {country} = useLocalSearchParams<{country?: string}>();
 
@@ -86,8 +91,10 @@ const DynamicTabsScreen = () => {
     if (initialized) return; // Evita múltiples ejecuciones
     const loadRemoteJson = async () => {
       try {
-        if (!department) {
-          department = (await AsyncStorage.getItem("department")) || "";
+        if (!department || !country) {
+          console.log("Department or country not found");   
+          department = (await AsyncStorage.getItem("department") || "La Libertad");
+          country = (await AsyncStorage.getItem("country") || "Peru");
         }
         const storedIcons = await getIconOrder();
         const remoteData = await fetchCompanies("priority");
@@ -98,6 +105,9 @@ const DynamicTabsScreen = () => {
         const companiesByDepartment = remoteData.filter((app) =>
           app.departments?.includes(department)
         );
+
+        setCurrentDepartment(department);
+        setCurrentCountry(country);
 
         //if (!storedIcons) {
         let formattedRoutes: categoryHashMap[] = [];
@@ -168,6 +178,19 @@ const DynamicTabsScreen = () => {
     );
   }
 
+  const handleGoLoginPress = () => {
+    setClickCount((prev) => prev + 1);
+
+    setTimeout(() => {
+      setClickCount(0); // Resetea el contador si no hay 3 clics seguidos
+    }, 1000);
+
+    if (clickCount + 1 === 3) {
+      setClickCount(0); // Reinicia el contador después de los 3 clics
+      router.push("../auth/login"); // Cambia "OtraPantalla" por el nombre de tu pantalla
+    }
+  };
+
   /* Tabs management */
   const layout = useWindowDimensions();
   const [index, setIndex] = useState(0);
@@ -215,7 +238,10 @@ const DynamicTabsScreen = () => {
 
   return (
     <View style={globalStyles.container}>
-      <LocationZoneHome country={country || ""} department={department || ""} />
+      <TouchableOpacity onPress={handleGoLoginPress} activeOpacity={1}>
+      <LocationZoneHome country={currentCountry} department={currentDepartment} />
+    </TouchableOpacity>
+      
       <TabView
         navigationState={{index, routes}}
         renderScene={renderScene}

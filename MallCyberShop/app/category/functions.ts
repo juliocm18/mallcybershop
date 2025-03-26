@@ -1,9 +1,9 @@
 import {supabase} from "../supabase";
-import {Category} from "../functions/types";
+import {Category} from "./types";
 
 export const getCategories = async (): Promise<Category[] | null> => {
   try {
-    const {data, error} = await supabase.from("category").select("*");
+    const {data, error} = await supabase.from("category").select("*").order("priority", {ascending: true});
     if (error) throw error;
     return data;
   } catch (error: any) {
@@ -23,19 +23,20 @@ export const getFormattedRoutes = async (
 };
 
 export const getCategoryNames = async (): Promise<string[]> => {
-  const {data, error} = await supabase.from("category").select("name");
+  const {data, error} = await supabase.from("category").select("name").order("priority", {ascending: true});
   if (error) throw new Error(error.message);
   return data.map((category) => category.name);
 };
 
 export const createCategory = async (
-  name: string
+  name: string,
+  priority: number
 ): Promise<Category | null> => {
   try {
     //const {data, error} = await supabase.from("category").insert([{name}]);
     const {data, error} = await supabase
       .from("category")
-      .upsert({name})
+      .upsert({name, priority})
       .select();
 
     if (error) throw error;
@@ -48,12 +49,13 @@ export const createCategory = async (
 
 export const updateCategory = async (
   id: number,
-  name: string
+  name: string,
+  priority: number
 ): Promise<Category | null> => {
   try {
     const {data, error} = await supabase
       .from("category")
-      .update({name})
+      .update({name, priority})
       .match({id})
       .select();
 

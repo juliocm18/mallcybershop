@@ -1,12 +1,10 @@
-import React from "react";
+import React, { useState } from "react";
 import {View, Text} from "react-native";
 import {FontAwesome} from "@expo/vector-icons";
 import {useRouter} from "expo-router";
 
 const LocationZoneHome = ({country, department}: {country: string, department: string}) => {
-  const router = useRouter();
-
-  return (
+  return (    
     <View
       style={{
         flexDirection: "row",

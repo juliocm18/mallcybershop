@@ -5,7 +5,7 @@ import {styles} from "./styles";
 import {FontAwesome} from "@expo/vector-icons";
 
 export const CompanyItem = React.memo(
-  ({item, onEdit, onLinks, onDelete, deleting}: any) => (
+  ({item, onEdit, onLinks, confirmDelete, deletingId}: any) => (
     <View style={styles.row}>
       <Text style={(styles.cell, {width: 200})}>{item.name}</Text>
       <View style={styles.buttonsContainer}>
@@ -23,10 +23,10 @@ export const CompanyItem = React.memo(
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.deleteButton}
-          onPress={() => onDelete(item.id || 0)}
-          disabled={deleting === item.id}
+          onPress={() => confirmDelete(item.id || 0)}
+          disabled={deletingId === item.id}
         >
-          {deleting === item.id ? (
+          {deletingId === item.id ? (
             <ActivityIndicator color="#fff" />
           ) : (
             <FontAwesome name="trash" size={24} color="white" />

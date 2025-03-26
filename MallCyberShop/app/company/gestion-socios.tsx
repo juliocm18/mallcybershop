@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -26,17 +26,19 @@ import {
   updateCompanyLink,
   uploadImage,
 } from "./functions";
-import {styles} from "./styles";
-import {FontAwesome} from "@expo/vector-icons";
-import {Picker} from "@react-native-picker/picker";
-import {Link} from "../link/model";
+import { styles } from "./styles";
+import { FontAwesome } from "@expo/vector-icons";
+import { Picker } from "@react-native-picker/picker";
+import { Link } from "../link/model";
 import LinkFunctions from "../link/functions";
-import {Company, CompanyLink} from "./company.interface";
+import { Company, CompanyLink } from "./company.interface";
 import PriorityInput from "./priority";
-import {CompanyItem} from "./company.item";
-import {useAuth} from "../context/AuthContext";
+import { CompanyItem } from "./company.item";
+import { useAuth } from "../context/AuthContext";
 import UserFunctions from "../user/functions";
 import RoleFunctions from "../role/functions";
+import { globalStyles } from "../styles";
+import ConfirmationModal from "../components/confirmation-modal";
 
 const CompanyScreen = () => {
   const [companies, setCompanies] = useState<Company[]>([]);
@@ -57,13 +59,16 @@ const CompanyScreen = () => {
   const [url, setUrl] = useState("");
   const [links, setLinks] = useState<Link[]>([]);
   const [loading, setLoading] = useState(false);
-  const [deleting, setDeleting] = useState<number | null>(null);
+  
+  const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [confirmModalVisible, setConfirmModalVisible] = useState(false);
+  const [deletingName, setDeletingName] = useState<string>();
 
   const [link, setLink] = useState<Link>();
 
   const [selectedLinkId, setSelectedLinkId] = useState<number>();
   const [priority, setPriority] = useState("");
-  const {session} = useAuth();
+  const { session } = useAuth();
   const handlePickImage = async () => {
     if (editingId) {
       setEditingImage(true);
@@ -209,11 +214,12 @@ const CompanyScreen = () => {
       Alert.alert("Error", "Campos requeridos");
       return;
     }
+    setLoading(true);
     try {
       if (editingLinkId) {
         const companyObj = {
           url: url,
-          link: {id: selectedLinkId},
+          link: { id: selectedLinkId },
         };
         const companyLinlUpdated = await updateCompanyLink(
           editingLinkId,
@@ -231,7 +237,7 @@ const CompanyScreen = () => {
           //identificador: identificador,
           url: url,
           companyId: companyId,
-          link: {id: selectedLinkId},
+          link: { id: selectedLinkId },
         };
         const companyLinlInserted = await createCompanyLink(companyObj);
         if (companyLinlInserted) {
@@ -245,6 +251,8 @@ const CompanyScreen = () => {
     } catch (error: any) {
       console.error("Error creating/updating company link:", error.message);
       Alert.alert("Error", error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -270,8 +278,9 @@ const CompanyScreen = () => {
   };
 
   const handleDeleteLink = async (companyLink: CompanyLink) => {
-    setDeleting(companyLink.id || 0);
+    setDeletingId(companyLink.id || 0);
     try {
+      
       deleteCompanyLink(companyLink.id || 0);
       const companyLinks = await fetchCompanyLinks(companyId);
       setCompanyLinks(companyLinks);
@@ -281,42 +290,56 @@ const CompanyScreen = () => {
     } catch (error: any) {
       Alert.alert("Error", error.message);
     } finally {
-      setDeleting(null);
+      setConfirmModalVisible(false)
+      setDeletingId(null);
     }
   };
 
   const handleDelete = async (id: number) => {
-    setDeleting(id);
+    setDeletingId(id);
     try {
       await deleteCompany(id);
-      await fetchCompanies("name");
+      //await fetchCompanies("name");
+      loadCompanies();
     } catch (error: any) {
       Alert.alert("Error", error.message);
     } finally {
-      setDeleting(null);
+      setDeletingId(null);
+      setConfirmModalVisible(false);
     }
+  };
+
+  const confirmDelete = (companyId: number, companyName: string) => {
+    setDeletingId(companyId);
+    setDeletingName(companyName);
+    setConfirmModalVisible(true);
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Administración de S.E</Text>
-      <Button
-        title="Agregar Socio Estratégico"
+      <Text style={globalStyles.pageTitle}>Administración de S.E</Text>
+      <TouchableOpacity
+        style={globalStyles.globalButton}
         onPress={handleAddCompany}
-        color="#ff9f61"
-      />
+        disabled={loading}
+      >
+        <Text style={globalStyles.globalButtonText}>
+          Agregar registro
+        </Text>
+        <FontAwesome style={globalStyles.globalButtonIcon} name="plus" size={24} color="white" />
+      </TouchableOpacity>
 
       <FlatList
-        style={{height: "92%"}}
+        style={{ height: "92%" }}
         data={companies}
         keyExtractor={(item) => (item.id || 0).toString()}
-        renderItem={({item}) => (
+        renderItem={({ item }) => (
           <CompanyItem
             item={item}
             onEdit={handleEdit}
             onLinks={handleLinks}
-            onDelete={handleDelete}
-            deleting={deleting}
+            confirmDelete={() => confirmDelete(item.id || 0, item.name)}
+            deletingId={deletingId}
           />
         )}
         getItemLayout={(data, index) => ({
@@ -367,7 +390,7 @@ const CompanyScreen = () => {
             </TouchableOpacity>
 
             {logoUri && (
-              <Image source={{uri: logoUri}} style={styles.logoPreview} />
+              <Image source={{ uri: logoUri }} style={styles.logoPreview} />
             )}
 
             <View style={styles.modalButtonContainer}>
@@ -424,24 +447,33 @@ const CompanyScreen = () => {
                     />
                   ))}
                 </Picker>
-                <Text style={styles.label}>Enlace</Text>
+                {/* <Text style={styles.label}>Enlace</Text> */}
                 <TextInput
+                  placeholder="Enlace"
                   style={styles.input}
                   value={url}
                   onChangeText={setUrl}
                 />
-                <View
-                  style={[styles.modalButtonContainer, {paddingBottom: 10}]}
-                >
+
+
+                <View style={[styles.modalButtonContainer, { paddingBottom: 10 }]}>
                   <TouchableOpacity
                     style={styles.modalUpdateButton}
                     onPress={handleSaveCompanyLink}
+                    disabled={loading}
                   >
-                    <Text style={styles.modalButtonText}>Guardar</Text>
+                    {loading ? (
+                      <ActivityIndicator color="#fff" />
+                    ) : (
+                      <Text style={styles.modalButtonText}>
+                        {editingId ? "Actualizar" : "Guardar"}
+                      </Text>
+                    )}
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={styles.modalCancelButton}
                     onPress={() => setModalLinkVisible(false)}
+                    disabled={loading}
                   >
                     <Text style={styles.modalButtonText}>Cancelar</Text>
                   </TouchableOpacity>
@@ -451,11 +483,11 @@ const CompanyScreen = () => {
                 data={companyLinks}
                 keyExtractor={(item) => (item.id || 0).toString()}
                 keyboardShouldPersistTaps="handled"
-                renderItem={({item}) => (
+                renderItem={({ item }) => (
                   <View style={styles.row}>
-                    <View style={{flexDirection: "column"}}>
+                    <View style={{ flexDirection: "column" }}>
                       <Text style={styles.cell}>Tipo: {item.link?.name}</Text>
-                      <Text style={[styles.cell, {maxWidth: 200}]}>
+                      <Text style={[styles.cell, { maxWidth: 200 }]}>
                         {item.url}
                       </Text>
                     </View>
@@ -467,11 +499,17 @@ const CompanyScreen = () => {
                       >
                         <FontAwesome name="edit" size={24} color="white" />
                       </TouchableOpacity>
+
                       <TouchableOpacity
                         style={styles.deleteButton}
                         onPress={() => handleDeleteLink(item)}
+                        disabled={deleting === item.id}
                       >
-                        <FontAwesome name="trash" size={24} color="white" />
+                        {deleting === item.id ? (
+                          <ActivityIndicator color="#fff" />
+                        ) : (
+                          <FontAwesome name="trash" size={24} color="white" />
+                        )}
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -481,6 +519,13 @@ const CompanyScreen = () => {
           </KeyboardAvoidingView>
         </View>
       </Modal>
+
+      <ConfirmationModal
+        visible={confirmModalVisible}
+        alias={deletingName || "el registro"}
+        onConfirm={() => {handleDelete(deletingId || 0);}}
+        onCancel={() => {setDeletingId(null); setConfirmModalVisible(false)}}
+      />
     </View>
   );
 };

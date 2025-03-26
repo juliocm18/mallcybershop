@@ -16,6 +16,8 @@ import {Link} from "./model";
 import LinkFunctions from "./functions";
 import {styles} from "./styles";
 import {FontAwesome} from "@expo/vector-icons";
+import { globalStyles } from "../styles";
+import ConfirmationModal from "../components/confirmation-modal";
 
 export default function Index() {
   const [links, setLinks] = useState<Link[]>([]);
@@ -26,7 +28,9 @@ export default function Index() {
   const [logoUri, setLogoUri] = useState<string | null>(null);
 
   const [loading, setLoading] = useState(false);
-  const [deleting, setDeleting] = useState<number | null>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [confirmModalVisible, setConfirmModalVisible] = useState(false);
+  const [deletingName, setDeletingName] = useState<string>();
 
   useEffect(() => {
     loadLinks();
@@ -58,14 +62,15 @@ export default function Index() {
   };
 
   const handleDelete = async (id: number) => {
-    setDeleting(id);
+    setDeletingId(id);
     try {
       await LinkFunctions.remove(id);
       await loadLinks();
     } catch (error: any) {
       Alert.alert("Error", error.message);
     } finally {
-      setDeleting(null);
+      setDeletingId(null);
+      setConfirmModalVisible(false)
     }
   };
 
@@ -141,14 +146,27 @@ export default function Index() {
     }
   };
 
+  const confirmDelete = (link: Link) => {
+    setDeletingId(link.id || 0);
+    setDeletingName(link.name);
+    setConfirmModalVisible(true);
+  };
+
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Administración de Contactos</Text>
-      <Button
-        title="Agregar Contacto"
-        onPress={() => handleAdd()}
-        color="#ff9f61"
-      />
+      <Text style={globalStyles.pageTitle}>Administración de Contactos</Text>
+      <TouchableOpacity
+        style={globalStyles.globalButton}
+        onPress={handleAdd}
+        disabled={loading}
+      >
+         <Text style={globalStyles.globalButtonText}>
+            Agregar registro            
+          </Text>
+          <FontAwesome style={globalStyles.globalButtonIcon} name="plus" size={24} color="white" />
+      </TouchableOpacity>
+
+
       <FlatList
         style={{height: "92%"}}
         data={links}
@@ -171,10 +189,10 @@ export default function Index() {
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.deleteButton}
-                onPress={() => handleDelete(item.id || 0)}
-                disabled={deleting === item.id}
+                onPress={() => confirmDelete(item)}
+                disabled={deletingId === item.id}
               >
-                {deleting === item.id ? (
+                {deletingId === item.id ? (
                   <ActivityIndicator color="#fff" />
                 ) : (
                   <FontAwesome name="trash" size={24} color="white" />
@@ -240,6 +258,13 @@ export default function Index() {
           </View>
         </View>
       </Modal>
+
+      <ConfirmationModal
+        visible={confirmModalVisible}
+        alias={deletingName || "el registro"}
+        onConfirm={() => {handleDelete(deletingId || 0);}}
+        onCancel={() => {setDeletingId(null); setConfirmModalVisible(false)}}
+      />
     </View>
   );
 }

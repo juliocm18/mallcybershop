@@ -25,7 +25,7 @@ const Select: React.FC<SelectProps> = ({
         style={styles.picker}
       >
         <Picker.Item
-          style={{color: ""}}
+          style={{color: "#fb8436"}}
           label={`Selecciona ${label.toLowerCase()}`}
           value=""
         />

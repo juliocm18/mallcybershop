@@ -11,6 +11,7 @@ import {useRouter} from "expo-router";
 import {Ionicons} from "@expo/vector-icons";
 import RoleFunctions from "../role/functions";
 import {globalStyles} from "../styles";
+import { ActivityIndicator } from "react-native-paper";
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -18,12 +19,14 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const {signIn} = useAuth();
   const router = useRouter();
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
     if (!email || !password) {
       setError("Debe completar todos los campos.");
       return;
     }
+    setLoading(true);
 
     try {
       const userLogged = await signIn(email, password);
@@ -35,6 +38,8 @@ export default function Login() {
       router.push("../adminhome");
     } catch (err) {
       setError("Credenciales incorrectas, intente nuevamente.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -68,9 +73,19 @@ export default function Login() {
 
       {error && <Text style={styles.errorText}>{error}</Text>}
 
-      <TouchableOpacity style={styles.button} onPress={handleLogin}>
-        <Text style={styles.buttonText}>ingresar</Text>
-      </TouchableOpacity>
+      <TouchableOpacity
+                style={styles.button}
+                onPress={handleLogin}
+                disabled={loading}
+              >
+                {loading ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={styles.buttonText}>
+                    Ingresar
+                  </Text>
+                )}
+              </TouchableOpacity>
 
       <TouchableOpacity
         style={styles.button}

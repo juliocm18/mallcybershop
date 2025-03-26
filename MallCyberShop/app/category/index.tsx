@@ -15,21 +15,20 @@ import {
   deleteCategory,
   updateCategory, // Asumir que tienes una función para actualizar categorías
 } from "./functions";
-import {useRouter} from "expo-router";
 import {FontAwesome} from "@expo/vector-icons";
 import { globalStyles } from "../styles";
-export type Category = {
-  id: number;
-  name: string;
-};
+import {Category} from "./types";
+import ConfirmationModal from "../components/confirmation-modal";
 
-const GestionCategorias = () => {
+const Index = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [newCategory, setNewCategory] = useState<string>("");
+  const [newPriority, setNewPriority] = useState<number>(0);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
-
+  const [confirmModalVisible, setConfirmModalVisible] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [deleting, setDeleting] = useState<number | null>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [deletingName, setDeletingName] = useState<string>();
 
   // Cargar categorías
   const loadCategories = async () => {
@@ -43,8 +42,7 @@ const GestionCategorias = () => {
 
   // Crear o actualizar categoría
   const handleSaveCategory = async () => {
-    console.log("newCategory", newCategory);
-    if (!newCategory.trim()) {
+    if (!newCategory.trim() || newPriority <= 0) {
       Alert.alert("Error", "Campos requeridos");
       return;
     }
@@ -54,22 +52,24 @@ const GestionCategorias = () => {
       // Actualizar categoría
       const updatedCategory = await updateCategory(
         editingCategory.id,
-        newCategory
+        newCategory,
+        newPriority
       );
       if (updatedCategory) {
         setNewCategory("");
+        setNewPriority(0);
         setEditingCategory(null);
         loadCategories();
         Alert.alert("Aviso", "Categoría actualizada");
         setLoading(false);
       }
     } else {
-      const createdCategory = await createCategory(newCategory);
+      const createdCategory = await createCategory(newCategory, newPriority);
       if (createdCategory) {
         setNewCategory("");
+        setNewPriority(0);
         loadCategories();
         Alert.alert("Aviso", "Categoría creada");
-
         setLoading(false);
       }
     }
@@ -77,7 +77,7 @@ const GestionCategorias = () => {
 
   // Eliminar categoría
   const handleDeleteCategory = async (id: number) => {
-    setDeleting(id);
+    setDeletingId(id);
     try {
       const success = await deleteCategory(id);
       if (success) {
@@ -87,23 +87,38 @@ const GestionCategorias = () => {
     } catch (error: any) {
       Alert.alert("Error", error.message);
     } finally {
-      setDeleting(null);
+      setDeletingId(null);
+      setConfirmModalVisible(false)
     }
   };
 
   // Habilitar edición de categoría
   const handleEditCategory = (category: Category) => {
     setNewCategory(category.name);
+    setNewPriority(category.priority);
     setEditingCategory(category);
+  };
+
+  const confirmDelete = (category: Category) => {
+    setDeletingId(category.id);
+    setDeletingName(category.name);
+    setConfirmModalVisible(true);
   };
 
   return (
     <View style={styles.container}>
-      <Text style={globalStyles.pageTitle}>Administración de Contactos</Text>
+      <Text style={globalStyles.pageTitle}>Administración de Categorías</Text>
       <TextInput
         value={newCategory}
         onChangeText={setNewCategory}
         placeholder="Nombre de la categoría"
+        style={styles.input}
+      />
+      <TextInput
+      keyboardType="numeric"
+        value={newPriority.toString()}
+        onChangeText={(text) => setNewPriority(Number(text))}
+        placeholder="prioridad"
         style={styles.input}
       />
       <TouchableOpacity
@@ -115,9 +130,10 @@ const GestionCategorias = () => {
           <ActivityIndicator color="#fff" />
         ) : (
           <Text style={styles.buttonText}>
-            {editingCategory ? "Actualizar" : "Guardar"}
-          </Text>
+            {editingCategory ? "Actualizar registro" : "Guardar registro"}
+          </Text>          
         )}
+        <FontAwesome style={globalStyles.globalButtonIcon} name="plus" size={24} color="white" />
       </TouchableOpacity>
 
       <FlatList
@@ -126,7 +142,7 @@ const GestionCategorias = () => {
         keyExtractor={(item) => item.id.toString()}
         renderItem={({item}) => (
           <View style={styles.row}>
-            <Text style={styles.cell}>{item.name}</Text>
+            <Text style={styles.cell}>{item.priority} - {item.name}</Text>
             <View style={styles.buttonsContainer}>
               <TouchableOpacity
                 style={styles.editButton}
@@ -136,10 +152,10 @@ const GestionCategorias = () => {
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.deleteButton}
-                onPress={() => handleDeleteCategory(item.id || 0)}
-                disabled={deleting === item.id}
+                onPress={() => confirmDelete(item)}
+                disabled={deletingId === item.id}
               >
-                {deleting === item.id ? (
+                {deletingId === item.id ? (
                   <ActivityIndicator color="#fff" />
                 ) : (
                   <FontAwesome name="trash" size={24} color="white" />
@@ -148,6 +164,12 @@ const GestionCategorias = () => {
             </View>
           </View>
         )}
+      />
+      <ConfirmationModal
+        visible={confirmModalVisible}
+        alias={deletingName || "el registro"}
+        onConfirm={() => {handleDeleteCategory(deletingId || 0);}}
+        onCancel={() => {setDeletingId(null); setConfirmModalVisible(false)}}
       />
     </View>
   );
@@ -219,4 +241,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default GestionCategorias;
+export default Index;

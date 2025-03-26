@@ -50,7 +50,7 @@ const Home: React.FC = () => {
         ) && (
           <>
             <Link
-              href="./category/gestion-categorias"
+              href="./category/"
               style={[styles.button, {backgroundColor: "#4CAF50"}]}
             >
               <View style={styles.iconLabelContainer}>

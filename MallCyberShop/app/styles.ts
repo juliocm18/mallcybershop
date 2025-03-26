@@ -1,11 +1,27 @@
 import {StyleSheet} from "react-native";
 export const globalStyles = StyleSheet.create({
   pageTitle: {
-    fontSize: 32,
+    fontSize: 24,
     fontWeight: "bold",
     textAlign: "center",
-    marginBottom: 40,
+    marginBottom: 10,
     color: "#fb8436",
+  },
+  globalButton: {
+    backgroundColor: "#ff9f61",
+    padding: 10,
+    borderRadius: 5,
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  globalButtonText: {
+    color: "#fff",
+    fontWeight: "bold",
+  },
+  globalButtonIcon: {
+    position: "absolute",
+    right: 10,
+    top: 10,
   },
   container: {
     flex: 1,
