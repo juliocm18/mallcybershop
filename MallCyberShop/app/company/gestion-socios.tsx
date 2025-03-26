@@ -70,6 +70,8 @@ const CompanyScreen = () => {
   const [selectedLinkId, setSelectedLinkId] = useState<number>();
   const [priority, setPriority] = useState("");
   const { session } = useAuth();
+
+  const [selectedPrefix, setSelectedPrefix] = useState("");
   const handlePickImage = async () => {
     if (editingId) {
       setEditingImage(true);
@@ -321,6 +323,11 @@ const CompanyScreen = () => {
     setConfirmModalLinkVisible(true);
   };
 
+  const handleSelectedLink = (linkId: number) => {
+    const link = links.find((link) => link.id === linkId);
+    setUrl(link?.prefix || "");
+  };
+
   return (
     <View style={styles.container}>
       <Text style={globalStyles.pageTitle}>Administración de S.E</Text>
@@ -444,15 +451,14 @@ const CompanyScreen = () => {
                 <Select
                   label="Tipo de Contacto"
                   selectedValue={link ? (link.id)?.toString() || "" : ""}
-                  onValueChange={(itemValue) => setSelectedLinkId(Number(itemValue))}
+                  onValueChange={(itemValue) => handleSelectedLink(Number(itemValue))}
                   items={links.map((link) => ({ id: link.id?.toString() || "", name: link.name || "" }))}
                 />
-                {/* <Text style={styles.label}>Enlace</Text> */}
                 <TextInput
                   placeholder="Enlace"
                   style={styles.input}
                   value={url}
-                  onChangeText={setUrl}
+                  onChangeText={setUrl}                  
                 />
 
 

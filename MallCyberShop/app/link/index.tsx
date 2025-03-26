@@ -6,7 +6,6 @@ import {
   FlatList,
   Image,
   TouchableOpacity,
-  Button,
   Modal,
   Alert,
   ActivityIndicator,
@@ -21,6 +20,7 @@ import ConfirmationModal from "../components/confirmation-modal";
 
 export default function Index() {
   const [links, setLinks] = useState<Link[]>([]);
+  const [prefix, setPrefix] = useState("");
   const [editingId, setEditingId] = useState<number | null>(null);
   const [name, setName] = useState("");
   const [editingImage, setEditingImage] = useState(false);
@@ -32,13 +32,42 @@ export default function Index() {
   const [confirmModalVisible, setConfirmModalVisible] = useState(false);
   const [deletingName, setDeletingName] = useState<string>();
 
+  /* Pagination */
+  const [page, setPage] = useState(0);
+const pageSize = 10; // Cantidad de registros por página
+const [loadingMore, setLoadingMore] = useState(false);
+const [hasMore, setHasMore] = useState(true);
+/* pagination end */
+
   useEffect(() => {
-    loadLinks();
+    loadLinks(true);
   }, []);
 
-  const loadLinks = async () => {
-    const data = await LinkFunctions.getAll();
-    if (data) setLinks(data);
+  const loadLinks = async (reset = false) => {
+    if (loadingMore) return;
+    setLoadingMore(true);  
+    const from = reset ? 0 : page * pageSize;
+    const to = from + pageSize - 1;
+
+    const data = await LinkFunctions.getAllPaged(from, to);
+    
+    if (reset) {
+      if (data) setLinks(data);
+      setPage(1);
+    } else {
+      setLinks((prevLinks) => [...prevLinks, ...(data || [])]);
+      setPage((prevPage) => prevPage + 1);
+    }
+  
+    setHasMore((data?.length || 0) === pageSize); // Si no hay más datos, detenemos la carga
+    setLoadingMore(false);
+
+  };
+
+  const loadMore = () => {
+    if (hasMore) {
+      loadLinks();
+    }
   };
 
   const handleAdd = () => {
@@ -50,12 +79,14 @@ export default function Index() {
     setEditingImage(false);
     setLogoUri(null);
     setName("");
+    setPrefix("");
     setEditingId(null);
   };
 
   const handleEdit = (link: Link) => {
     setEditingId(link.id || 0);
     setName(link.name || "");
+    setPrefix(link.prefix || "");
     setEditingImage(false);
     setLogoUri(link.icon || "");
     setModalVisible(true);
@@ -65,7 +96,7 @@ export default function Index() {
     setDeletingId(id);
     try {
       await LinkFunctions.remove(id);
-      await loadLinks();
+      await loadLinks(true);
     } catch (error: any) {
       Alert.alert("Error", error.message);
     } finally {
@@ -85,7 +116,7 @@ export default function Index() {
   };
 
   const handleSave = async () => {
-    if (!name) {
+    if (!name || !prefix) {
       Alert.alert("Error", "Campos requeridos");
       return;
     }
@@ -102,6 +133,7 @@ export default function Index() {
         const newLink: Link = {
           name,
           icon: uploadedUrl || "",
+          prefix
         };
         const responseUpdateLink = await LinkFunctions.update(
           editingId,
@@ -111,7 +143,7 @@ export default function Index() {
         if (responseUpdateLink) {
           clearFields();
           setModalVisible(false);
-          loadLinks();
+          loadLinks(true);
           Alert.alert("Aviso", "Registro actualizado");
         }
       } else {
@@ -129,6 +161,7 @@ export default function Index() {
         const newLink: Link = {
           name,
           icon: uploadedUrl || "",
+          prefix
         };
 
         await LinkFunctions.save(newLink);
@@ -136,7 +169,7 @@ export default function Index() {
         // Limpiar los campos después de un registro exitoso
         clearFields();
         setModalVisible(false);
-        loadLinks();
+        loadLinks(true);
       }
     } catch (error: any) {
       console.error("Error creating company:", error.message);
@@ -168,11 +201,9 @@ export default function Index() {
 
 
       <FlatList
-        style={{height: "92%"}}
+        style={{height: "90%"}}
         data={links}
-        keyExtractor={(item) =>
-          item.id ? item.id.toString() : Math.random().toString()
-        }
+        keyExtractor={(item) => Math.random().toString()}
         renderItem={({item}) => (
           <View style={styles.row}>
             <View style={{flexDirection: "column"}}>
@@ -201,6 +232,11 @@ export default function Index() {
             </View>
           </View>
         )}
+        onEndReached={loadMore}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={loadingMore ? <ActivityIndicator size="large" /> : null}
+        removeClippedSubviews={true} // Elimina elementos fuera de pantalla
+        windowSize={3}
       />
 
       <Modal visible={modalVisible} animationType="slide" transparent>
@@ -210,11 +246,18 @@ export default function Index() {
               {editingId ? "Actualizar" : "Guardar"} Contacto
             </Text>
 
-            <Text style={styles.label}>Nombre</Text>
             <TextInput
+              placeholder="Nombre"
               style={styles.input}
               value={name}
               onChangeText={setName}
+            />
+
+            <TextInput
+              placeholder="Prefijo"
+              style={styles.input}
+              value={prefix}
+              onChangeText={setPrefix}
             />
 
             <TouchableOpacity
