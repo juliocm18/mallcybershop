@@ -45,6 +45,8 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 10,
     marginRight: 10,
     borderRadius: 5,
+    height: 40,
+    justifyContent: "center",
   },
   editButtonText: {
     color: "#fff",
@@ -55,6 +57,8 @@ export const styles = StyleSheet.create({
     paddingVertical: 5,
     paddingHorizontal: 10,
     borderRadius: 5,
+    height: 40,
+    justifyContent: "center",
   },
   LinkButton: {
     backgroundColor: "#0087ff",

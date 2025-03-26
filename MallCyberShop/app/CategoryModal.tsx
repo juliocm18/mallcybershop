@@ -1,7 +1,7 @@
 import React from "react";
 import {Modal, View, Text, ScrollView, TouchableOpacity} from "react-native";
 import BouncyCheckbox from "react-native-bouncy-checkbox";
-import {styles} from "./styles";
+import {globalStyles} from "./styles";
 
 interface CategoryModalProps {
   visible: boolean;
@@ -20,12 +20,12 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
 }) => {
   return (
     <Modal visible={visible} animationType="slide" transparent>
-      <View style={styles.modalContainer}>
-        <View style={styles.modalContent}>
-          <Text style={styles.modalTitle}>Filtrar por Categoría</Text>
+      <View style={globalStyles.modalContainer}>
+        <View style={globalStyles.modalContent}>
+          <Text style={globalStyles.modalTitle}>Filtrar por Categoría</Text>
           <ScrollView>
             {categories.map((category) => (
-              <View key={category} style={styles.checkboxContainer}>
+              <View key={category} style={globalStyles.checkboxContainer}>
                 <BouncyCheckbox
                   size={30}
                   fillColor="#ff9f61"
@@ -33,14 +33,14 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
                   text={category}
                   isChecked={selectedCategories.includes(category)}
                   onPress={() => toggleCategory(category)}
-                  textStyle={styles.checkboxText}
-                  iconStyle={styles.checkboxIcon}
+                  textStyle={globalStyles.checkboxText}
+                  iconStyle={globalStyles.checkboxIcon}
                 />
               </View>
             ))}
           </ScrollView>
-          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-            <Text style={styles.closeButtonText}>Cerrar</Text>
+          <TouchableOpacity style={globalStyles.closeButton} onPress={onClose}>
+            <Text style={globalStyles.closeButtonText}>Cerrar</Text>
           </TouchableOpacity>
         </View>
       </View>

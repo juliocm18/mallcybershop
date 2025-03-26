@@ -1,5 +1,5 @@
-import {TabView, SceneMap, TabBar} from "react-native-tab-view";
-import React, {useState, useEffect, useRef} from "react";
+import { TabView, SceneMap, TabBar } from "react-native-tab-view";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -8,22 +8,23 @@ import {
   useWindowDimensions,
   ScrollView,
 } from "react-native";
-import {FontAwesome} from "@expo/vector-icons";
-import {DraggableGrid} from "react-native-draggable-grid";
-import {openWhatsApp, handleLinkPress, getDeviceIdentifier} from "../functions";
-import {useRouter} from "expo-router";
-import {globalStyles} from "../styles";
+import { FontAwesome } from "@expo/vector-icons";
+import { DraggableGrid } from "react-native-draggable-grid";
+import { openWhatsApp, handleLinkPress, getDeviceIdentifier } from "../functions";
+import { useRouter } from "expo-router";
+import { globalStyles } from "../styles";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import SocialLinksModal from "../SocialLinksModal";
-import {fetchCompanies, fetchCompanyLinks} from "../company/functions";
-import {getCategoryNames, getFormattedRoutes} from "../category/functions";
-import {createCompanyCounter} from "../company/company-counter";
-import {Link} from "../link/model";
+import { fetchCompanies, fetchCompanyLinks } from "../company/functions";
+import { getCategoryNames, getFormattedRoutes } from "../category/functions";
+import { createCompanyCounter } from "../company/company-counter";
+import { Link } from "../link/model";
 import AdminZone from "./adminZone";
-import {useLocalSearchParams} from "expo-router";
-import {confirmButtonStyles} from "react-native-modal-datetime-picker";
+import { useLocalSearchParams } from "expo-router";
+import { confirmButtonStyles } from "react-native-modal-datetime-picker";
 import LocationHome from "../locationhome";
 import LocationZoneHome from "./location-home";
+import ChatButton from "./chat-button";
 
 const STORAGE_KEY = "icon_order";
 
@@ -61,13 +62,13 @@ const DynamicTabsScreen = () => {
     Map<string, any[]>
   >(new Map());
   const [initialized, setInitialized] = useState(false);
-  const [routes, setRoutes] = useState<{key: string; title: string}[]>([]);
- const [currentDepartment, setCurrentDepartment] = useState<string>("");
- const [currentCountry, setCurrentCountry] = useState<string>("");
- const [clickCount, setClickCount] = useState(0);
+  const [routes, setRoutes] = useState<{ key: string; title: string }[]>([]);
+  const [currentDepartment, setCurrentDepartment] = useState<string>("");
+  const [currentCountry, setCurrentCountry] = useState<string>("");
+  const [clickCount, setClickCount] = useState(0);
 
-  let {department} = useLocalSearchParams<{department?: string}>();
-  let {country} = useLocalSearchParams<{country?: string}>();
+  let { department } = useLocalSearchParams<{ department?: string }>();
+  let { country } = useLocalSearchParams<{ country?: string }>();
 
   const toggleModalSocial = async (item: GridItem) => {
     const companyId = +item.id;
@@ -92,7 +93,7 @@ const DynamicTabsScreen = () => {
     const loadRemoteJson = async () => {
       try {
         if (!department || !country) {
-          console.log("Department or country not found");   
+          console.log("Department or country not found");
           department = (await AsyncStorage.getItem("department") || "La Libertad");
           country = (await AsyncStorage.getItem("country") || "Peru");
         }
@@ -173,7 +174,7 @@ const DynamicTabsScreen = () => {
   if (error) {
     return (
       <View style={globalStyles.container}>
-        <Text style={{color: "red", textAlign: "center"}}>{error}</Text>
+        <Text style={{ color: "red", textAlign: "center" }}>{error}</Text>
       </View>
     );
   }
@@ -195,20 +196,20 @@ const DynamicTabsScreen = () => {
   const layout = useWindowDimensions();
   const [index, setIndex] = useState(0);
 
-  const renderScene = ({route}: {route: {key: string; title: string}}) => (
+  const renderScene = ({ route }: { route: { key: string; title: string } }) => (
     <ScrollView
-      contentContainerStyle={{flexGrow: 1}}
+      contentContainerStyle={{ flexGrow: 1 }}
       keyboardShouldPersistTaps="handled"
       scrollEnabled={scrollEnabled}
     >
-      <View style={{flex: 1, backgroundColor: "#ffdcbf"}}>
+      <View style={{ flex: 1, backgroundColor: "#ffdcbf" }}>
         <DraggableGrid
           numColumns={4}
           renderItem={(item: IconItem) => (
             <View style={globalStyles.logoContainer}>
               <View style={globalStyles.logoWrapper}>
                 <Image
-                  source={{uri: item.logo}}
+                  source={{ uri: item.logo }}
                   style={globalStyles.logo}
                   resizeMode="cover"
                 />
@@ -238,15 +239,16 @@ const DynamicTabsScreen = () => {
 
   return (
     <View style={globalStyles.container}>
+      <ChatButton />
       <TouchableOpacity onPress={handleGoLoginPress} activeOpacity={1}>
-      <LocationZoneHome country={currentCountry} department={currentDepartment} />
-    </TouchableOpacity>
-      
+        <LocationZoneHome country={currentCountry} department={currentDepartment} />
+      </TouchableOpacity>
+
       <TabView
-        navigationState={{index, routes}}
+        navigationState={{ index, routes }}
         renderScene={renderScene}
         onIndexChange={setIndex}
-        initialLayout={{width: layout.width}}
+        initialLayout={{ width: layout.width }}
         lazy // Solo renderiza la pestaña activa
         lazyPreloadDistance={1} // Precarga solo la siguiente pestaña
         renderTabBar={(props) => (

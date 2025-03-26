@@ -116,7 +116,7 @@ function MainLayout() {
       if (session) {
         //router.replace("/adminhome");
       } else {
-        router.replace("./locationhome");
+        router.replace("./chat/chat-group");
       }
     }
   }, [session, loading, isVideoFinished]);

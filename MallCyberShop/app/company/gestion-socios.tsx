@@ -39,6 +39,7 @@ import UserFunctions from "../user/functions";
 import RoleFunctions from "../role/functions";
 import { globalStyles } from "../styles";
 import ConfirmationModal from "../components/confirmation-modal";
+import Select from "../components/select";
 
 const CompanyScreen = () => {
   const [companies, setCompanies] = useState<Company[]>([]);
@@ -63,7 +64,7 @@ const CompanyScreen = () => {
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [confirmModalVisible, setConfirmModalVisible] = useState(false);
   const [deletingName, setDeletingName] = useState<string>();
-
+  const [confirmModalLinkVisible, setConfirmModalLinkVisible] = useState(false);
   const [link, setLink] = useState<Link>();
 
   const [selectedLinkId, setSelectedLinkId] = useState<number>();
@@ -277,23 +278,6 @@ const CompanyScreen = () => {
     }
   };
 
-  const handleDeleteLink = async (companyLink: CompanyLink) => {
-    setDeletingId(companyLink.id || 0);
-    try {
-      
-      deleteCompanyLink(companyLink.id || 0);
-      const companyLinks = await fetchCompanyLinks(companyId);
-      setCompanyLinks(companyLinks);
-      setLink(undefined);
-      setUrl("");
-      setEditingLinkId(null);
-    } catch (error: any) {
-      Alert.alert("Error", error.message);
-    } finally {
-      setConfirmModalVisible(false)
-      setDeletingId(null);
-    }
-  };
 
   const handleDelete = async (id: number) => {
     setDeletingId(id);
@@ -313,6 +297,28 @@ const CompanyScreen = () => {
     setDeletingId(companyId);
     setDeletingName(companyName);
     setConfirmModalVisible(true);
+  };
+
+  const handleDeleteLink = async (companyLinkId: number) => {  
+    try {      
+      deleteCompanyLink(companyLinkId);
+      const companyLinks = await fetchCompanyLinks(companyId);
+      setCompanyLinks(companyLinks);
+      setLink(undefined);
+      setUrl("");
+      setEditingLinkId(null);
+    } catch (error: any) {
+      Alert.alert("Error", error.message);
+    } finally {
+      setDeletingId(null);
+      setConfirmModalLinkVisible(false);     
+    }
+  };
+
+  const confirmDeleteLink = (companyLink: CompanyLink) => {
+    setDeletingId(companyLink.id || 0);
+    setDeletingName(companyLink.link?.name || "");
+    setConfirmModalLinkVisible(true);
   };
 
   return (
@@ -435,18 +441,12 @@ const CompanyScreen = () => {
                 <Text style={styles.socialModalFooterTitle}>
                   Agregar Contacto:
                 </Text>
-                <Picker
-                  selectedValue={link?.id}
-                  onValueChange={(itemValue) => setSelectedLinkId(itemValue)}
-                >
-                  {links.map((link) => (
-                    <Picker.Item
-                      key={link.id}
-                      label={link.name}
-                      value={link.id}
-                    />
-                  ))}
-                </Picker>
+                <Select
+                  label="Tipo de Contacto"
+                  selectedValue={link ? (link.id)?.toString() || "" : ""}
+                  onValueChange={(itemValue) => setSelectedLinkId(Number(itemValue))}
+                  items={links.map((link) => ({ id: link.id?.toString() || "", name: link.name || "" }))}
+                />
                 {/* <Text style={styles.label}>Enlace</Text> */}
                 <TextInput
                   placeholder="Enlace"
@@ -456,7 +456,7 @@ const CompanyScreen = () => {
                 />
 
 
-                <View style={[styles.modalButtonContainer, { paddingBottom: 10 }]}>
+                <View style={[styles.modalButtonContainer]}>
                   <TouchableOpacity
                     style={styles.modalUpdateButton}
                     onPress={handleSaveCompanyLink}
@@ -502,10 +502,10 @@ const CompanyScreen = () => {
 
                       <TouchableOpacity
                         style={styles.deleteButton}
-                        onPress={() => handleDeleteLink(item)}
-                        disabled={deleting === item.id}
+                        onPress={() => confirmDeleteLink(item)}
+                        disabled={deletingId === item.id}
                       >
-                        {deleting === item.id ? (
+                        {deletingId === item.id ? (
                           <ActivityIndicator color="#fff" />
                         ) : (
                           <FontAwesome name="trash" size={24} color="white" />
@@ -525,6 +525,14 @@ const CompanyScreen = () => {
         alias={deletingName || "el registro"}
         onConfirm={() => {handleDelete(deletingId || 0);}}
         onCancel={() => {setDeletingId(null); setConfirmModalVisible(false)}}
+      />
+
+      {/* Mensaje de confirmacipon para eliminar enlaces de contacto */}
+      <ConfirmationModal
+        visible={confirmModalLinkVisible}
+        alias={deletingName || "el registro"}
+        onConfirm={() => {handleDeleteLink(deletingId || 0);}}
+        onCancel={() => {setDeletingId(null); setConfirmModalLinkVisible(false)}}
       />
     </View>
   );
