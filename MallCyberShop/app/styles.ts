@@ -184,4 +184,14 @@ export const globalStyles = StyleSheet.create({
   tabBar: {backgroundColor: "#ea822c"},
   indicator: {backgroundColor: "#fff"},
   tab: {maxWidth: 160}, // Asegura que cada tab tenga un ancho adecuado para scroll
+  errorContainer: {
+    padding: 10,
+    backgroundColor: "#ffebee",
+    marginVertical: 10,
+    borderRadius: 5,
+  },
+  errorText: {
+    color: "#d32f2f",
+    textAlign: "center",
+  },
 });

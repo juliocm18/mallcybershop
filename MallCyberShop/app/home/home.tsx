@@ -93,19 +93,30 @@ const DynamicTabsScreen = () => {
     const loadRemoteJson = async () => {
       try {
         if (!department || !country) {
-          console.log("Department or country not found");
           department = (await AsyncStorage.getItem("department") || "La Libertad");
-          country = (await AsyncStorage.getItem("country") || "Peru");
+          country = (await AsyncStorage.getItem("country") || "Perú");
         }
-        const storedIcons = await getIconOrder();
+        // const storedIcons = await getIconOrder();
         const remoteData = await fetchCompanies("priority");
 
         const uniqueCategories = await getCategoryNames();
         const companyByCategory = new Map<string, any[]>();
 
-        const companiesByDepartment = remoteData.filter((app) =>
-          app.departments?.includes(department)
+        const companiesByCountry = remoteData.filter((company) =>
+          company.countries?.includes(country)
         );
+        
+
+        const companiesByDepartment = remoteData.filter((company) =>
+          company.departments?.includes(department)
+        );
+
+
+        const mergedCompanies = [
+          ...new Map(
+            [...companiesByCountry, ...companiesByDepartment].map((company) => [company.id, company])
+          ).values(),
+        ];
 
         setCurrentDepartment(department);
         setCurrentCountry(country);
@@ -116,7 +127,8 @@ const DynamicTabsScreen = () => {
 
         await Promise.all(
           uniqueCategories.map(async (category) => {
-            const companies = companiesByDepartment.filter((app) =>
+
+            const companies = mergedCompanies.filter((app) =>
               app.categories?.includes(category)
             );
 

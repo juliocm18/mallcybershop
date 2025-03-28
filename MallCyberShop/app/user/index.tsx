@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -12,21 +12,22 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
 } from "react-native";
 
-import {User} from "./model";
+import { User } from "./model";
 
-import {styles} from "./styles";
+import { styles } from "./styles";
 import UserFunctions from "./functions";
-import {FontAwesome, Ionicons} from "@expo/vector-icons";
-import {Picker} from "@react-native-picker/picker";
-import {Role} from "../role/model";
+import { FontAwesome, Ionicons } from "@expo/vector-icons";
+import { Picker } from "@react-native-picker/picker";
+import { Role } from "../role/model";
 import RoleFunctions from "../role/functions";
 import Select from "../components/select";
 import continentsData from "../data/continents.json";
 import countriesData from "../data/countries.json";
 import departmentsData from "../data/departments.json";
-import {useAuth} from "../context/AuthContext";
+import { useAuth } from "../context/AuthContext";
 export default function Index() {
   const [users, setUsers] = useState<User[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -49,9 +50,9 @@ export default function Index() {
   const [modalTerritoryVisible, setModalTerritoryVisible] = useState(false);
   const [continent, setContinent] = useState("");
   const [country, setCountry] = useState("");
-  const [countries, setCountries] = useState<{id: string; name: string}[]>([]);
+  const [countries, setCountries] = useState<{ id: string; name: string }[]>([]);
   const [departments, setDepartments] = useState<string[]>([]);
-  const {session} = useAuth();
+  const { session } = useAuth();
   const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
 
   const toggleSelection = (department: string) => {
@@ -66,8 +67,8 @@ export default function Index() {
   useEffect(() => {
     if (continent) {
       setCountries(
-        (countriesData as Record<string, {id: string; name: string}[]>)[
-          continent
+        (countriesData as Record<string, { id: string; name: string }[]>)[
+        continent
         ] || []
       );
       setCountry("");
@@ -212,12 +213,12 @@ export default function Index() {
         keyExtractor={(item) =>
           item.id ? item.id.toString() : Math.random().toString()
         }
-        renderItem={({item}) => (
+        renderItem={({ item }) => (
           <View style={styles.row}>
-            <View style={{flexDirection: "column", maxWidth: 180}}>
+            <View style={{ flexDirection: "column", maxWidth: 180 }}>
               <Text style={styles.cell}>{item.email}</Text>
               {item.roles && item.roles.length > 0 ? (
-                <Text style={[styles.cell, {fontWeight: "bold"}]}>
+                <Text style={[styles.cell, { fontWeight: "bold" }]}>
                   {item.roles[0].name}
                 </Text>
               ) : (
@@ -371,7 +372,7 @@ export default function Index() {
                   }}
                 >
                   {departments.length === 0 ? (
-                    <Text style={{color: "#ccc"}}>
+                    <Text style={{ color: "#ccc" }}>
                       Lista de Departamentos...
                     </Text>
                   ) : (
@@ -379,7 +380,7 @@ export default function Index() {
                       data={departments}
                       keyExtractor={(item) => item}
                       showsHorizontalScrollIndicator={true}
-                      renderItem={({item}) => {
+                      renderItem={({ item }) => {
                         const isSelected = selectedDepartments.includes(item);
                         return (
                           <TouchableOpacity
@@ -406,13 +407,13 @@ export default function Index() {
                             >
                               {isSelected && (
                                 <Text
-                                  style={{color: "white", fontWeight: "bold"}}
+                                  style={{ color: "white", fontWeight: "bold" }}
                                 >
                                   ✔
                                 </Text>
                               )}
                             </View>
-                            <Text style={{marginLeft: 10, fontSize: 16}}>
+                            <Text style={{ marginLeft: 10, fontSize: 16 }}>
                               {item}
                             </Text>
                           </TouchableOpacity>
@@ -421,12 +422,16 @@ export default function Index() {
                     />
                   )}
 
-                  <Text style={{marginTop: 20, fontWeight: "bold"}}>
-                    Seleccionados: {selectedDepartments.join(", ")}
-                  </Text>
+                  <View style={{ marginTop: 20, maxHeight: 150, borderWidth: 1, borderColor: "#ccc", borderRadius: 3 }}>
+                    <ScrollView>
+                      <Text style={{ fontWeight: "bold", padding: 10, fontSize: 11, color: "#898989" }}>
+                        Seleccionados: {selectedDepartments.join(", ")}
+                      </Text>
+                    </ScrollView>
+                  </View>
                 </View>
 
-                <View style={[styles.modalButtonContainer, {paddingTop: 10}]}>
+                <View style={[styles.modalButtonContainer, { paddingTop: 10 }]}>
                   <TouchableOpacity
                     style={styles.modalUpdateButton}
                     onPress={handleSaveTerritory}

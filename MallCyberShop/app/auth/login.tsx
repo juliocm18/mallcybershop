@@ -12,6 +12,7 @@ import {Ionicons} from "@expo/vector-icons";
 import RoleFunctions from "../role/functions";
 import {globalStyles} from "../styles";
 import { ActivityIndicator } from "react-native-paper";
+import { useTranslation } from "react-i18next";
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -21,9 +22,11 @@ export default function Login() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
+  const { t } = useTranslation();
+
   const handleLogin = async () => {
     if (!email || !password) {
-      setError("Debe completar todos los campos.");
+      setError(t('auth.error.completeFields'));
       return;
     }
     setLoading(true);
@@ -37,7 +40,7 @@ export default function Login() {
       setError(null);
       router.push("../adminhome");
     } catch (err) {
-      setError("Credenciales incorrectas, intente nuevamente.");
+      setError(t('auth.error.invalidCredentials'));
     } finally {
       setLoading(false);
     }
@@ -45,23 +48,25 @@ export default function Login() {
 
   return (
     <View style={styles.container}>
-      <Text style={globalStyles.pageTitle}>Inicio de Sesión</Text>
+      <Text style={globalStyles.pageTitle}>{t('auth.login')}</Text>
 
       <TextInput
         style={styles.input}
-        placeholder="correo"
+        placeholder={t('auth.email')}
         value={email}
         onChangeText={setEmail}
         keyboardType="email-address"
+        autoCapitalize="none"
       />
 
       <View style={styles.passwordContainer}>
         <TextInput
           style={styles.passwordInput}
-          placeholder="contraseña"
+          placeholder={t('auth.password')}
           value={password}
           onChangeText={setPassword}
           secureTextEntry={!showPassword}
+          autoCapitalize="none"
         />
         <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
           <Ionicons
@@ -82,7 +87,7 @@ export default function Login() {
                   <ActivityIndicator color="#fff" />
                 ) : (
                   <Text style={styles.buttonText}>
-                    Ingresar
+                    {t('auth.loginButton')}
                   </Text>
                 )}
               </TouchableOpacity>
@@ -91,7 +96,7 @@ export default function Login() {
         style={styles.button}
         onPress={() => router.push("../home/home")}
       >
-        <Text style={styles.buttonText}>ir a la Tienda</Text>
+        <Text style={styles.buttonText}>{t('auth.goToStore')}</Text>
       </TouchableOpacity>
     </View>
   );

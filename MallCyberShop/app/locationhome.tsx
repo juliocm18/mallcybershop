@@ -8,6 +8,7 @@ import departmentsData from "./data/departments.json";
 import Select from "./components/select";
 import {useRouter} from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useTranslation } from "react-i18next";
 
 const LocationHome = () => {
   const router = useRouter();
@@ -17,6 +18,7 @@ const LocationHome = () => {
 
   const [countries, setCountries] = useState<{id: string; name: string}[]>([]);
   const [departments, setDepartments] = useState<string[]>([]);
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (continent) {
@@ -54,16 +56,16 @@ const LocationHome = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Selecciona tu Ubicación</Text>
+      <Text style={styles.title}>{t('locationHome.title')}</Text>
 
       <Select
-        label="Continente"
+        label={t('common.continent')}
         selectedValue={continent}
         onValueChange={setContinent}
         items={continentsData}
       />
       <Select
-        label="País"
+        label={t('common.country')}
         selectedValue={country?.id || ""}
         onValueChange={(value) => {
           const selectedCountry = countries.find(c => c.id === value);
@@ -74,7 +76,7 @@ const LocationHome = () => {
 
       {departments.length > 0 && (
         <Select
-          label="Departamento"
+          label={t('common.department')}
           selectedValue={department}
           onValueChange={setDepartment}
           items={departments.map((dep) => ({id: dep, name: dep}))}
@@ -87,7 +89,7 @@ const LocationHome = () => {
         disabled={!department}
         onPress={handleConfirm}
       >
-        Ingresar
+        {t('common.enterButton')}
       </Button>
 
       <Button
@@ -95,7 +97,7 @@ const LocationHome = () => {
         style={styles.button}
         onPress={() => router.push("/auth/login")}
       >
-        Ir al Inicio de Sesión
+        {t('locationHome.goToLogin')}
       </Button>
     </View>
   );

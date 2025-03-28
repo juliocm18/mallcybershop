@@ -1,0 +1,31 @@
+{
+  "common": {
+    "error": "Erro",
+    "loading": "Carregando...",
+    "save": "Salvar",
+    "cancel": "Cancelar",
+    "delete": "Excluir",
+    "edit": "Editar",
+    "close": "Fechar"
+  },
+  "auth": {
+    "login": "Entrar",
+    "signup": "Cadastrar",
+    "email": "E-mail",
+    "password": "Senha"
+  },
+  "home": {
+    "welcome": "Bem-vindo",
+    "categories": "Categorias",
+    "companies": "Empresas",
+    "socialLinks": "Redes Sociais",
+    "location": "Localização",
+    "chat": "Chat"
+  },
+  "admin": {
+    "adminZone": "Zona Admin",
+    "management": "Gestão",
+    "partners": "Parceiros",
+    "territories": "Territórios"
+  }
+}

@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -11,10 +11,10 @@ import {
   ActivityIndicator,
 } from "react-native";
 
-import {Link} from "./model";
+import { Link } from "./model";
 import LinkFunctions from "./functions";
-import {styles} from "./styles";
-import {FontAwesome} from "@expo/vector-icons";
+import { styles } from "./styles";
+import { FontAwesome } from "@expo/vector-icons";
 import { globalStyles } from "../styles";
 import ConfirmationModal from "../components/confirmation-modal";
 
@@ -34,10 +34,10 @@ export default function Index() {
 
   /* Pagination */
   const [page, setPage] = useState(0);
-const pageSize = 10; // Cantidad de registros por página
-const [loadingMore, setLoadingMore] = useState(false);
-const [hasMore, setHasMore] = useState(true);
-/* pagination end */
+  const pageSize = 10; // Cantidad de registros por página
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  /* pagination end */
 
   useEffect(() => {
     loadLinks(true);
@@ -45,12 +45,12 @@ const [hasMore, setHasMore] = useState(true);
 
   const loadLinks = async (reset = false) => {
     if (loadingMore) return;
-    setLoadingMore(true);  
+    setLoadingMore(true);
     const from = reset ? 0 : page * pageSize;
     const to = from + pageSize - 1;
 
     const data = await LinkFunctions.getAllPaged(from, to);
-    
+
     if (reset) {
       if (data) setLinks(data);
       setPage(1);
@@ -58,7 +58,7 @@ const [hasMore, setHasMore] = useState(true);
       setLinks((prevLinks) => [...prevLinks, ...(data || [])]);
       setPage((prevPage) => prevPage + 1);
     }
-  
+
     setHasMore((data?.length || 0) === pageSize); // Si no hay más datos, detenemos la carga
     setLoadingMore(false);
 
@@ -193,22 +193,22 @@ const [hasMore, setHasMore] = useState(true);
         onPress={handleAdd}
         disabled={loading}
       >
-         <Text style={globalStyles.globalButtonText}>
-            Agregar registro            
-          </Text>
-          <FontAwesome style={globalStyles.globalButtonIcon} name="plus" size={24} color="white" />
+        <Text style={globalStyles.globalButtonText}>
+          Agregar registro
+        </Text>
+        <FontAwesome style={globalStyles.globalButtonIcon} name="plus" size={24} color="white" />
       </TouchableOpacity>
 
 
       <FlatList
-        style={{height: "90%"}}
+        style={{ height: "90%" }}
         data={links}
         keyExtractor={(item) => Math.random().toString()}
-        renderItem={({item}) => (
+        renderItem={({ item }) => (
           <View style={styles.row}>
-            <View style={{flexDirection: "column"}}>
+            <View style={{ flexDirection: "column" }}>
               <Text style={styles.cell}>{item.name}</Text>
-              <Image source={{uri: item.icon}} style={styles.logoPreview} />
+              <Image source={{ uri: item.icon }} style={styles.logoPreview} />
             </View>
 
             <View style={styles.buttonsContainer}>
@@ -276,7 +276,7 @@ const [hasMore, setHasMore] = useState(true);
                 resizeMode="contain" // Opcional, ajusta la forma en que se muestra la imagen
               />
             )}
-            <View style={[styles.modalButtonContainer, {paddingTop: 10}]}>
+            <View style={[styles.modalButtonContainer, { paddingTop: 10 }]}>
               <TouchableOpacity
                 style={styles.modalUpdateButton}
                 onPress={handleSave}
@@ -305,8 +305,8 @@ const [hasMore, setHasMore] = useState(true);
       <ConfirmationModal
         visible={confirmModalVisible}
         alias={deletingName || "el registro"}
-        onConfirm={() => {handleDelete(deletingId || 0);}}
-        onCancel={() => {setDeletingId(null); setConfirmModalVisible(false)}}
+        onConfirm={() => { handleDelete(deletingId || 0); }}
+        onCancel={() => { setDeletingId(null); setConfirmModalVisible(false) }}
       />
     </View>
   );

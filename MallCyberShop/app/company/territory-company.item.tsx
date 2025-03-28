@@ -5,7 +5,7 @@ import {styles} from "./styles";
 import {FontAwesome} from "@expo/vector-icons";
 
 export const TerritoryCompanyItem = React.memo(
-  ({item, onOpenTerritory}: any) => (
+  ({item, onOpenTerritory, onOpenCountry}: any) => (
     <View style={styles.row}>
       <Text style={[styles.cell]}>{item.name}</Text>
       <View style={styles.buttonsContainer}>
@@ -14,6 +14,12 @@ export const TerritoryCompanyItem = React.memo(
           onPress={() => onOpenTerritory(item)}
         >
           <FontAwesome name="globe" size={24} color="white" />
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.greenLinkButton}
+          onPress={() => onOpenCountry(item)}
+        >
+          <FontAwesome name="flag-checkered" size={24} color="white" />
         </TouchableOpacity>
       </View>
     </View>
