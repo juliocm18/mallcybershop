@@ -1,0 +1,31 @@
+{
+  "common": {
+    "error": "Error",
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close"
+  },
+  "auth": {
+    "login": "Login",
+    "signup": "Sign Up",
+    "email": "Email",
+    "password": "Password"
+  },
+  "home": {
+    "welcome": "Welcome",
+    "categories": "Categories",
+    "companies": "Companies",
+    "socialLinks": "Social Links",
+    "location": "Location",
+    "chat": "Chat"
+  },
+  "admin": {
+    "adminZone": "Admin Zone",
+    "management": "Management",
+    "partners": "Partners",
+    "territories": "Territories"
+  }
+}

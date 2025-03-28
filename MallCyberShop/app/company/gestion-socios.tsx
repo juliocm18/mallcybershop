@@ -21,6 +21,7 @@ import {
   fetchCompanies,
   fetchCompaniesByDepartments,
   fetchCompanyLinks,
+  getAllPaged,
   pickImage,
   updateCompany,
   updateCompanyLink,
@@ -60,7 +61,7 @@ const CompanyScreen = () => {
   const [url, setUrl] = useState("");
   const [links, setLinks] = useState<Link[]>([]);
   const [loading, setLoading] = useState(false);
-  
+
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [confirmModalVisible, setConfirmModalVisible] = useState(false);
   const [deletingName, setDeletingName] = useState<string>();
@@ -70,6 +71,15 @@ const CompanyScreen = () => {
   const [selectedLinkId, setSelectedLinkId] = useState<number>();
   const [priority, setPriority] = useState("");
   const { session } = useAuth();
+
+  /* Pagination */
+  const [page, setPage] = useState(0);
+  const pageSize = 20; // Cantidad de registros por página
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  /* pagination end */
+
+
   const handlePickImage = async () => {
     if (editingId) {
       setEditingImage(true);
@@ -97,11 +107,17 @@ const CompanyScreen = () => {
   };
 
   useEffect(() => {
-    loadCompanies();
+    loadCompanies(true);
     loadLinks();
   }, []);
 
-  const loadCompanies = async () => {
+  const loadCompanies = async (reset: boolean = false) => {
+    if (loadingMore) return;
+    setLoadingMore(true);
+    const from = reset ? 0 : page * pageSize;
+    const to = from + pageSize - 1;
+
+
     const userDepartments = await UserFunctions.getDepartmentsByUser(
       session?.user?.id || ""
     );
@@ -111,11 +127,42 @@ const CompanyScreen = () => {
         (role) => role.name === "CEO" || role.name === "Superadministrador"
       )
     ) {
-      const data = await fetchCompanies("name");
-      if (data) setCompanies(data);
+      const data = await getAllPaged(from, to, "name");
+
+      if (reset) {
+        if (data) setCompanies(data);
+        setPage(1);
+      } else {
+        setCompanies((prevCompanies) => [...prevCompanies, ...(data || [])]);
+        setPage((prevPage) => prevPage + 1);
+      }
+
+      setHasMore((data?.length || 0) === pageSize); // Si no hay más datos, detenemos la carga
+      setLoadingMore(false);
+
+
+
     } else {
-      const data = await fetchCompaniesByDepartments("name", userDepartments);
-      if (data) setCompanies(data);
+      const data = await fetchCompaniesByDepartments("name", userDepartments, from, to);
+
+      if (reset) {
+        if (data) setCompanies(data);
+        setPage(1);
+      } else {
+        setCompanies((prevCompanies) => [...prevCompanies, ...(data || [])]);
+        setPage((prevPage) => prevPage + 1);
+      }
+
+      setHasMore((data?.length || 0) === pageSize); // Si no hay más datos, detenemos la carga
+      setLoadingMore(false);
+
+
+    }
+  };
+
+  const loadMore = () => {
+    if (hasMore) {
+      loadCompanies(false);
     }
   };
 
@@ -156,7 +203,7 @@ const CompanyScreen = () => {
         if (updatedCategory) {
           clearFields();
           setModalVisible(false);
-          loadCompanies();
+          loadCompanies(true);
           Alert.alert("Aviso", "Registro actualizado");
         }
       } else {
@@ -188,7 +235,7 @@ const CompanyScreen = () => {
         clearFields();
 
         setModalVisible(false);
-        loadCompanies();
+        loadCompanies(true);
       }
     } catch (error: any) {
       console.error("Error creating company:", error.message);
@@ -284,7 +331,7 @@ const CompanyScreen = () => {
     try {
       await deleteCompany(id);
       //await fetchCompanies("name");
-      loadCompanies();
+      loadCompanies(true);
     } catch (error: any) {
       Alert.alert("Error", error.message);
     } finally {
@@ -299,8 +346,8 @@ const CompanyScreen = () => {
     setConfirmModalVisible(true);
   };
 
-  const handleDeleteLink = async (companyLinkId: number) => {  
-    try {      
+  const handleDeleteLink = async (companyLinkId: number) => {
+    try {
       deleteCompanyLink(companyLinkId);
       const companyLinks = await fetchCompanyLinks(companyId);
       setCompanyLinks(companyLinks);
@@ -311,7 +358,7 @@ const CompanyScreen = () => {
       Alert.alert("Error", error.message);
     } finally {
       setDeletingId(null);
-      setConfirmModalLinkVisible(false);     
+      setConfirmModalLinkVisible(false);
     }
   };
 
@@ -319,6 +366,11 @@ const CompanyScreen = () => {
     setDeletingId(companyLink.id || 0);
     setDeletingName(companyLink.link?.name || "");
     setConfirmModalLinkVisible(true);
+  };
+
+  const handleSelectedLink = (linkId: number) => {
+    const link = links.find((link) => link.id === linkId);
+    setUrl(link?.prefix || "");
   };
 
   return (
@@ -338,7 +390,7 @@ const CompanyScreen = () => {
       <FlatList
         style={{ height: "92%" }}
         data={companies}
-        keyExtractor={(item) => (item.id || 0).toString()}
+        keyExtractor={(item, index) => (index).toString()}
         renderItem={({ item }) => (
           <CompanyItem
             item={item}
@@ -353,7 +405,11 @@ const CompanyScreen = () => {
           offset: 80 * index,
           index,
         })}
-        windowSize={10}
+        onEndReached={loadMore}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={loadingMore ? <ActivityIndicator size="large" /> : null}
+        removeClippedSubviews={true} // Elimina elementos fuera de pantalla
+        windowSize={3}
       />
 
       <Modal visible={modalVisible} animationType="slide" transparent>
@@ -444,10 +500,9 @@ const CompanyScreen = () => {
                 <Select
                   label="Tipo de Contacto"
                   selectedValue={link ? (link.id)?.toString() || "" : ""}
-                  onValueChange={(itemValue) => setSelectedLinkId(Number(itemValue))}
+                  onValueChange={(itemValue) => handleSelectedLink(Number(itemValue))}
                   items={links.map((link) => ({ id: link.id?.toString() || "", name: link.name || "" }))}
                 />
-                {/* <Text style={styles.label}>Enlace</Text> */}
                 <TextInput
                   placeholder="Enlace"
                   style={styles.input}
@@ -523,16 +578,16 @@ const CompanyScreen = () => {
       <ConfirmationModal
         visible={confirmModalVisible}
         alias={deletingName || "el registro"}
-        onConfirm={() => {handleDelete(deletingId || 0);}}
-        onCancel={() => {setDeletingId(null); setConfirmModalVisible(false)}}
+        onConfirm={() => { handleDelete(deletingId || 0); }}
+        onCancel={() => { setDeletingId(null); setConfirmModalVisible(false) }}
       />
 
       {/* Mensaje de confirmacipon para eliminar enlaces de contacto */}
       <ConfirmationModal
         visible={confirmModalLinkVisible}
         alias={deletingName || "el registro"}
-        onConfirm={() => {handleDeleteLink(deletingId || 0);}}
-        onCancel={() => {setDeletingId(null); setConfirmModalLinkVisible(false)}}
+        onConfirm={() => { handleDeleteLink(deletingId || 0); }}
+        onCancel={() => { setDeletingId(null); setConfirmModalLinkVisible(false) }}
       />
     </View>
   );

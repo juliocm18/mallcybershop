@@ -1,0 +1,43 @@
+{
+  "common": {
+    "error": "Error",
+    "loading": "Cargando...",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "close": "Cerrar",
+    "enterButton": "Ingresar",
+    "continent": "Continente",
+    "country": "País",
+    "department": "Departamento"
+  },
+  "locationHome": {
+    "title": "Selecciona tu Ubicación",
+    "goToLogin": "Ir a Iniciar Sesión"
+  },
+  "auth": {
+    "login": "Iniciar Sesión",
+    "signup": "Registrarse",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "loginButton": "Ingresar",
+    "goToStore": "Ir a la tienda",
+    "error.completeFields": "Por favor, completa todos los campos",
+    "error.invalidCredentials": "Credenciales inválidas"
+  },
+  "home": {
+    "welcome": "Bienvenido",
+    "categories": "Categorías",
+    "companies": "Empresas",
+    "socialLinks": "Redes Sociales",
+    "location": "Ubicación",
+    "chat": "Chat"
+  },
+  "admin": {
+    "adminZone": "Zona Admin",
+    "management": "Gestión",
+    "partners": "Socios",
+    "territories": "Territorios"
+  }
+}

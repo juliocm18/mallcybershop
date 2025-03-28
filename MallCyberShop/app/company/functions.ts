@@ -95,7 +95,7 @@ export const uploadImage = async (uri: string): Promise<string | null> => {
 };
 
 // 🆕 Crear una empresa
-export const createCompany = async (company: Company) => {
+export const createCompany = async (company: Partial<Company>) => {
   const {data, error} = await supabase.from("company").insert([company]);
   if (error) throw new Error(error.message);
   return data;
@@ -111,35 +111,49 @@ export const fetchCompanies = async (order: string) => {
   return data;
 };
 
-export const fetchCompaniesByDepartments = async (
-  order: string,
-  departments: string[]
-): Promise<Company[]> => {
+export const getAllPaged = async (from: number, to: number, order: string) => {
   const {data, error} = await supabase
     .from("company")
     .select("*")
-    .filter("departments", "overlaps", departments)
+    .range(from, to)
     .order(order, {ascending: true});
   if (error) throw new Error(error.message);
   return data;
 };
 
+export const fetchCompaniesByDepartments = async (
+  order: string,
+  departments: string[],
+  from: number,
+  to: number
+): Promise<Company[]> => {
+  const {data, error} = await supabase
+    .from("company")
+    .select("*")
+    .filter("departments", "overlaps", departments)
+    .range(from, to)
+    .order(order, {ascending: true});
+  if (error) throw new Error(error.message);
+  return data;
+};
+
+
 export const fetchCompaniesByDepartmentsOrNull = async (
   order: string,
-  departments: string[]
+  departments: string[],
+  from: number,
+  to: number
 ): Promise<Company[]> => {
   const {data: matchData, error: matchError} = await supabase
     .from("company")
     .select("*")
-    .overlaps("departments", departments);
+    .range(from, to)
+    .order(order, {ascending: true});
+    //.overlaps("departments", departments).order("name", {ascending: true});
 
-  const {data: nullData, error: nullError} = await supabase
-    .from("company")
-    .select("*")
-    .or("departments.is.null");
-  const data = [...(matchData || []), ...(nullData || [])];
-  if (matchError || nullError)
-    throw new Error(matchError?.message || nullError?.message);
+  const data = [...(matchData || [])];
+  if (matchError)
+    throw new Error(matchError?.message);
   return data;
 };
 

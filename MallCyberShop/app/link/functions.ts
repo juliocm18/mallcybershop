@@ -4,6 +4,12 @@ import * as ImagePicker from "expo-image-picker";
 import {manipulateAsync, SaveFormat} from "expo-image-manipulator";
 
 export default class LinkFunctions {
+  static getAllPaged = async (from: number, to: number): Promise<Link[] | null> => {
+    const {data, error} = await supabase.from("link").select("*").order("name").range(from, to);
+    if (error) throw new Error(error.message);
+    return data as Link[];
+  };
+
   static getAll = async (): Promise<Link[] | null> => {
     const {data, error} = await supabase.from("link").select("*").order("name");
     if (error) throw new Error(error.message);
