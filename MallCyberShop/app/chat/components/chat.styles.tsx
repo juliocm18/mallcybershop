@@ -1,8 +1,8 @@
-import { Dimensions, StyleSheet } from "react-native";
+import { StyleSheet, Dimensions } from 'react-native';
 
 const { width } = Dimensions.get('window');
 
-export const stylesChat = StyleSheet.create({
+export const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: "#FFF5F0",
@@ -44,18 +44,16 @@ export const stylesChat = StyleSheet.create({
         position: 'relative',
     },
     userAvatar: {
-        width: 50,
-        height: 50,
-        borderRadius: 25,
-        backgroundColor: "#FFA577",
+        width: 40,
+        height: 40,
+        borderRadius: 20,
         justifyContent: "center",
         alignItems: "center",
-        marginRight: 15,
+        marginRight: 12,
     },
     userAvatarText: {
-        color: "#fff",
+        color: "#5A2E00",
         fontWeight: "bold",
-        fontSize: 20,
     },
     userInfo: {
         flex: 1,
@@ -97,7 +95,6 @@ export const stylesChat = StyleSheet.create({
         color: "#fff",
         fontSize: 20,
         fontWeight: "bold",
-        flexShrink: 1, // Permite que el texto se reduzca si no hay espacio
     },
     messagesList: {
         paddingHorizontal: 10,
@@ -186,7 +183,6 @@ export const stylesChat = StyleSheet.create({
         backgroundColor: "#FFE8D9",
         borderTopWidth: 1,
         borderTopColor: "#FFD3B4",
-        alignItems: 'center', // Alinea verticalmente el input y el botón
     },
     input: {
         flex: 1,
@@ -198,8 +194,6 @@ export const stylesChat = StyleSheet.create({
         marginRight: 10,
         backgroundColor: "#fff",
         color: "#5A2E00",
-        maxHeight: 120, // Altura máxima para el input multilínea
-        textAlignVertical: 'top', // Alinea el texto en la parte superior
     },
     sendButton: {
         width: 50,
@@ -212,14 +206,51 @@ export const stylesChat = StyleSheet.create({
     headerTitleContainer: {
         flex: 1,
         marginHorizontal: 10,
+        justifyContent: 'center',
     },
     typingIndicator: {
         fontSize: 12,
-        color: '#FFF',
+        color: 'rgba(255, 255, 255, 0.8)',
         fontStyle: 'italic',
         marginTop: 2,
     },
     sendButtonDisabled: {
-        backgroundColor: "#FFB38A", // Un tono más claro del naranja principal
+        backgroundColor: "#FFB38A",
+        opacity: 0.7,
     },
+    myProfileContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 15,
+        backgroundColor: 'rgba(255, 255, 255, 0.2)',
+        borderRadius: 10,
+        margin: 15,
+        marginBottom: 20,
+    },
+    myProfileAvatar: {
+        width: 50,
+        height: 50,
+        borderRadius: 25,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 15,
+    },
+    myProfileAvatarText: {
+        color: "#5A2E00",
+        fontWeight: "bold",
+        fontSize: 20,
+    },
+    myProfileInfo: {
+        flex: 1,
+    },
+    myProfileName: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: "#5A2E00",
+    },
+    myProfileStatus: {
+        fontSize: 14,
+        color: "#5A2E00",
+    },
+
 });

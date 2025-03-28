@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import {View, Text} from "react-native";
-import {FontAwesome} from "@expo/vector-icons";
-import {useRouter} from "expo-router";
+import ChatButton from "./chat-button";
 
 const LocationZoneHome = ({country, department}: {country: string, department: string}) => {
   return (    
@@ -9,11 +8,12 @@ const LocationZoneHome = ({country, department}: {country: string, department: s
       style={{
         flexDirection: "row",
         alignItems: "center",
-        justifyContent: "flex-end",
+        justifyContent: "space-between", // Distribuye los elementos a los lados
         paddingBottom: 5,
         paddingRight: 5,
       }}
     >
+      <ChatButton />
       <Text
         style={{
           color: "white",

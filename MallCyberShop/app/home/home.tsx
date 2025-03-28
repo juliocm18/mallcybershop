@@ -250,8 +250,7 @@ const DynamicTabsScreen = () => {
   /* Tabs management */
 
   return (
-    <View style={globalStyles.container}>
-      <ChatButton />
+    <View style={globalStyles.container}>      
       <TouchableOpacity onPress={handleGoLoginPress} activeOpacity={1}>
         <LocationZoneHome country={currentCountry} department={currentDepartment} />
       </TouchableOpacity>
