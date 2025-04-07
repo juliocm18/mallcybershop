@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import { createHash } from 'crypto';
+
 
 import { Chat, Message, UserProfile, UserSession } from '../models';
 import { supabase } from '@/app/supabase';
@@ -10,15 +10,6 @@ const TABLES = {
   CHAT: 'chat',
   USER_PROFILE: 'user_profile',
   MESSAGE: 'message'
-};
-
-// Helper function to generate encrypted chat ID from title
-const generateChatId = (title: string): string => {
-  const hash = createHash('sha256')
-    .update(title + uuidv4())
-    .digest('hex')
-    .slice(0, 32);
-  return hash;
 };
 
 // Create a new chat (group or private)
@@ -39,13 +30,16 @@ export const createChat = async (
       country,
       city,
       status: 'active',
-      createdAt: new Date().toISOString()
     };
 
     // Insert chat
     const { data: chatData, error: chatError } = await supabase
       .from(TABLES.CHAT)
-      .insert(chat)
+      .insert({
+        ...chat,
+        created_at: new Date().toISOString()
+
+      })
       .select()
       .single();
 
@@ -90,7 +84,7 @@ export const getChatMessages = async (chatId: string): Promise<Message[]> => {
     const { data, error } = await supabase
       .from(TABLES.MESSAGE)
       .select('*')
-      .eq('chatId', chatId)
+      .eq('chat_id', chatId)
       .order('time', { ascending: false })
       .limit(100);
 
@@ -105,10 +99,12 @@ export const getChatMessages = async (chatId: string): Promise<Message[]> => {
 // Send a message
 export const sendMessage = async (message: Omit<Message, 'id' | 'time' | 'status'>): Promise<Message | null> => {
   try {
-    const newMessage: Message = {
-      ...message,
+    const newMessage: any = {
+      text: message.text,
       time: new Date(),
-      status: 'sending'
+      status: 'sending',
+      chat_id: message.chatId,
+      sender_id: message.senderId,
     };
 
     const { data, error } = await supabase
@@ -118,7 +114,15 @@ export const sendMessage = async (message: Omit<Message, 'id' | 'time' | 'status
       .single();
 
     if (error) throw error;
-    return data;
+    return data.map((message: any) => ({
+      chatId: message.chat_id,
+      senderId: message.sender_id,
+      text: message.text,
+      time: message.time,
+      status: message.status,
+      isMe: message.senderId === 'currentUser?.id', //cambiar por currentUser.id
+      sender: message.sender || { id: '', name: 'Usuario', status: 'online' }
+    }));
   } catch (error) {
     console.error('Error sending message:', error);
     return null;
@@ -232,17 +236,8 @@ export const getChatByCountryAndCity = async (country: string, city: string): Pr
     const { data, error } = await supabase
       .from(TABLES.CHAT)
       .select(`
-        *,
-        messages:message(
-          id,
-          senderId: sender_id,
-          text,
-          time,
-          status
-        )
+        *
       `)
-      .order('time', { ascending: false })
-      .limit(100)
       .eq('country', country)
       .eq('city', city)
       .single();
@@ -323,7 +318,7 @@ export const updateUserProfile = async (profile: Partial<UserProfile>): Promise<
 export const getCurrentUser = async (): Promise<UserProfile | null> => {
   try {
 
-    const {data: { session }} = await supabase.auth.getSession();
+    const { data: { session } } = await supabase.auth.getSession();
 
     if (!session) return null;
     const userId = session.user.id;
@@ -357,7 +352,7 @@ export const updateMessageLike = async (
 
     // Procesamos el array de likes
     let updatedLikes = currentMessage.likes || [];
-    
+
     if (isLiked) {
       // Añadimos el usuario si no está ya en el array
       if (!updatedLikes.includes(userId)) {
@@ -387,4 +382,3 @@ export const updateMessageLike = async (
     return null;
   }
 };
-  

@@ -35,38 +35,44 @@ const GroupChatScreen: React.FC = () => {
       setUsers(users);
     };
     if (chatId) {
-      loadUsers();
+      // loadUsers();
     }
   }, [chatId]);
 
   useEffect(() => {
     const loadMessages = async () => {
-      const chat = await getChatByCountryAndCity(country, department);
-      if (chat && chat.id) {
-        setChatId(chat.id);
-        const messages = await getChatMessages(chat.id);
-        setMessages(messages.map(message => ({
-          ...message,
-          isMe: message.senderId === currentUser?.id,
-          sender: currentUser || { id: '', name: 'Usuario', status: 'online' }
-        })));
-      } else {
-        setMessages([]);
-        const chat = await createChat({
-          name: title,
-          type: 'group',
-          country: country,
-          city: department
-        }); 
+      try {
+        const chat = await getChatByCountryAndCity(country, department);
+        console.log("chat_------> ", chat)
         if (chat && chat.id) {
           setChatId(chat.id);
+          const messages = await getChatMessages(chat.id);
+          setMessages(messages.map(message => ({
+            ...message,
+            isMe: message.senderId === currentUser?.id,
+            sender: currentUser || { id: '', name: 'Usuario', status: 'online' }
+          })));
+        } else {
+          setMessages([]);
+          const chat = await createChat({
+            name: title,
+            type: 'group',
+            country: country,
+            city: department,
+          });
+          if (chat && chat.id) {
+            setChatId(chat.id);
+          }
         }
+      } catch (error) {
+        console.log(error, 'error al cargar los mensajes')
       }
+
     };
-    if (country && department && currentUser) {
+    if (country && department && title) {
       loadMessages();
     }
-  }, [country, department, currentUser]);
+  }, [country, department, title]);
 
   const handleUserPress = (user: UserProfile) => {
     setIsLoading(true);

@@ -40,6 +40,6 @@ export interface Message {
     status?: 'sending' | 'sent' | 'delivered' | 'read';
     isLiked?: boolean
     likes?: string[]
-    createdBy?: string
-    updatedBy?: string
+    createdAt?:string;
+    updatedAt?:string;
 }
