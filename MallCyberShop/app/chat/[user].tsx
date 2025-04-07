@@ -1,80 +1,93 @@
 import React, { useState, useEffect } from 'react';
 import { View, ActivityIndicator } from 'react-native';
-import { Chat } from './components/chat';
+
 import { useLocalSearchParams, useNavigation, router } from 'expo-router';
-import { UserChat, Message } from './components/types';
+import { MessageChat } from './components/types';
+import { UserProfile } from './models';
+import { createChat, getChatByRecipientId, getChatMessages, getCurrentUser, getUserProfile } from './api/functions';
+import { Chat } from './components/chat';
 
 const PrivateChatScreen: React.FC = () => {
   const params = useLocalSearchParams();
   const navigation = useNavigation();
   const [isLoading, setIsLoading] = useState(true);
-  const [currentUser, setCurrentUser] = useState<UserChat | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
-
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
+  const [recipientUser, setRecipientUser] = useState<UserProfile | null>(null);
+  const [messages, setMessages] = useState<MessageChat[]>([]);
+  const [chatId, setChatId] = useState<string | null>(null);
   // Extraer parámetros con valores por defecto
   const userId = params.userId as string || 'unknown';
-  const userName = params.userName as string || 'Usuario';
-  const userStatus = params.userStatus as 'online' | 'offline' | 'typing' || 'online';
 
   // Cargar datos iniciales
   useEffect(() => {
     const loadInitialData = async () => {
-      setIsLoading(true);
-      
-      // Simular carga de datos (reemplazar con tu lógica real)
-      setTimeout(() => {
-        setCurrentUser({
-          id: userId,
-          name: userName,
-          status: userStatus,
-          lastSeen: new Date().toISOString()
-        });
+      try {
+        setIsLoading(true);
 
-        // Mensajes de ejemplo
-        setMessages([
-          {
-            id: '1',
-            text: `¡Hola! Soy ${userName}`,
-            sender: userId,
-            isMe: false,
-            time: new Date(Date.now() - 86400000), // 1 día atrás
-            status: 'read'
-          },
-          {
-            id: '2',
-            text: 'Hola, ¿cómo estás?',
-            sender: 'me',
-            isMe: true,
-            time: new Date(Date.now() - 43200000), // 12 horas atrás
-            status: 'read'
-          },
-          {
-            id: '3',
-            text: '¿Vas a ir a la reunión mañana?',
-            sender: userId,
-            isMe: false,
-            time: new Date(Date.now() - 3600000), // 1 hora atrás
-            status: 'delivered'
-          }
-        ]);
-
+        // Simular carga de datos (reemplazar con tu lógica real)
+        const recipientUser = await getUserProfile(userId)
+        const currentUser = await getCurrentUser()
+        setCurrentUser(currentUser)
+        setRecipientUser(recipientUser)
         setIsLoading(false);
-      }, 500);
+      } catch (error) {
+        console.error('Error loading initial data:', error);
+        setIsLoading(false);
+      }
     };
 
     loadInitialData();
+  }, [userId]);
 
-    // Configurar opciones de navegación
+  useEffect(() => {
     navigation.setOptions({
-      title: userName,
+      title: recipientUser?.name || 'Usuario',
     });
-  }, [userId, userName, userStatus]);
+  }, [recipientUser]);
+
+  useEffect(() => {
+    const loadMessages = async () => {
+      try {
+        setIsLoading(true);
+        if (!recipientUser?.id) return;
+        let chat = await getChatByRecipientId(recipientUser.id);
+        if (!chat?.id) {
+          chat = await createChat({
+            name: recipientUser.name,
+            type: 'private',
+            recipientId: recipientUser.id,
+            country: recipientUser.country,
+            city: recipientUser.city
+          });
+          if (chat?.id) {
+            setChatId(chat.id);
+          }
+          setMessages([])
+        } else {
+          const messages = await getChatMessages(chat.id);
+          setMessages(messages.map(message => ({
+            ...message,
+            isMe: message.senderId === currentUser?.id
+          })));
+        }
+
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Error loading messages:', error);
+        setIsLoading(false);
+      }
+    };
+
+    if (recipientUser) {
+      loadMessages();
+    }
+  }, [recipientUser?.id, currentUser]);
 
   const handleBackPress = () => {
     router.push('/chat/group');
   };
 
-  if (isLoading || !currentUser) {
+  if (isLoading || !currentUser || !recipientUser || !chatId) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <ActivityIndicator size="large" color="#FF8C5A" />
@@ -85,8 +98,9 @@ const PrivateChatScreen: React.FC = () => {
   return (
     <Chat
       chatType="private"
-      chatId={`private_${userId}`}
+      chatId={chatId}
       currentUser={currentUser}
+      recipientUser={recipientUser}
       initialMessages={messages}
       onBack={handleBackPress}
     />

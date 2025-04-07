@@ -1,59 +1,80 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, ActivityIndicator } from 'react-native';
-import { Chat } from './components/chat';
+import { Chat, USER_STATUS } from './components/chat';
 import { useRouter } from 'expo-router';
-import { UserChat, Message } from './components/types';
+import { MessageChat } from './components/types';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { UserProfile } from './models';
+import { createChat, getChatByCountryAndCity, getChatMessages, getOnlineUsersByChatLocation } from './api/functions';
 
 const GroupChatScreen: React.FC = () => {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const currentUser: UserChat = {
-    id: 'user-123', // ID único
-    name: 'Tu Nombre',
-    status: 'online'
-  };
-  // Datos de ejemplo para el chat grupal
-  const groupUsers: UserChat[] = [
-    { id: '1', name: 'María', status: 'online', lastSeen: new Date().toISOString() },
-    { id: '2', name: 'Juan', status: 'typing', lastSeen: new Date().toISOString() },
-    { id: '3', name: 'Pedro', status: 'online', lastSeen: new Date().toISOString() },
-    currentUser
-  ];
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
+  const [users, setUsers] = useState<UserProfile[]>([]);
+  const [messages, setMessages] = useState<MessageChat[]>([]);
+  const [department, setDepartment] = useState('La Libertad');
+  const [country, setCountry] = useState('Perú');
+  const [title, setTitle] = useState('');
+  const [chatId, setChatId] = useState('');
 
-  // Mensajes iniciales de ejemplo
-  const initialMessages: Message[] = [
-    {
-      id: '1',
-      text: '¡Hola a todos! ¿Cómo están?',
-      sender: '1',
-      isMe: false,
-      time: new Date(Date.now() - 3600000),
-      status: 'delivered'
-    },
-    {
-      id: '2',
-      text: '¿Alguien ha revisado el último proyecto?',
-      sender: '3',
-      isMe: false,
-      time: new Date(Date.now() - 1800000),
-      status: 'delivered'
-    },
-    {
-      id: '3',
-      text: 'Sí, yo lo revisé ayer por la tarde',
-      sender: '4',
-      isMe: true,
-      time: new Date(Date.now() - 900000),
-      status: 'read'
+  useEffect(() => {
+    const loadLocationZone = async () => {
+      const department = (await AsyncStorage.getItem("department") || "La Libertad");
+      const country = (await AsyncStorage.getItem("country") || "Perú");
+      setDepartment(department);
+      setCountry(country);
+      setTitle(`${country} - ${department}`);
     }
-  ];
+    loadLocationZone();
+  }, []);
 
-  const handleUserPress = (user: UserChat) => {
+  useEffect(() => {
+    const loadUsers = async () => {
+      const users = await getOnlineUsersByChatLocation(chatId, true);
+      setUsers(users);
+    };
+    if (chatId) {
+      loadUsers();
+    }
+  }, [chatId]);
+
+  useEffect(() => {
+    const loadMessages = async () => {
+      const chat = await getChatByCountryAndCity(country, department);
+      if (chat && chat.id) {
+        setChatId(chat.id);
+        const messages = await getChatMessages(chat.id);
+        setMessages(messages.map(message => ({
+          ...message,
+          isMe: message.senderId === currentUser?.id,
+          sender: currentUser || { id: '', name: 'Usuario', status: 'online' }
+        })));
+      } else {
+        setMessages([]);
+        const chat = await createChat({
+          name: title,
+          type: 'group',
+          country: country,
+          city: department
+        }); 
+        if (chat && chat.id) {
+          setChatId(chat.id);
+        }
+      }
+    };
+    if (country && department && currentUser) {
+      loadMessages();
+    }
+  }, [country, department, currentUser]);
+
+  const handleUserPress = (user: UserProfile) => {
     setIsLoading(true);
     setTimeout(() => {
+      if (!user.id) return;
       router.push({
         pathname: '/chat/[user]',
-        params: { 
+        params: {
           user: user.id,
           userName: user.name,
           userStatus: user.status
@@ -74,11 +95,11 @@ const GroupChatScreen: React.FC = () => {
   return (
     <Chat
       chatType="group"
-      chatId="group1"
-      title="Ciudad"
-      users={groupUsers}
-      initialMessages={initialMessages}
-      currentUser={currentUser}
+      chatId={chatId}
+      title={title}
+      users={users}
+      initialMessages={messages}
+      currentUser={currentUser!}
       onUserSelect={handleUserPress}
     />
   );

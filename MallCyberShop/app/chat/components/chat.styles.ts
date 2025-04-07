@@ -36,6 +36,7 @@ export const styles = StyleSheet.create({
     },
     userList: {
         marginTop: 20,
+        paddingBottom: 80,
     },
     userItem: {
         flexDirection: 'row',
@@ -252,5 +253,93 @@ export const styles = StyleSheet.create({
         fontSize: 14,
         color: "#5A2E00",
     },
+    messageStatusContainer: {
+        alignSelf: 'flex-end',
+        marginTop: 2,
+    },
+    messageStatusText: {
+        fontSize: 12,
+    },
+    sentStatus: {
+        color: '#888',
+    },
+    deliveredStatus: {
+        color: '#8BC34A',
+    },
+    footerButtonContainer: {
+        position: 'absolute',
+        bottom: 20,
+        left: 20,
+        right: 20,
+    },
+    backToHomeButton: {
+        backgroundColor: '#D45D00',
+        padding: 15,
+        borderRadius: 10,
+        alignItems: 'center',
+        justifyContent: 'center',
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        elevation: 5,
+    },
+    backToHomeButtonText: {
+        color: '#FFF5F0',
+        fontSize: 16,
+        fontWeight: 'bold',
+    },
+    likeButton: {
+        marginRight: 8,
+        marginLeft: 8,
+        padding: 4,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
 
+    heartAnimation: {
+        width: 100,
+        height: 100,
+        alignSelf: 'center',
+    },
+
+    fullScreenHeartAnimation: {
+        width: 300,
+        height: 300,
+    },
+
+    fullScreenAnimationContainer: {
+        ...StyleSheet.absoluteFillObject,
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 100,
+        pointerEvents: 'none',
+    },
+
+    likeMessageContainer: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingVertical: 20,
+    },
+    messageFooter: {
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+        alignItems: 'center',
+        marginTop: 4,
+    },
+    likeAnimationContainer: {
+        position: 'absolute',
+        right: 0,
+        bottom: 0,
+        width: 80,
+        height: 80,
+        justifyContent: 'center',
+        alignItems: 'center',
+        pointerEvents: 'none',
+    },
+
+    likeAnimation: {
+        width: '100%',
+        height: '100%',
+    },
 });
