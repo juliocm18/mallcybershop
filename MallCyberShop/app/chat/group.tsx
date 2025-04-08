@@ -34,8 +34,15 @@ const GroupChatScreen: React.FC = () => {
       const users = await getOnlineUsersByChatLocation(chatId, true);
       setUsers(users);
     };
+    const loadCurrentUser = async () => {
+      const user = await AsyncStorage.getItem('currentUser');
+      if (user) {
+        setCurrentUser(JSON.parse(user));
+      }
+    };
     if (chatId) {
       // loadUsers();
+      loadCurrentUser();
     }
   }, [chatId]);
 
@@ -43,15 +50,14 @@ const GroupChatScreen: React.FC = () => {
     const loadMessages = async () => {
       try {
         const chat = await getChatByCountryAndCity(country, department);
-        console.log("chat_------> ", chat)
         if (chat && chat.id) {
           setChatId(chat.id);
           const messages = await getChatMessages(chat.id);
           setMessages(messages.map(message => ({
             ...message,
-            isMe: message.senderId === currentUser?.id,
-            sender: currentUser || { id: '', name: 'Usuario', status: 'online' }
-          })));
+            isMe: message.senderId === (currentUser?.id || 'bb353e09-30b2-46d6-9cf7-2c88a2e55434'),
+            sender: { id: message.senderId, name: message.senderName, status: 'online' },
+          } as MessageChat)));
         } else {
           setMessages([]);
           const chat = await createChat({
@@ -72,7 +78,7 @@ const GroupChatScreen: React.FC = () => {
     if (country && department && title) {
       loadMessages();
     }
-  }, [country, department, title]);
+  }, [title, country, department]);
 
   const handleUserPress = (user: UserProfile) => {
     setIsLoading(true);

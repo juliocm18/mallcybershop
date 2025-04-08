@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { Chat, Message, UserProfile, UserSession } from '../models';
 import { supabase } from '@/app/supabase';
+import { MessageChat } from '../components/types';
 
 
 const TABLES = {
@@ -83,13 +84,23 @@ export const getChatMessages = async (chatId: string): Promise<Message[]> => {
   try {
     const { data, error } = await supabase
       .from(TABLES.MESSAGE)
-      .select('*')
+      .select(`*,
+        user_profile: sender_id (user_id, name, avatar)
+        `)
       .eq('chat_id', chatId)
       .order('time', { ascending: false })
       .limit(100);
 
     if (error) throw error;
-    return data || [];
+    return data.map((message: any) => ({
+      chatId: message.chat_id,
+      senderId: message.sender_id,
+      senderName: message.user_profile?.name,
+      text: message.text,
+      time: message.time,
+      status: message.status,
+      id: message.id
+    }));
   } catch (error) {
     console.error('Error fetching chat messages:', error);
     return [];
@@ -102,7 +113,7 @@ export const sendMessage = async (message: Omit<Message, 'id' | 'time' | 'status
     const newMessage: any = {
       text: message.text,
       time: new Date(),
-      status: 'sending',
+      status: 'sent',
       chat_id: message.chatId,
       sender_id: message.senderId,
     };
@@ -114,15 +125,7 @@ export const sendMessage = async (message: Omit<Message, 'id' | 'time' | 'status
       .single();
 
     if (error) throw error;
-    return data.map((message: any) => ({
-      chatId: message.chat_id,
-      senderId: message.sender_id,
-      text: message.text,
-      time: message.time,
-      status: message.status,
-      isMe: message.senderId === 'currentUser?.id', //cambiar por currentUser.id
-      sender: message.sender || { id: '', name: 'Usuario', status: 'online' }
-    }));
+    return data;
   } catch (error) {
     console.error('Error sending message:', error);
     return null;
@@ -335,7 +338,7 @@ export const getCurrentUser = async (): Promise<UserProfile | null> => {
 
 // Update message like status
 export const updateMessageLike = async (
-  messageId: string,
+  messageId: number,
   userId: string,
   isLiked: boolean
 ): Promise<Message | null> => {

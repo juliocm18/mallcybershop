@@ -32,9 +32,10 @@ export interface Chat {
 }
 
 export interface Message {
-    id?: string;
+    id?: number;
     chatId: string;
     senderId: string;
+    senderName?: string;
     text: string;
     time: Date;
     status?: 'sending' | 'sent' | 'delivered' | 'read';

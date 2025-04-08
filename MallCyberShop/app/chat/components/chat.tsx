@@ -85,7 +85,7 @@ export const Chat: React.FC<ChatProps> = ({
   const [messages, setMessages] = useState<MessageChat[]>(initialMessages);
   const [newMessage, setNewMessage] = useState('');
   const [showUsers, setShowUsers] = useState(false);
-  const [activeAnimationId, setActiveAnimationId] = useState<string | null>(null);
+  const [activeAnimationId, setActiveAnimationId] = useState<number | null>(null);
   const animationRefs = useRef<{ [key: string]: LottieView | null }>({});
   const router = useRouter();
   // Función para obtener el color del avatar
@@ -129,7 +129,7 @@ export const Chat: React.FC<ChatProps> = ({
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   }, []);
 
-  const handleLike = useCallback(async (messageId: string) => {
+  const handleLike = useCallback(async (messageId: number) => {
     if (!currentUser?.id) return;
 
     setMessages(prevMessages => {
@@ -167,7 +167,7 @@ export const Chat: React.FC<ChatProps> = ({
 
   // Enviar mensaje
   const handleSend = useCallback(async () => {
-    if (!newMessage.trim() 
+    if (!newMessage.trim()
       // || !currentUser?.id
     ) return;
 
@@ -179,8 +179,8 @@ export const Chat: React.FC<ChatProps> = ({
       status: 'sent'
     };
     try {
-      await sendMessage(newMsg);
-      setMessages(prev => [{ ...newMsg, isMe: true, sender: currentUser }, ...prev] as MessageChat[]);
+      const saveMessage = await sendMessage(newMsg);
+      setMessages(prev => [{ ...newMsg, id: saveMessage?.id, isMe: true, senderName: currentUser?.name || 'Yo' }, ...prev] as MessageChat[]);
       setNewMessage('');
     } catch (error) {
       console.error('Error sending message:', error);
@@ -228,14 +228,13 @@ export const Chat: React.FC<ChatProps> = ({
   // Renderizar mensaje individual
   const renderMessage = useCallback(({ item }: { item: MessageChat }) => {
     if (!item.id) return null;
+    console.log("item---> renderMessage---> ", item)
     const messageTime = formatTime(item.time);
-    const sender = chatType === CHAT_TYPES.GROUP
-      ? item.sender || { id: item.sender, name: item.sender, status: USER_STATUS.ONLINE }
-      : item.isMe
-        ? { id: currentUser?.id || '0', name: 'Tú', status: USER_STATUS.ONLINE }
-        : currentUser || { id: '', name: 'Usuario', status: USER_STATUS.ONLINE };
-    const avatarColor = getAvatarColor(sender.id || '');
-    const isLikedByMe = item.likes?.includes(currentUser?.id || '') || false;
+
+    const avatarColor = getAvatarColor(item.senderId || '');
+    // const isLikedByMe = item.likes?.includes(currentUser?.id || '') || false;
+    const isLikedByMe = false;
+
 
     return (
       <View style={[
@@ -245,11 +244,11 @@ export const Chat: React.FC<ChatProps> = ({
         {!item.isMe && chatType === CHAT_TYPES.GROUP && (
           <TouchableOpacity
             style={styles.avatarWrapper}
-            onPress={() => handleUserPress(sender.id || '')}
+            onPress={() => handleUserPress(item.senderId || '')}
           >
             <View style={[styles.avatar, { backgroundColor: avatarColor.backgroundColor }]}>
               <Text style={[styles.avatarText, { color: avatarColor.color }]}>
-                {sender?.name?.charAt(0).toUpperCase()}
+                {item?.senderName?.charAt(0).toUpperCase()}
               </Text>
             </View>
           </TouchableOpacity>
@@ -257,7 +256,7 @@ export const Chat: React.FC<ChatProps> = ({
 
         <View style={styles.messageColumn}>
           {!item.isMe && chatType === CHAT_TYPES.GROUP && (
-            <Text style={styles.senderName}>{sender.name}</Text>
+            <Text style={styles.senderName}>{item.senderName}</Text>
           )}
           <View style={styles.messageWithTime}>
             <View style={[
@@ -277,7 +276,7 @@ export const Chat: React.FC<ChatProps> = ({
 
                 {/* Botón de like */}
                 <TouchableOpacity
-                  onPress={() => handleLike(item.id || '')}
+                  onPress={() => handleLike(item?.id || 0)}
                   style={styles.likeButton}
                   activeOpacity={0.6}
                 >
@@ -319,7 +318,7 @@ export const Chat: React.FC<ChatProps> = ({
             {item.id && activeAnimationId === item.id && (
               <View style={styles.likeAnimationContainer}>
                 <LottieView
-                  ref={ref => animationRefs.current[item.id || ''] = ref}
+                  ref={ref => animationRefs.current[item.id || 0] = ref}
                   source={heartAnimation}
                   autoPlay
                   loop={false}
@@ -332,7 +331,7 @@ export const Chat: React.FC<ChatProps> = ({
         </View>
       </View>
     );
-  }, [chatType, currentUser, formatTime, handleUserPress, handleLike, activeAnimationId]);
+  }, [messages, chatType, currentUser, handleLike, activeAnimationId]);
 
   // Renderizar item de usuario en el sidebar
   const renderUserItem = useCallback(({ item }: { item: UserProfile }) => {
@@ -450,13 +449,13 @@ export const Chat: React.FC<ChatProps> = ({
           <FlatList
             data={messages}
             renderItem={renderMessage}
-            keyExtractor={(item, index) => item.id || index.toString()}
+            keyExtractor={(item, index) => item.id?.toString() || index.toString()}
             contentContainerStyle={styles.messagesList}
             inverted
           />
           {/* Entrada de mensaje */}
           <View style={styles.inputContainer}>
-            
+
             <TextInput
               style={styles.input}
               value={newMessage}
