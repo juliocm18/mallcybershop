@@ -342,4 +342,88 @@ export const styles = StyleSheet.create({
         width: '100%',
         height: '100%',
     },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    modalContainer: {
+        width: '80%',
+        backgroundColor: 'white',
+        borderRadius: 10,
+        padding: 20,
+        alignItems: 'center',
+    },
+    modalTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        marginBottom: 15,
+    },
+    modalText: {
+        textAlign: 'center',
+        marginBottom: 20,
+    },
+    modalLabel: {
+        alignSelf: 'flex-start',
+        marginBottom: 5,
+        fontWeight: 'bold',
+    },
+    modalInput: {
+        width: '100%',
+        borderWidth: 1,
+        borderColor: '#ccc',
+        borderRadius: 5,
+        padding: 10,
+        marginBottom: 15,
+    },
+    genderOptions: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        width: '100%',
+        marginBottom: 20,
+    },
+    genderOption: {
+        padding: 10,
+        borderWidth: 1,
+        borderColor: '#ccc',
+        borderRadius: 5,
+    },
+    genderOptionSelected: {
+        backgroundColor: '#e3f2fd',
+        borderColor: '#2196f3',
+    },
+    modalSubmitButton: {
+        backgroundColor: '#2196f3',
+        padding: 10,
+        borderRadius: 5,
+        width: '100%',
+        alignItems: 'center',
+    },
+    modalSubmitButtonText: {
+        color: 'white',
+        fontWeight: 'bold',
+    },
+    modalCloseButton: {
+        marginTop: 10,
+        padding: 10,
+    },
+    modalCloseButtonText: {
+        color: '#2196f3',
+    },
+    googleLoginButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#DB4437',
+        padding: 10,
+        borderRadius: 5,
+        marginBottom: 10,
+        width: '100%',
+        justifyContent: 'center',
+    },
+    googleLoginButtonText: {
+        color: 'white',
+        marginLeft: 10,
+        fontWeight: 'bold',
+    },
 });

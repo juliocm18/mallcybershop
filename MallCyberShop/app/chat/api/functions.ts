@@ -92,7 +92,7 @@ export const getChatMessages = async (chatId: string): Promise<Message[]> => {
       .limit(100);
 
     if (error) throw error;
-    return data.map((message: any) => ({
+    const result = data.map((message: any) => ({
       chatId: message.chat_id,
       senderId: message.sender_id,
       senderName: message.user_profile?.name,
@@ -100,7 +100,8 @@ export const getChatMessages = async (chatId: string): Promise<Message[]> => {
       time: message.time,
       status: message.status,
       id: message.id
-    }));
+    }))
+    return result;
   } catch (error) {
     console.error('Error fetching chat messages:', error);
     return [];
@@ -286,7 +287,7 @@ export const getUserProfile = async (userId: string): Promise<UserProfile | null
     const { data, error } = await supabase
       .from(TABLES.USER_PROFILE)
       .select('*')
-      .eq('id', userId)
+      .eq('user_id', userId)
       .single();
 
     if (error) throw error;
@@ -385,3 +386,91 @@ export const updateMessageLike = async (
     return null;
   }
 };
+
+// Función para iniciar sesión con Google
+export const signInWithGoogle = async () => {
+  try {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      
+    });
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Error signing in with Google:', error);
+    return null;
+  }
+};
+
+// Función para cerrar sesión
+export const signOut = async () => {
+  try {
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
+    return true;
+  } catch (error) {
+    console.error('Error signing out:', error);
+    return false;
+  }
+};
+
+// Función para obtener la sesión actual
+export const getCurrentSession = async () => {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    return session;
+  } catch (error) {
+    console.error('Error getting session:', error);
+    return null;
+  }
+};
+
+// Función para crear o actualizar el perfil del usuario
+export const upsertUserProfile = async (userProfile: UserProfile) => {
+  try {
+    const { data, error } = await supabase
+      .from('user_profile')
+      .upsert({
+        id: userProfile.id,
+        email: userProfile.email,
+        name: userProfile.name,
+        avatar: userProfile.avatar,
+        age: userProfile.age,
+        gender: userProfile.gender,
+        status: userProfile.status,
+        updated_at: new Date().toISOString(),
+        userId: userProfile.userId
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Error upserting user profile:', error);
+    return null;
+  }
+};
+
+// Función para actualizar el estado de la sesión del usuario
+export const updateUserSessionStatus = async (userId: string, status: 'online' | 'offline') => {
+  try {
+    const { data, error } = await supabase
+      .from('user_session')
+      .upsert({
+        user_id: userId,
+        is_online: status === 'online',
+        last_seen_at: new Date().toISOString()
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Error updating user session status:', error);
+    return null;
+  }
+};
+

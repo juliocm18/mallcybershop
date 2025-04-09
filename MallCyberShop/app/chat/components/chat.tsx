@@ -8,13 +8,15 @@ import {
   SafeAreaView,
   Dimensions,
   TouchableWithoutFeedback,
+  Modal,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { styles } from './chat.styles';
 import { MessageChat, } from './types';
 import { useRouter } from 'expo-router';
 import { Message, UserProfile } from '../models';
-import { sendMessage, updateMessageLike } from '../api/functions';
+import { getCurrentSession, getCurrentUser, sendMessage, signInWithGoogle, updateMessageLike, updateUserSessionStatus, upsertUserProfile } from '../api/functions';
 import LottieView from 'lottie-react-native';
 import heartAnimation from '../../../assets/animations/hearth.json';
 
@@ -82,10 +84,26 @@ export const Chat: React.FC<ChatProps> = ({
   onUserSelect,
 }) => {
 
-  const [messages, setMessages] = useState<MessageChat[]>(initialMessages);
+  const [messages, setMessages] = useState<MessageChat[]>(() =>
+    initialMessages.map(msg => ({
+      ...msg,
+      formattedTime: new Date(msg.time).toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+    }))
+  );
   const [newMessage, setNewMessage] = useState('');
   const [showUsers, setShowUsers] = useState(false);
   const [activeAnimationId, setActiveAnimationId] = useState<number | null>(null);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [userProfileData, setUserProfileData] = useState({
+    age: '',
+    gender: 'male'
+  });
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [currentUserProfile, setCurrentUserProfile] = useState<UserProfile | null>(currentUser || null);
   const animationRefs = useRef<{ [key: string]: LottieView | null }>({});
   const router = useRouter();
   // Función para obtener el color del avatar
@@ -93,40 +111,118 @@ export const Chat: React.FC<ChatProps> = ({
     return generatePastelColor(userId);
   }, []);
   // // Efecto para combinar mensajes iniciales con los de ejemplo si no hay iniciales
-  // useEffect(() => {
-  //   if (initialMessages.length === 0) {
-  //     const exampleMessages: MessageChat[] = [
-  //       {
-  //         id: '1',
-  //         chatId,
-  //         text: chatType === 'group' ? '¡Hola a todos!' : `¡Hola! Soy ${currentUser?.name || 'Usuario'}`,
-  //         senderId: chatType === 'group' ? '1' : currentUser?.id || '1',
-  //         isMe: false,
-  //         time: new Date(Date.now() - 3600000),
-  //         status: 'delivered',
-  //         createdBy: chatType === 'group' ? '1' : currentUser?.id || '1',
-  //         updatedBy: chatType === 'group' ? '1' : currentUser?.id || '1',
+  useEffect(() => {
+    setMessages(initialMessages);
+  }, [initialMessages]);
 
-  //       },
-  //       {
-  //         id: '2',
-  //         chatId,
-  //         text: chatType === 'group' ? '¿Cómo están?' : '¿Cómo estás?',
-  //         senderId: 'me',
-  //         isMe: true,
-  //         time: new Date(Date.now() - 1800000),
-  //         status: 'read',
-  //         createdBy: currentUser?.id || '1',
-  //         updatedBy: currentUser?.id || ''
-  //       }
-  //     ];
-  //     setMessages(exampleMessages);
-  //   }
-  // }, [chatType, currentUser, initialMessages]);
+  // Verificar la sesión al cargar el componente
+  useEffect(() => {
+    const checkSession = async () => {
+      const session = await getCurrentSession();
+      if (session) {
+        setIsAuthenticated(true);
+        // Obtener o crear el perfil del usuario
+        const profile = await handleUserProfile(session.user);
+        if (profile) {
+          setCurrentUserProfile(profile);
+          // Actualizar estado de sesión a "online"
+          await updateUserSessionStatus(profile.id, 'online');
+        }
+      }
+    };
+
+    checkSession();
+
+    return () => {
+      // Al desmontar el componente, actualizar estado a "offline"
+      if (currentUserProfile?.id) {
+        updateUserSessionStatus(currentUserProfile.id, 'offline');
+      }
+    };
+  }, []);
+
+   // Manejar inicio de sesión con Google
+   const handleGoogleLogin = async () => {
+    const result = await signInWithGoogle();
+    if (result) {
+      // Esperamos un momento para dar tiempo a que Supabase actualice la sesión
+      setTimeout(async () => {
+        const session = await getCurrentSession();
+        if (session?.user) {
+          setIsAuthenticated(true);
+          const profile = await handleUserProfile(session.user);
+          if (profile) {
+            setCurrentUserProfile(profile);
+            await updateUserSessionStatus(profile.id, 'online');
+          }
+          setShowLoginModal(false);
+        }
+      }, 1000); // Pequeño delay para asegurar la actualización
+    }
+  };
+
+  // Manejar el perfil del usuario (crear o actualizar)
+  const handleUserProfile = async (user: any) => {
+    if (!user) return null;
+
+    // Verificar si ya tiene perfil completo
+    const existingProfile = await getCurrentUser();
+    if (existingProfile && existingProfile.age && existingProfile.gender) {
+      return existingProfile;
+    }
+
+    // Si no tiene perfil completo, mostrar modal para completar datos
+    setUserProfileData({
+      age: '',
+      gender: existingProfile?.gender || 'male'
+    });
+    setShowProfileModal(true);
+
+    // Crear/actualizar perfil con datos básicos
+    const profileData = {
+      id: user.id,
+      email: user.email,
+      name: user.user_metadata?.full_name || user.email,
+      avatar: user.user_metadata?.avatar_url,
+      status: 'online' as 'online' | 'offline' | 'typing'
+
+    };
+
+    return await upsertUserProfile(profileData);
+  };
+
+  // Manejar envío de datos del perfil
+  const handleProfileSubmit = async () => {
+    if (!userProfileData.age || !userProfileData.gender) {
+      Alert.alert('Error', 'Por favor completa todos los campos');
+      return;
+    }
+
+    const session = await getCurrentSession();
+    if (!session?.user) {
+      Alert.alert('Error', 'No hay sesión activa');
+      return;
+    }
+
+    const profile = await upsertUserProfile({
+      id: session.user.id,
+      name: session.user.user_metadata?.full_name || session.user.email,
+      email: session.user.email,
+      avatar: session.user.user_metadata?.avatar_url,
+      age: parseInt(userProfileData.age),
+      gender: userProfileData.gender,
+      status: 'online'
+    });
+
+    if (profile) {
+      setCurrentUserProfile(profile);
+      setShowProfileModal(false);
+    }
+  };
 
   // Formatear hora del mensaje
   const formatTime = useCallback((date: Date) => {
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return new Date(date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   }, []);
 
   const handleLike = useCallback(async (messageId: number) => {
@@ -167,25 +263,35 @@ export const Chat: React.FC<ChatProps> = ({
 
   // Enviar mensaje
   const handleSend = useCallback(async () => {
-    if (!newMessage.trim()
-      // || !currentUser?.id
-    ) return;
+    if (!newMessage.trim() || !currentUserProfile?.id) return;
+
+    // Verificar si el usuario está autenticado
+    if (!isAuthenticated || !currentUserProfile) {
+      setShowLoginModal(true);
+      return;
+    }
+
+    // Verificar si el perfil está completo
+    if (!currentUserProfile.age || !currentUserProfile.gender) {
+      setShowProfileModal(true);
+      return;
+    }
 
     const newMsg: Message = {
       chatId,
       text: newMessage,
-      senderId: currentUser?.id || 'bb353e09-30b2-46d6-9cf7-2c88a2e55434',
+      senderId: currentUserProfile.id as string,
       time: new Date(),
       status: 'sent'
     };
     try {
       const saveMessage = await sendMessage(newMsg);
-      setMessages(prev => [{ ...newMsg, id: saveMessage?.id, isMe: true, senderName: currentUser?.name || 'Yo' }, ...prev] as MessageChat[]);
+      setMessages(prev => [{ ...newMsg, id: saveMessage?.id, isMe: true, senderName: currentUserProfile.name || 'Yo' }, ...prev] as MessageChat[]);
       setNewMessage('');
     } catch (error) {
       console.error('Error sending message:', error);
     }
-  }, [newMessage, currentUser]);
+  }, [newMessage, currentUserProfile, isAuthenticated]);
 
   // Cerrar sidebar
   const handleCloseSidebar = useCallback(() => {
@@ -225,23 +331,25 @@ export const Chat: React.FC<ChatProps> = ({
     return <View style={{ width: 28 }} />;
   };
 
-  // Renderizar mensaje individual
-  const renderMessage = useCallback(({ item }: { item: MessageChat }) => {
+
+  const MessageItem = React.memo(({ item, isGroup, isMe, onLike, onUserPress, avatarColor, currentUserId, activeAnimationId }: {
+    item: MessageChat;
+    isGroup: boolean;
+    isMe: boolean;
+    onLike: (id: number) => void;
+    onUserPress: (userId: string) => void;
+    avatarColor: { backgroundColor: string; color: string };
+    currentUserId?: string;
+    activeAnimationId: number | null;
+  }) => {
     if (!item.id) return null;
-    console.log("item---> renderMessage---> ", item)
+
     const messageTime = formatTime(item.time);
-
-    const avatarColor = getAvatarColor(item.senderId || '');
-    // const isLikedByMe = item.likes?.includes(currentUser?.id || '') || false;
-    const isLikedByMe = false;
-
+    const isLikedByMe = item.likes?.includes(currentUserId || '') || false;
 
     return (
-      <View style={[
-        styles.messageRow,
-        item.isMe ? styles.myMessageRow : styles.otherMessageRow,
-      ]}>
-        {!item.isMe && chatType === CHAT_TYPES.GROUP && (
+      <View style={[styles.messageRow, isMe ? styles.myMessageRow : styles.otherMessageRow]}>
+        {!item.isMe && isGroup && (
           <TouchableOpacity
             style={styles.avatarWrapper}
             onPress={() => handleUserPress(item.senderId || '')}
@@ -255,7 +363,7 @@ export const Chat: React.FC<ChatProps> = ({
         )}
 
         <View style={styles.messageColumn}>
-          {!item.isMe && chatType === CHAT_TYPES.GROUP && (
+          {!item.isMe && isGroup && (
             <Text style={styles.senderName}>{item.senderName}</Text>
           )}
           <View style={styles.messageWithTime}>
@@ -266,28 +374,28 @@ export const Chat: React.FC<ChatProps> = ({
               <Text style={item.isMe ? styles.myText : styles.otherText}>
                 {item.text}
               </Text>
-              <View style={styles.messageFooter}>
-                <Text style={[
-                  styles.timeText,
-                  item.isMe ? styles.myTimeText : styles.otherTimeText
-                ]}>
-                  {messageTime}
-                </Text>
+            </View>
+            <View style={styles.messageFooter}>
+              <Text style={[
+                styles.timeText,
+                item.isMe ? styles.myTimeText : styles.otherTimeText
+              ]}>
+                {messageTime}
+              </Text>
 
-                {/* Botón de like */}
-                <TouchableOpacity
-                  onPress={() => handleLike(item?.id || 0)}
-                  style={styles.likeButton}
-                  activeOpacity={0.6}
-                >
-                  <Ionicons
-                    name="heart"
-                    size={16}
-                    color={isLikedByMe ? "#ff3e3e" : "#ccc"}
-                    solid={isLikedByMe}
-                  />
-                </TouchableOpacity>
-              </View>
+              {/* Botón de like */}
+              <TouchableOpacity
+                onPress={() => handleLike(item?.id || 0)}
+                style={styles.likeButton}
+                activeOpacity={0.6}
+              >
+                <Ionicons
+                  name="heart"
+                  size={16}
+                  color={isLikedByMe ? "#ff3e3e" : "#ccc"}
+                  solid={isLikedByMe}
+                />
+              </TouchableOpacity>
             </View>
             {/* Estado del mensaje (checkmarks) debajo del texto */}
             {/* {item.isMe && (
@@ -331,7 +439,23 @@ export const Chat: React.FC<ChatProps> = ({
         </View>
       </View>
     );
-  }, [messages, chatType, currentUser, handleLike, activeAnimationId]);
+  });
+
+  const renderMessage = useCallback(({ item }: { item: MessageChat }) => {
+    const avatarColor = getAvatarColor(item.senderId || '');
+    return (
+      <MessageItem
+        item={item}
+        isGroup={chatType === CHAT_TYPES.GROUP}
+        isMe={item.isMe}
+        onLike={handleLike}
+        onUserPress={handleUserPress}
+        avatarColor={avatarColor}
+        currentUserId={currentUser?.id}
+        activeAnimationId={activeAnimationId}
+      />
+    );
+  }, [chatType, currentUser?.id, handleLike, handleUserPress, activeAnimationId, getAvatarColor]);
 
   // Renderizar item de usuario en el sidebar
   const renderUserItem = useCallback(({ item }: { item: UserProfile }) => {
@@ -421,6 +545,99 @@ export const Chat: React.FC<ChatProps> = ({
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Modales para login y perfil */}
+      <Modal
+        visible={showLoginModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowLoginModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>Iniciar sesión</Text>
+            <Text style={styles.modalText}>
+              Para enviar mensajes, por favor inicia sesión con Google.
+            </Text>
+
+            <TouchableOpacity
+              style={styles.googleLoginButton}
+              onPress={handleGoogleLogin}
+            >
+              <Ionicons name="logo-google" size={24} color="#fff" />
+              <Text style={styles.googleLoginButtonText}>Iniciar sesión con Google</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.modalCloseButton}
+              onPress={() => setShowLoginModal(false)}
+            >
+              <Text style={styles.modalCloseButtonText}>Cancelar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        visible={showProfileModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowProfileModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>Completa tu perfil</Text>
+
+            <Text style={styles.modalLabel}>Edad</Text>
+            <TextInput
+              style={styles.modalInput}
+              value={userProfileData.age}
+              onChangeText={(text) => setUserProfileData({ ...userProfileData, age: text })}
+              placeholder="Tu edad"
+              keyboardType="numeric"
+            />
+
+            <Text style={styles.modalLabel}>Género</Text>
+            <View style={styles.genderOptions}>
+              <TouchableOpacity
+                style={[
+                  styles.genderOption,
+                  userProfileData.gender === 'male' && styles.genderOptionSelected
+                ]}
+                onPress={() => setUserProfileData({ ...userProfileData, gender: 'male' })}
+              >
+                <Text>Hombre</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.genderOption,
+                  userProfileData.gender === 'female' && styles.genderOptionSelected
+                ]}
+                onPress={() => setUserProfileData({ ...userProfileData, gender: 'female' })}
+              >
+                <Text>Mujer</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.genderOption,
+                  userProfileData.gender === 'other' && styles.genderOptionSelected
+                ]}
+                onPress={() => setUserProfileData({ ...userProfileData, gender: 'other' })}
+              >
+                <Text>Otro</Text>
+              </TouchableOpacity>
+            </View>
+
+            <TouchableOpacity
+              style={styles.modalSubmitButton}
+              onPress={handleProfileSubmit}
+            >
+              <Text style={styles.modalSubmitButtonText}>Guardar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
       {/* Sidebar de usuarios (solo para grupo) */}
       {renderSidebar()}
 

@@ -10,11 +10,15 @@ export interface UserSession {
 export interface UserProfile {
     id?: string;
     name: string;
+    email?: string;
     avatar?: string;
     status: 'online' | 'offline' | 'typing';
     lastSeen?: string;
     city?: string;
     country?: string;
+    age?: number;
+    gender?: string;
+    userId?: string;
     createdAt?: string;
     updatedAt?: string;
 }
