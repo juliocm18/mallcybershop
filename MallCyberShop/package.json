@@ -7,7 +7,7 @@
     "start:dev": "expo start --offline",
     "reset-project": "node ./scripts/reset-project.js",
     "android": "expo start --android --offline",
-    "ios": "expo start --ios",
+    "ios": "expo run:ios",
     "web": "expo start --web",
     "test": "jest --watchAll",
     "lint": "expo lint"
@@ -19,12 +19,14 @@
     "@expo/vector-icons": "^14.0.2",
     "@react-native-async-storage/async-storage": "^1.23.1",
     "@react-native-community/datetimepicker": "^8.2.0",
+    "@react-native-google-signin/google-signin": "^13.2.0",
     "@react-native-picker/picker": "^2.9.0",
     "@react-navigation/bottom-tabs": "^7.0.0",
     "@react-navigation/native": "^7.0.0",
     "@supabase/supabase-js": "^2.47.16",
     "expo": "^52.0.36",
     "expo-application": "~6.0.2",
+    "expo-auth-session": "~6.0.3",
     "expo-constants": "^17.0.7",
     "expo-device": "~7.0.2",
     "expo-font": "^13.0.4",
@@ -40,6 +42,7 @@
     "expo-system-ui": "~4.0.6",
     "expo-video": "^2.0.5",
     "expo-web-browser": "~14.0.1",
+    "lottie-react-native": "7.1.0",
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "react-i18next": "^15.4.1",
@@ -61,8 +64,7 @@
     "react-native-vector-icons": "^10.2.0",
     "react-native-web": "~0.19.13",
     "react-native-webview": "13.12.5",
-    "victory-native": "^36.9.2",
-    "lottie-react-native": "7.1.0"
+    "victory-native": "^36.9.2"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

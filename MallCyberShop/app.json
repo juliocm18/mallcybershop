@@ -13,11 +13,13 @@
     },
     "android": {
       "permissions": ["READ_PHONE_STATE"],
+      
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.burbitstudio.mallcybershop"
+      "package": "com.burbitstudio.mallcybershop",
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "bundler": "metro",

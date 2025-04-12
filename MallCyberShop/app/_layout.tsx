@@ -9,14 +9,14 @@ import RoleFunctions from "./role/functions";
 import './i18n/i18n';
 import LanguageSelector from './components/LanguageSelector';
 import { useTranslation } from "react-i18next";
-
+import * as WebBrowser from 'expo-web-browser';
 //import * as SplashScreen from "expo-splash-screen";
 
 // Mantiene el splash hasta que el video termine
 //SplashScreen.preventAutoHideAsync();
 
 const videoSource = require("../assets/video/splash1.mp4"); // Importa correctamente
-
+WebBrowser.maybeCompleteAuthSession();
 function MainLayout() {
   const {session, loading} = useAuth();
   const router = useRouter();

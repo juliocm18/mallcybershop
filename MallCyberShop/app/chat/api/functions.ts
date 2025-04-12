@@ -3,15 +3,91 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { Chat, Message, UserProfile, UserSession } from '../models';
 import { supabase } from '@/app/supabase';
-import { MessageChat } from '../components/types';
+import * as AuthSession from 'expo-auth-session';
+import * as WebBrowser from 'expo-web-browser';
+import { Platform } from 'react-native';
+import { makeRedirectUri } from 'expo-auth-session';
 
-
+const ENV_REDIRECT_URL = 'exp://192.168.18.22:8081';
 const TABLES = {
   USER_SESSION: 'user_session',
   CHAT: 'chat',
   USER_PROFILE: 'user_profile',
   MESSAGE: 'message'
 };
+
+import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
+
+// Configura esto al iniciar tu aplicación (por ejemplo, en tu App.tsx o contexto de autenticación)
+GoogleSignin.configure({
+  webClientId: 'TU_CLIENT_ID_GOOGLE_WEB', // ID de cliente para aplicaciones WEB de Google Cloud Console
+  iosClientId: 'TU_CLIENT_ID_GOOGLE_IOS', // ID de cliente para iOS de Google Cloud Console (solo si usas iOS)
+  offlineAccess: true, // Opcional: si necesitas refresh tokens
+});
+
+// Función mejorada para iniciar sesión con Google
+export const signInWithGoogle = async () => {
+  try {
+    // 1. Verificar servicios de Google Play (Android)
+    await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+
+    // 2. Iniciar sesión
+    const { data } = await GoogleSignin.signIn();
+
+    if (!data?.idToken) throw new Error("No se obtuvo token de Google");
+
+    // 3. Autenticar con Supabase
+    const { data: { session }, error } = await supabase.auth.signInWithIdToken({
+      provider: 'google',
+      token: data.idToken,
+    });
+
+    if (error || !session) throw error || new Error("Sesión no creada");
+
+    return session;
+  } catch (error) {
+    console.error("Error en login con Google:", error);
+    
+    // Manejo específico de errores
+    switch (error as string) {
+      case statusCodes.SIGN_IN_CANCELLED:
+        throw new Error("Usuario canceló el login");
+      case statusCodes.IN_PROGRESS:
+        throw new Error("Operación ya en progreso");
+      case statusCodes.PLAY_SERVICES_NOT_AVAILABLE:
+        throw new Error("Google Play Services no disponible");
+      default:
+        throw error;
+    }
+  }
+};
+
+// Función para cerrar sesión
+export const signOut = async () => {
+  try {
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
+    return true;
+  } catch (error) {
+    console.error('Error signing out:', error);
+    return false;
+  }
+};
+
+// Función para obtener la sesión actual
+export const getCurrentSession = async () => {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    return session;
+  } catch (error) {
+    console.error('Error getting session:', error);
+    return null;
+  }
+};
+
+
+
+
 
 // Create a new chat (group or private)
 export const createChat = async (
@@ -387,44 +463,7 @@ export const updateMessageLike = async (
   }
 };
 
-// Función para iniciar sesión con Google
-export const signInWithGoogle = async () => {
-  try {
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      
-    });
 
-    if (error) throw error;
-    return data;
-  } catch (error) {
-    console.error('Error signing in with Google:', error);
-    return null;
-  }
-};
-
-// Función para cerrar sesión
-export const signOut = async () => {
-  try {
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
-    return true;
-  } catch (error) {
-    console.error('Error signing out:', error);
-    return false;
-  }
-};
-
-// Función para obtener la sesión actual
-export const getCurrentSession = async () => {
-  try {
-    const { data: { session } } = await supabase.auth.getSession();
-    return session;
-  } catch (error) {
-    console.error('Error getting session:', error);
-    return null;
-  }
-};
 
 // Función para crear o actualizar el perfil del usuario
 export const upsertUserProfile = async (userProfile: UserProfile) => {

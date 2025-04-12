@@ -100,7 +100,7 @@ export const Chat: React.FC<ChatProps> = ({
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [userProfileData, setUserProfileData] = useState({
     age: '',
-    gender: 'male'
+    gender: 'hombre'
   });
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentUserProfile, setCurrentUserProfile] = useState<UserProfile | null>(currentUser || null);
@@ -143,21 +143,23 @@ export const Chat: React.FC<ChatProps> = ({
 
    // Manejar inicio de sesión con Google
    const handleGoogleLogin = async () => {
-    const result = await signInWithGoogle();
-    if (result) {
-      // Esperamos un momento para dar tiempo a que Supabase actualice la sesión
-      setTimeout(async () => {
-        const session = await getCurrentSession();
-        if (session?.user) {
-          setIsAuthenticated(true);
-          const profile = await handleUserProfile(session.user);
-          if (profile) {
-            setCurrentUserProfile(profile);
-            await updateUserSessionStatus(profile.id, 'online');
-          }
-          setShowLoginModal(false);
+    try {
+      const session = await signInWithGoogle();
+      
+      if (session) {
+        setIsAuthenticated(true);
+        const profile = await handleUserProfile(session.user);
+        
+        if (profile) {
+          setCurrentUserProfile(profile);
+          await updateUserSessionStatus(profile.id, 'online');
         }
-      }, 1000); // Pequeño delay para asegurar la actualización
+        
+        setShowLoginModal(false);
+      }
+    } catch (error) {
+      console.error('Error en login con Google:', error);
+      Alert.alert('Error', error as string || 'Ocurrió un error al iniciar sesión');
     }
   };
 
@@ -174,7 +176,7 @@ export const Chat: React.FC<ChatProps> = ({
     // Si no tiene perfil completo, mostrar modal para completar datos
     setUserProfileData({
       age: '',
-      gender: existingProfile?.gender || 'male'
+      gender: existingProfile?.gender || 'hombre'
     });
     setShowProfileModal(true);
 
@@ -263,7 +265,7 @@ export const Chat: React.FC<ChatProps> = ({
 
   // Enviar mensaje
   const handleSend = useCallback(async () => {
-    if (!newMessage.trim() || !currentUserProfile?.id) return;
+    if (!newMessage.trim()) return;
 
     // Verificar si el usuario está autenticado
     if (!isAuthenticated || !currentUserProfile) {
@@ -393,7 +395,7 @@ export const Chat: React.FC<ChatProps> = ({
                   name="heart"
                   size={16}
                   color={isLikedByMe ? "#ff3e3e" : "#ccc"}
-                  solid={isLikedByMe}
+                  style={{ opacity: isLikedByMe ? 1 : 0.5 }}
                 />
               </TouchableOpacity>
             </View>
@@ -426,7 +428,7 @@ export const Chat: React.FC<ChatProps> = ({
             {item.id && activeAnimationId === item.id && (
               <View style={styles.likeAnimationContainer}>
                 <LottieView
-                  ref={ref => animationRefs.current[item.id || 0] = ref}
+                  ref={animationRefs.current[item.id || 0]}
                   source={heartAnimation}
                   autoPlay
                   loop={false}
@@ -542,6 +544,7 @@ export const Chat: React.FC<ChatProps> = ({
       </View>
     );
   };
+  
 
   return (
     <SafeAreaView style={styles.container}>
