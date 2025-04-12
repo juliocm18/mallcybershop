@@ -20,8 +20,9 @@ import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-si
 
 // Configura esto al iniciar tu aplicación (por ejemplo, en tu App.tsx o contexto de autenticación)
 GoogleSignin.configure({
+  scopes: ['https://www.googleapis.com/auth/drive.readonly'],
   webClientId: 'TU_CLIENT_ID_GOOGLE_WEB', // ID de cliente para aplicaciones WEB de Google Cloud Console
-  iosClientId: 'TU_CLIENT_ID_GOOGLE_IOS', // ID de cliente para iOS de Google Cloud Console (solo si usas iOS)
+  // iosClientId: 'TU_CLIENT_ID_GOOGLE_IOS', // ID de cliente para iOS de Google Cloud Console (solo si usas iOS)
   offlineAccess: true, // Opcional: si necesitas refresh tokens
 });
 
