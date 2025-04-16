@@ -5,7 +5,7 @@ import { useRouter } from 'expo-router';
 import { MessageChat } from './components/types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { UserProfile } from './models';
-import { createChat, getChatByCountryAndCity, getChatMessages, getOnlineUsersByChatLocation } from './api/functions';
+import { createChat, getChatByCountryAndCity, getChatMessages, getCurrentUser, getOnlineUsersByChatLocation } from './api/functions';
 
 const GroupChatScreen: React.FC = () => {
   const router = useRouter();
@@ -35,13 +35,13 @@ const GroupChatScreen: React.FC = () => {
       setUsers(users);
     };
     const loadCurrentUser = async () => {
-      const user = await AsyncStorage.getItem('currentUser');
+      const user = await getCurrentUser();
       if (user) {
-        setCurrentUser(JSON.parse(user));
+        setCurrentUser(user);
       }
     };
     if (chatId) {
-      // loadUsers();
+      loadUsers();
       loadCurrentUser();
     }
   }, [chatId]);

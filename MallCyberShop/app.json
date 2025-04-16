@@ -18,8 +18,8 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.burbitstudio.mallcybershop",
-      "googleServicesFile": "./google-services.json"
+      "package": "com.burbitstudio.mallcybershop"
+      
     },
     "web": {
       "bundler": "metro",

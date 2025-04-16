@@ -17,11 +17,12 @@ const TABLES = {
 };
 
 import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Configura esto al iniciar tu aplicación (por ejemplo, en tu App.tsx o contexto de autenticación)
 GoogleSignin.configure({
   scopes: ['https://www.googleapis.com/auth/drive.readonly'],
-  webClientId: 'TU_CLIENT_ID_GOOGLE_WEB', // ID de cliente para aplicaciones WEB de Google Cloud Console
+  webClientId: '433020737721-jg1bd0itv6el92fcj82crlqn0ief71sq.apps.googleusercontent.com', // ID de cliente para aplicaciones WEB de Google Cloud Console
   // iosClientId: 'TU_CLIENT_ID_GOOGLE_IOS', // ID de cliente para iOS de Google Cloud Console (solo si usas iOS)
   offlineAccess: true, // Opcional: si necesitas refresh tokens
 });
@@ -365,7 +366,7 @@ export const getUserProfile = async (userId: string): Promise<UserProfile | null
       .from(TABLES.USER_PROFILE)
       .select('*')
       .eq('user_id', userId)
-      .single();
+      .maybeSingle();
 
     if (error) throw error;
     return data;
@@ -407,9 +408,10 @@ export const getCurrentUser = async (): Promise<UserProfile | null> => {
     const profile = await getUserProfile(userId);
 
     if (!profile) return null;
+    await AsyncStorage.setItem('currentUser', JSON.stringify(profile));
     return profile;
   } catch (error) {
-    console.error('Error fetching user profile:', error);
+    console.error('Error fetching current user:', error);
     return null;
   }
 };
@@ -467,7 +469,7 @@ export const updateMessageLike = async (
 
 
 // Función para crear o actualizar el perfil del usuario
-export const upsertUserProfile = async (userProfile: UserProfile) => {
+export const upsertUserProfile = async (userProfile: UserProfile): Promise<UserProfile | null> => {
   try {
     const { data, error } = await supabase
       .from('user_profile')
@@ -480,7 +482,7 @@ export const upsertUserProfile = async (userProfile: UserProfile) => {
         gender: userProfile.gender,
         status: userProfile.status,
         updated_at: new Date().toISOString(),
-        userId: userProfile.userId
+        user_id: userProfile.id
       })
       .select()
       .single();

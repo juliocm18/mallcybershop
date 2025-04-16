@@ -123,7 +123,7 @@ export const Chat: React.FC<ChatProps> = ({
         setIsAuthenticated(true);
         // Obtener o crear el perfil del usuario
         const profile = await handleUserProfile(session.user);
-        if (profile) {
+        if (profile && profile.id) {
           setCurrentUserProfile(profile);
           // Actualizar estado de sesión a "online"
           await updateUserSessionStatus(profile.id, 'online');
@@ -145,12 +145,12 @@ export const Chat: React.FC<ChatProps> = ({
    const handleGoogleLogin = async () => {
     try {
       const session = await signInWithGoogle();
-      
+      console.log("Session Google", session)
       if (session) {
         setIsAuthenticated(true);
         const profile = await handleUserProfile(session.user);
-        
-        if (profile) {
+        console.log("Profile", profile)
+        if (profile && profile.id) {
           setCurrentUserProfile(profile);
           await updateUserSessionStatus(profile.id, 'online');
         }
@@ -169,6 +169,7 @@ export const Chat: React.FC<ChatProps> = ({
 
     // Verificar si ya tiene perfil completo
     const existingProfile = await getCurrentUser();
+    console.log("Existing Profile", existingProfile)
     if (existingProfile && existingProfile.age && existingProfile.gender) {
       return existingProfile;
     }
@@ -228,7 +229,7 @@ export const Chat: React.FC<ChatProps> = ({
   }, []);
 
   const handleLike = useCallback(async (messageId: number) => {
-    if (!currentUser?.id) return;
+    if (!currentUserProfile?.id) return;
 
     setMessages(prevMessages => {
       return prevMessages.map(msg => {
@@ -245,15 +246,15 @@ export const Chat: React.FC<ChatProps> = ({
           const updatedMsg: MessageChat = {
             ...msg,
             isLiked,
-            likes: isLiked && currentUser.id
-              ? [...(msg.likes || []), currentUser.id]
-              : (msg.likes || []).filter(id => id !== currentUser.id)
+            likes: isLiked && currentUserProfile.id
+              ? [...(msg.likes || []), currentUserProfile.id]
+              : (msg.likes || []).filter(id => id !== currentUserProfile.id)
           };
 
-          if (!currentUser.id) return updatedMsg;
+          if (!currentUserProfile.id) return updatedMsg;
 
           // Enviar la actualización al servidor
-          updateMessageLike(messageId, currentUser.id, isLiked)
+          updateMessageLike(messageId, currentUserProfile.id, isLiked)
             .catch(console.error);
 
           return updatedMsg;
@@ -261,7 +262,7 @@ export const Chat: React.FC<ChatProps> = ({
         return msg;
       });
     });
-  }, [currentUser]);
+  }, [currentUserProfile]);
 
   // Enviar mensaje
   const handleSend = useCallback(async () => {
@@ -453,11 +454,11 @@ export const Chat: React.FC<ChatProps> = ({
         onLike={handleLike}
         onUserPress={handleUserPress}
         avatarColor={avatarColor}
-        currentUserId={currentUser?.id}
+        currentUserId={currentUserProfile?.id}
         activeAnimationId={activeAnimationId}
       />
     );
-  }, [chatType, currentUser?.id, handleLike, handleUserPress, activeAnimationId, getAvatarColor]);
+  }, [chatType, currentUserProfile?.id, handleLike, handleUserPress, activeAnimationId, getAvatarColor]);
 
   // Renderizar item de usuario en el sidebar
   const renderUserItem = useCallback(({ item }: { item: UserProfile }) => {
@@ -466,7 +467,7 @@ export const Chat: React.FC<ChatProps> = ({
     return (
       <TouchableOpacity
         style={styles.userItem}
-        onPress={() => item.id !== currentUser?.id && handleUserPress(item.id || '')}
+        onPress={() => item.id !== currentUserProfile?.id && handleUserPress(item.id || '')}
       >
         <View style={[styles.userAvatar, { backgroundColor: avatarColor.backgroundColor }]}>
           <Text style={[styles.userAvatarText, { color: avatarColor.color }]}>
@@ -480,7 +481,7 @@ export const Chat: React.FC<ChatProps> = ({
               item.status === USER_STATUS.ONLINE ? 'En línea' : 'Desconectado'}
           </Text>
         </View>
-        {item.id !== currentUser?.id && (
+        {item.id !== currentUserProfile?.id && (
           <View style={[
             styles.onlineIndicator,
             { backgroundColor: item.status === USER_STATUS.ONLINE ? '#4CAF50' : '#ccc' }
@@ -488,14 +489,14 @@ export const Chat: React.FC<ChatProps> = ({
         )}
       </TouchableOpacity>
     );
-  }, [handleUserPress, currentUser, getAvatarColor]);
+  }, [handleUserPress, currentUserProfile, getAvatarColor]);
 
 
   const renderSidebar = () => {
     if (chatType !== 'group' || !showUsers) return null;
 
     // TypeScript now knows currentUser is defined here
-    const myAvatarColor = getAvatarColor(currentUser?.id || '0');
+    const myAvatarColor = getAvatarColor(currentUserProfile?.id || '0');
 
     return (
       <View style={styles.sidebar}>
@@ -503,13 +504,13 @@ export const Chat: React.FC<ChatProps> = ({
         <View style={styles.myProfileContainer}>
           <View style={[styles.myProfileAvatar, { backgroundColor: myAvatarColor.backgroundColor }]}>
             <Text style={[styles.myProfileAvatarText, { color: myAvatarColor.color }]}>
-              {currentUser?.name.charAt(0).toUpperCase()}
+              {currentUserProfile?.name.charAt(0).toUpperCase()}
             </Text>
           </View>
           <View style={styles.myProfileInfo}>
-            <Text style={styles.myProfileName}>{currentUser?.name}</Text>
+            <Text style={styles.myProfileName}>{currentUserProfile?.name}</Text>
             <Text style={styles.myProfileStatus}>
-              {currentUser?.status === USER_STATUS.ONLINE ? 'En línea' : 'Desconectado'}
+              {currentUserProfile?.status === USER_STATUS.ONLINE ? 'En línea' : 'Desconectado'}
             </Text>
           </View>
         </View>
@@ -521,10 +522,10 @@ export const Chat: React.FC<ChatProps> = ({
           <Ionicons name="close" size={28} color="#fff" />
         </TouchableOpacity>
 
-        <Text style={styles.sidebarTitle}>Conectados ({users.length})</Text>
+        <Text style={styles.sidebarTitle}>Usuarios en linea ({users.length})</Text>
 
         <FlatList
-          data={users.filter(user => user.id !== currentUser?.id)}
+          data={users.filter(user => user.id !== currentUserProfile?.id)}
           renderItem={renderUserItem}
           keyExtractor={(item) => item.id || ''}
           contentContainerStyle={styles.userList}
