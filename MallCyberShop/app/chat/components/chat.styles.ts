@@ -426,4 +426,36 @@ export const styles = StyleSheet.create({
         marginLeft: 10,
         fontWeight: 'bold',
     },
+    blockedUserName: {
+        color: '#999',
+        textDecorationLine: 'line-through'
+    },
+    blockButton: {
+        padding: 8,
+        borderRadius: 20,
+        marginLeft: 10,
+        backgroundColor: '#f44336'
+    },
+    modalButtonContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginTop: 20
+    },
+    modalButton: {
+        flex: 1,
+        padding: 12,
+        borderRadius: 8,
+        alignItems: 'center',
+        marginHorizontal: 5
+    },
+    cancelButton: {
+        backgroundColor: '#ccc'
+    },
+    unblockButton: {
+        backgroundColor: '#4CAF50'
+    },
+    modalButtonText: {
+        color: '#fff',
+        fontWeight: 'bold'
+    }
 });

@@ -20,6 +20,8 @@ import { getCurrentSession, getCurrentUser, sendMessage, signInWithGoogle, updat
 import LottieView from 'lottie-react-native';
 import heartAnimation from '../../../assets/animations/hearth.json';
 
+import { blockUser, unblockUser, getBlockedUsers, isUserBlocked } from '../api/functions';
+
 export const generatePastelColor = (seed: string): { backgroundColor: string; color: string } => {
   // Usamos el ID del usuario como semilla para generar un color consistente
   const hash = seed.split('').reduce((acc, char) => {
@@ -106,6 +108,10 @@ export const Chat: React.FC<ChatProps> = ({
   const [currentUserProfile, setCurrentUserProfile] = useState<UserProfile | null>(currentUser || null);
   const animationRefs = useRef<{ [key: string]: LottieView | null }>({});
   const router = useRouter();
+
+  const [blockedUsers, setBlockedUsers] = useState<string[]>([]);
+  const [showBlockModal, setShowBlockModal] = useState(false);
+  const [selectedUserToBlock, setSelectedUserToBlock] = useState<UserProfile | null>(null);
   // Función para obtener el color del avatar
   const getAvatarColor = useCallback((userId: string) => {
     return generatePastelColor(userId);
@@ -114,6 +120,47 @@ export const Chat: React.FC<ChatProps> = ({
   useEffect(() => {
     setMessages(initialMessages);
   }, [initialMessages]);
+
+  // Agregar este useEffect para cargar los usuarios bloqueados
+  useEffect(() => {
+    const loadBlockedUsers = async () => {
+      if (currentUserProfile?.id) {
+        const blocked = await getBlockedUsers(currentUserProfile.id);
+        setBlockedUsers(blocked);
+      }
+    };
+
+    loadBlockedUsers();
+  }, [currentUserProfile?.id]);
+
+  // Bloqueo de usuario
+  const handleBlockUser = async (user: UserProfile) => {
+    if (!currentUserProfile?.id || !user.id) return;
+
+    const isBlocked = await isUserBlocked(currentUserProfile.id, user.id);
+
+    if (isBlocked) {
+      const success = await unblockUser(currentUserProfile.id, user.id);
+      if (success) {
+        setBlockedUsers(prev => prev.filter(id => id !== user.id));
+        Alert.alert('Éxito', `${user.name} ha sido desbloqueado`);
+      }
+    } else {
+      const success = await blockUser(currentUserProfile.id, user.id);
+      if (success) {
+        setBlockedUsers(prev => user.id ? [...prev, user.id] : prev);
+        Alert.alert('Éxito', `${user.name} ha sido bloqueado`);
+      }
+    }
+
+    setShowBlockModal(false);
+    setSelectedUserToBlock(null);
+  };
+
+  const openBlockModal = (user: UserProfile) => {
+    setSelectedUserToBlock(user);
+    setShowBlockModal(true);
+  };
 
   // Verificar la sesión al cargar el componente
   useEffect(() => {
@@ -141,8 +188,8 @@ export const Chat: React.FC<ChatProps> = ({
     };
   }, []);
 
-   // Manejar inicio de sesión con Google
-   const handleGoogleLogin = async () => {
+  // Manejar inicio de sesión con Google
+  const handleGoogleLogin = async () => {
     try {
       const session = await signInWithGoogle();
       console.log("Session Google", session)
@@ -154,7 +201,7 @@ export const Chat: React.FC<ChatProps> = ({
           setCurrentUserProfile(profile);
           await updateUserSessionStatus(profile.id, 'online');
         }
-        
+
         setShowLoginModal(false);
       }
     } catch (error) {
@@ -280,6 +327,15 @@ export const Chat: React.FC<ChatProps> = ({
       return;
     }
 
+    // Verificar si estamos en un chat privado con un usuario bloqueado
+    if (chatType === CHAT_TYPES.PRIVATE && recipientUser?.id) {
+      const isBlocked = await isUserBlocked(currentUserProfile.id, recipientUser.id);
+      if (isBlocked) {
+        Alert.alert('Usuario bloqueado', 'No puedes enviar mensajes a este usuario porque lo has bloqueado.');
+        return;
+      }
+    }
+
     const newMsg: Message = {
       chatId,
       text: newMessage,
@@ -287,6 +343,7 @@ export const Chat: React.FC<ChatProps> = ({
       time: new Date(),
       status: 'sent'
     };
+
     try {
       const saveMessage = await sendMessage(newMsg);
       setMessages(prev => [{ ...newMsg, id: saveMessage?.id, isMe: true, senderName: currentUserProfile.name || 'Yo' }, ...prev] as MessageChat[]);
@@ -294,7 +351,7 @@ export const Chat: React.FC<ChatProps> = ({
     } catch (error) {
       console.error('Error sending message:', error);
     }
-  }, [newMessage, currentUserProfile, isAuthenticated]);
+  }, [newMessage, currentUserProfile, isAuthenticated, chatType, recipientUser]);
 
   // Cerrar sidebar
   const handleCloseSidebar = useCallback(() => {
@@ -463,33 +520,49 @@ export const Chat: React.FC<ChatProps> = ({
   // Renderizar item de usuario en el sidebar
   const renderUserItem = useCallback(({ item }: { item: UserProfile }) => {
     const avatarColor = getAvatarColor(item.id || '0');
+    const isBlocked = blockedUsers.includes(item.id || '');
+    const isCurrentUser = item.id === currentUserProfile?.id;
 
     return (
       <TouchableOpacity
         style={styles.userItem}
-        onPress={() => item.id !== currentUserProfile?.id && handleUserPress(item.id || '')}
+        onPress={() => !isBlocked && !isCurrentUser && handleUserPress(item.id || '')}
       >
-        <View style={[styles.userAvatar, { backgroundColor: avatarColor.backgroundColor }]}>
+        <View style={[styles.userAvatar, {
+          backgroundColor: avatarColor.backgroundColor,
+          opacity: isBlocked ? 0.5 : 1
+        }]}>
           <Text style={[styles.userAvatarText, { color: avatarColor.color }]}>
             {item.name.charAt(0).toUpperCase()}
           </Text>
         </View>
         <View style={styles.userInfo}>
-          <Text style={styles.userName}>{item.name}</Text>
-          <Text style={styles.userStatus}>
-            {item.status === USER_STATUS.TYPING ? 'Escribiendo...' :
-              item.status === USER_STATUS.ONLINE ? 'En línea' : 'Desconectado'}
+          <Text style={[styles.userName, isBlocked && styles.blockedUserName]}>
+            {item.name}
+            {isBlocked && ' (Bloqueado)'}
           </Text>
+          {!isBlocked && (
+            <Text style={styles.userStatus}>
+              {item.status === USER_STATUS.TYPING ? 'Escribiendo...' :
+                item.status === USER_STATUS.ONLINE ? 'En línea' : 'Desconectado'}
+            </Text>
+          )}
         </View>
-        {item.id !== currentUserProfile?.id && (
-          <View style={[
-            styles.onlineIndicator,
-            { backgroundColor: item.status === USER_STATUS.ONLINE ? '#4CAF50' : '#ccc' }
-          ]} />
+        {!isCurrentUser && (
+          <TouchableOpacity
+            style={styles.blockButton}
+            onPress={() => openBlockModal(item)}
+          >
+            <Ionicons
+              name={isBlocked ? 'lock-open' : 'lock-closed'}
+              size={20}
+              color={isBlocked ? '#4CAF50' : '#f44336'}
+            />
+          </TouchableOpacity>
         )}
       </TouchableOpacity>
     );
-  }, [handleUserPress, currentUserProfile, getAvatarColor]);
+  }, [handleUserPress, currentUserProfile, getAvatarColor, blockedUsers]);
 
 
   const renderSidebar = () => {
@@ -545,7 +618,7 @@ export const Chat: React.FC<ChatProps> = ({
       </View>
     );
   };
-  
+
 
   return (
     <SafeAreaView style={styles.container}>
@@ -639,6 +712,52 @@ export const Chat: React.FC<ChatProps> = ({
             >
               <Text style={styles.modalSubmitButtonText}>Guardar</Text>
             </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        visible={showBlockModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowBlockModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>
+              {selectedUserToBlock && blockedUsers.includes(selectedUserToBlock.id || '')
+                ? `Desbloquear a ${selectedUserToBlock.name}`
+                : `Bloquear a ${selectedUserToBlock?.name}`}
+            </Text>
+            <Text style={styles.modalText}>
+              {selectedUserToBlock && blockedUsers.includes(selectedUserToBlock.id || '')
+                ? '¿Estás seguro que quieres desbloquear a este usuario? Podrá enviarte mensajes y ver tu estado en línea.'
+                : '¿Estás seguro que quieres bloquear a este usuario? No podrás enviarle mensajes ni ver su estado en línea.'}
+            </Text>
+
+            <View style={styles.modalButtonContainer}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.cancelButton]}
+                onPress={() => setShowBlockModal(false)}
+              >
+                <Text style={styles.modalButtonText}>Cancelar</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.modalButton,
+                blockedUsers.includes(selectedUserToBlock?.id || '')
+                  ? styles.unblockButton
+                  : styles.blockButton
+                ]}
+                onPress={() => selectedUserToBlock && handleBlockUser(selectedUserToBlock)}
+              >
+                <Text style={styles.modalButtonText}>
+                  {selectedUserToBlock && blockedUsers.includes(selectedUserToBlock.id || '')
+                    ? 'Desbloquear'
+                    : 'Bloquear'}
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Modal>

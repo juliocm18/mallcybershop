@@ -3,6 +3,8 @@ export interface UserSession {
     userId: string
     isOnline: boolean
     typing: boolean
+    currentCountry: string;
+    currentCity: string;
     createdAt?: string
     updatedAt?: string
 }
@@ -48,3 +50,9 @@ export interface Message {
     createdAt?:string;
     updatedAt?:string;
 }
+
+export interface BlockedUser {
+    blockerId: string;
+    blockedId: string;
+    createdAt: Date;
+  }

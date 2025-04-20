@@ -5,7 +5,7 @@ import { useRouter } from 'expo-router';
 import { MessageChat } from './components/types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { UserProfile } from './models';
-import { createChat, getChatByCountryAndCity, getChatMessages, getCurrentUser, getOnlineUsersByChatLocation } from './api/functions';
+import { createChat, getChatByCountryAndCity, getChatMessages, getCurrentUser, getOnlineUsersByChatLocation, updateUserProfile, updateUserSessionStatus } from './api/functions';
 
 const GroupChatScreen: React.FC = () => {
   const router = useRouter();
@@ -35,9 +35,14 @@ const GroupChatScreen: React.FC = () => {
       setUsers(users);
     };
     const loadCurrentUser = async () => {
-      const user = await getCurrentUser();
-      if (user) {
-        setCurrentUser(user);
+      try {
+        const user = await getCurrentUser();
+        if (user && user.id) {
+          setCurrentUser(user);
+          await updateUserSessionStatus(user.id, USER_STATUS.ONLINE as 'online' | 'offline' , country, department);
+        }
+      } catch (error) {
+        console.log(error, 'error al cargar el usuario actual');
       }
     };
     if (chatId) {

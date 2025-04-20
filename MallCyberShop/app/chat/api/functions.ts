@@ -482,7 +482,9 @@ export const upsertUserProfile = async (userProfile: UserProfile): Promise<UserP
         gender: userProfile.gender,
         status: userProfile.status,
         updated_at: new Date().toISOString(),
-        user_id: userProfile.id
+        user_id: userProfile.id,
+        country: userProfile.country,
+        city: userProfile.city
       })
       .select()
       .single();
@@ -496,14 +498,16 @@ export const upsertUserProfile = async (userProfile: UserProfile): Promise<UserP
 };
 
 // Función para actualizar el estado de la sesión del usuario
-export const updateUserSessionStatus = async (userId: string, status: 'online' | 'offline') => {
+export const updateUserSessionStatus = async (userId: string, status: 'online' | 'offline', country?: string, city?: string) => {
   try {
     const { data, error } = await supabase
       .from('user_session')
       .upsert({
         user_id: userId,
         is_online: status === 'online',
-        last_seen_at: new Date().toISOString()
+        last_seen_at: new Date().toISOString(),
+        ...country ? {current_country: country} : null,
+        ...city ? {current_city: city} : null
       })
       .select()
       .single();
@@ -515,4 +519,7 @@ export const updateUserSessionStatus = async (userId: string, status: 'online' |
     return null;
   }
 };
+
+
+
 
