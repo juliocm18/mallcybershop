@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, Image } from 'react-native';
 import { MessageBubbleProps } from '../types';
 import { styles } from '../styles';
 
@@ -11,24 +11,53 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isOwnMess
 
   return (
     <View style={[
-      styles.messageBubble,
-      isOwnMessage ? styles.ownMessage : styles.otherMessage
+      styles.messageContainer,
+      isOwnMessage ? styles.ownMessageContainer : styles.otherMessageContainer
     ]}>
-      {!isOwnMessage && message.user?.name && (
-        <Text style={styles.userName}>{message.user.name}</Text>
+      {!isOwnMessage && (
+        <View style={styles.messageAvatarContainer}>
+          <Image
+            source={
+              message.user?.avatar_url
+                ? { uri: message.user.avatar_url }
+                : require('./default-avatar.png')
+            }
+            style={styles.messageAvatar}
+          />
+        </View>
       )}
-      <Text style={[
-        styles.messageText,
-        isOwnMessage ? styles.ownMessageText : styles.otherMessageText
+      <View style={[
+        styles.messageBubble,
+        isOwnMessage ? styles.ownMessage : styles.otherMessage
       ]}>
-        {message.content}
-      </Text>
-      <Text style={[
-        styles.messageTime,
-        isOwnMessage ? styles.ownMessageTime : styles.otherMessageTime
-      ]}>
-        {formatTime(message.created_at)}
-      </Text>
+        {!isOwnMessage && message.user?.name && (
+          <Text style={styles.messageUserName}>{message.user.name}</Text>
+        )}
+        <Text style={[
+          styles.messageText,
+          isOwnMessage ? styles.ownMessageText : styles.otherMessageText
+        ]}>
+          {message.content}
+        </Text>
+        <Text style={[
+          styles.messageTime,
+          isOwnMessage ? styles.ownMessageTime : styles.otherMessageTime
+        ]}>
+          {formatTime(message.created_at)}
+        </Text>
+      </View>
+      {isOwnMessage && (
+        <View style={styles.messageAvatarContainer}>
+          <Image
+            source={
+              message.user?.avatar_url
+                ? { uri: message.user.avatar_url }
+                : require('./default-avatar.png')
+            }
+            style={styles.messageAvatar}
+          />
+        </View>
+      )}
     </View>
   );
 };

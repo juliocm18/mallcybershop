@@ -11,10 +11,8 @@ export default function ChatRoomScreen() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
 
   useEffect(() => {
-    console.log("estoy aqui")
     // Get initial user
     supabase.auth.getUser().then(({ data: { user } }) => {
-      console.log(user)
       setCurrentUser(user);
     });
 

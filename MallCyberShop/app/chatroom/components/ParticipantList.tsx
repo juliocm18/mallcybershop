@@ -94,7 +94,7 @@ export const ParticipantList: React.FC<ParticipantListProps> = ({
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.participantScroll}
+        style={styles.participantListContainer}
       >
         {participants.map((participant) => (
           <TouchableOpacity

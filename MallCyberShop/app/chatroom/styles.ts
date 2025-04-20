@@ -158,23 +158,59 @@ export const styles = StyleSheet.create({
   },
   sendButton: {
     padding: 8,
+    backgroundColor: '#0084ff',
+    borderRadius: 20,
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  sendButtonDisabled: {
+    backgroundColor: '#ccc',
+  },
+  messageContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    marginVertical: 4,
+    paddingHorizontal: 8,
+  },
+  ownMessageContainer: {
+    justifyContent: 'flex-end',
+  },
+  otherMessageContainer: {
+    justifyContent: 'flex-start',
+  },
+  messageAvatarContainer: {
+    marginHorizontal: 8,
+  },
+  messageAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
   },
   messageBubble: {
-    maxWidth: width * 0.7,
+    maxWidth: '70%',
     padding: 12,
     borderRadius: 16,
-    marginVertical: 4,
+    marginVertical: 2,
+  },
+  messageUserName: {
+    fontSize: 12,
+    fontWeight: '600',
+    marginBottom: 4,
+    color: '#666',
   },
   ownMessage: {
-    alignSelf: 'flex-end',
     backgroundColor: '#0084ff',
+    borderTopRightRadius: 4,
   },
   otherMessage: {
-    alignSelf: 'flex-start',
     backgroundColor: '#f0f0f0',
+    borderTopLeftRadius: 4,
   },
   messageText: {
     fontSize: 16,
+    lineHeight: 20,
   },
   ownMessageText: {
     color: '#fff',
@@ -183,19 +219,14 @@ export const styles = StyleSheet.create({
     color: '#000',
   },
   messageTime: {
-    fontSize: 12,
+    fontSize: 11,
     marginTop: 4,
+    alignSelf: 'flex-end',
   },
   ownMessageTime: {
-    color: '#fff',
-    opacity: 0.7,
+    color: 'rgba(255, 255, 255, 0.7)',
   },
   otherMessageTime: {
     color: '#666',
-  },
-  userName: {
-    fontSize: 12,
-    color: '#666',
-    marginBottom: 2,
   },
 });
