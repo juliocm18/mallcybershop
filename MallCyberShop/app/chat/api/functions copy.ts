@@ -257,20 +257,13 @@ export const getOnlineUsersByChatLocation = async (
       .select(`
         *
       `)
+      //.eq('country', chat.country)
+      //.eq('city', chat.city)
+      //.eq('user_session.isOnline', true);
 
-    // let query = supabase
-    //   .from(TABLES.USER_PROFILE)
-    //   .select(`
-    //     *,
-    //     user_session:user_id (
-    //       isOnline,
-    //       typing,
-    //       last_seen_at
-    //     )
-    //   `)
-    //   .eq('country', chat.country)
-    //   .eq('city', chat.city)
-    //   .eq('user_session.isOnline', true);
+      // is_online,
+      // typing,
+      // last_seen_at
 
     // Filtro adicional para typing si se solicita
     if (!includeTyping) {
@@ -278,7 +271,7 @@ export const getOnlineUsersByChatLocation = async (
     }
 
     const { data: users, error } = await query;
-    //console.log('getOnlineUsersByChatLocation', users)
+    console.log(users)
 
     if (error) throw error;
 
@@ -509,15 +502,12 @@ export const updateUserSessionStatus = async (userId: string, status: 'online' |
       .upsert({
         user_id: userId,
         is_online: status === 'online',
-        last_seen_at: new Date().toISOString(),
-        current_country: 'Peru',
-        current_city: 'Tacna'
+        last_seen_at: new Date().toISOString()
       })
       .select()
       .single();
 
     if (error) throw error;
-    console.log("🚀 ~ updateUserSessionStatus ~ data:", data)
     return data;
   } catch (error) {
     console.error('Error updating user session status:', error);

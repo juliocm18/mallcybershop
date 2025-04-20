@@ -3,10 +3,7 @@ import { StyleSheet, Dimensions } from 'react-native';
 const { width } = Dimensions.get('window');
 
 export const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: "#FFF5F0",
-    },
+    container: {padding: 20 , flex: 1,},
     sidebar: {
         position: 'absolute',
         left: 0,
@@ -426,4 +423,33 @@ export const styles = StyleSheet.create({
         marginLeft: 10,
         fontWeight: 'bold',
     },
+    logoPreview: {width: 100, height: 100, marginBottom: 15},
+    imagePickerText: {color: "#fff"},
+    imagePicker: {
+        backgroundColor: "#0087ff",
+        padding: 10,
+        alignItems: "center",
+        marginBottom: 10,
+      },
+      passwordContainer: {
+        flexDirection: "row",
+        alignItems: "center",
+        borderColor: "#ddd",
+        borderWidth: 1,
+        borderRadius: 8,
+        marginBottom: 20,
+        paddingHorizontal: 10,
+      },
+      passwordInput: {
+        flex: 1,
+        height: 50,
+        fontSize: 16,
+        color: "#333",
+      },
+      eyeButton: {
+        padding: 10,
+      },
+      eyeText: {
+        fontSize: 18,
+      },
 });

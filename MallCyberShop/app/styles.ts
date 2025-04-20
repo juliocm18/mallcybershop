@@ -194,4 +194,40 @@ export const globalStyles = StyleSheet.create({
     color: "#d32f2f",
     textAlign: "center",
   },
+  input: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    padding: 10,
+    marginBottom: 15,
+    borderRadius: 5,
+  },
+  modalButtonContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingTop: 10,
+  },
+  modalCancelButton: {
+    backgroundColor: "#898989",
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    borderRadius: 5,
+    width: "45%",
+  },
+  modalUpdateButton: {
+    backgroundColor: "#ff9f61",
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    borderRadius: 5,
+    width: "45%",
+  },
+  modalButtonText: {
+    color: "#fff",
+    fontWeight: "bold",
+    textAlign: "center",
+  },
+  modalButtonText: {
+    color: "#fff",
+    fontWeight: "bold",
+    textAlign: "center",
+  },
 });

@@ -13,10 +13,10 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { styles } from './chat.styles';
-import { CHAT_TYPES, ChatProps, MessageChat, USER_STATUS, } from './types';
+import { MessageChat, } from './types';
 import { useRouter } from 'expo-router';
 import { Message, UserProfile } from '../models';
-import { getCurrentSession, getCurrentUser, getUserProfile, sendMessage, updateMessageLike, updateUserSessionStatus, upsertUserProfile } from '../api/functions';
+import { getCurrentSession, getCurrentUser, sendMessage, updateMessageLike, updateUserSessionStatus, upsertUserProfile } from '../api/functions';
 import LottieView from 'lottie-react-native';
 import heartAnimation from '../../../assets/animations/hearth.json';
 import { globalStyles } from "../../styles";
@@ -26,8 +26,58 @@ import { useAuth } from '@/app/context/AuthContext';
 import { ActivityIndicator } from 'react-native-paper';
 import Select from '@/app/components/select';
 import gendersData from '@/app/chat/genders.json';
-import { generatePastelColor } from '../api/new-functions';
 
+export const generatePastelColor = (seed: string): { backgroundColor: string; color: string } => {
+  // Usamos el ID del usuario como semilla para generar un color consistente
+  const hash = seed.split('').reduce((acc, char) => {
+    return char.charCodeAt(0) + ((acc << 5) - acc);
+  }, 0);
+
+  // Generamos tonos pastel (valores HSL con alta luminosidad y saturación)
+  const h = Math.abs(hash) % 360; // Matiz (0-359)
+  const s = 70 + Math.abs(hash % 30); // Saturación (70-100%)
+  const l = 80 + Math.abs(hash % 15); // Luminosidad (80-95%)
+
+  const backgroundColor = `hsl(${h}, ${s}%, ${l}%)`;
+
+  // Determinamos el color del texto basado en la luminosidad del fondo
+  // Si la luminosidad es mayor a 60%, el texto será oscuro (negro o casi negro), de lo contrario será claro (blanco o casi blanco)
+  const textColor = l > 60 ? 'hsl(0, 0%, 20%)' : 'hsl(0, 0%, 95%)';
+
+  return {
+    backgroundColor,
+    color: textColor
+  };
+};
+
+export interface ChatProps {
+  chatType: 'group' | 'private';
+  chatId: string;
+  title?: string;
+  users?: UserProfile[];
+  currentUser?: UserProfile;
+  recipientUser?: UserProfile;
+  initialMessages?: MessageChat[];
+  onBack?: () => void;
+  onUserSelect?: (user: UserProfile) => void;
+}
+
+export const CHAT_TYPES = {
+  GROUP: 'group',
+  PRIVATE: 'private'
+};
+
+export const MESSAGE_STATUS = {
+  SENT: 'sent',
+  DELIVERED: 'delivered',
+  READ: 'read'
+};
+
+export const USER_STATUS = {
+  ONLINE: 'online',
+  TYPING: 'typing',
+  OFFLINE: 'offline'
+};
 
 export const Chat: React.FC<ChatProps> = ({
   chatType,
@@ -54,12 +104,16 @@ export const Chat: React.FC<ChatProps> = ({
   const [showUsers, setShowUsers] = useState(false);
   const [activeAnimationId, setActiveAnimationId] = useState<number | null>(null);
 
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [userProfileData, setUserProfileData] = useState({
+    age: '',
+    gender: 'hombre'
+  });
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentUserProfile, setCurrentUserProfile] = useState<UserProfile | null>(currentUser || null);
   const animationRefs = useRef<{ [key: string]: LottieView | null }>({});
 
   /* User Profile attributes */
-  const { session } = useAuth();
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [userProfileId, setUserProfileId] = useState<string>('');
   const [userProfileName, setUserProfileName] = useState<string>('');
@@ -83,7 +137,8 @@ export const Chat: React.FC<ChatProps> = ({
     }
   };
 
-  const handleCreateAccount = async () => {
+
+  const handleSave = async () => {
     if (!userProfileName || !userProfileEmail || !userProfileAvatar || !userProfilePassword) {
       Alert.alert("Error", "Campos requeridos");
       return;
@@ -96,6 +151,7 @@ export const Chat: React.FC<ChatProps> = ({
         return;
       }
       const uploadedUrl = await uploadImage(userProfileAvatar);
+      // console.log("uploadedUrl", uploadedUrl);
       if (uploadedUrl) {
         console.log("📤 Imagen subida con éxito:", uploadedUrl);
       } else {
@@ -121,20 +177,23 @@ export const Chat: React.FC<ChatProps> = ({
       Alert.alert("Aviso", "Registro creado con éxito");
 
       const userLogged = await signIn(userProfileEmail, userProfilePassword);
-      if (userLogged) {
-        console.log("🚀 ~ handleCreateAccount ~ userLogged:", userLogged)
+      if(userLogged){
         setIsAuthenticated(true);
         //const profile = await handleUserProfile(session.user);
-        //console.log("Profile", profile)
-        if (profile && profile.id && profile.userId) {
-          console.log("🚀 ~ handleCreateAccount ~ if-profile:", profile)
+        console.log("Profile", profile)
+        if (profile && profile.id) {
           setCurrentUserProfile(profile);
-          const sessionUpdated = await updateUserSessionStatus(profile.userId, 'online');
-          console.log("Session updated:", sessionUpdated);
+          await updateUserSessionStatus(profile.id, 'online');
         }
-      } else {
-        Alert.alert("Error", "No se pudo iniciar sesión");
       }
+      // if (userLogged && userLogged.id) {
+      //   const roles = await RoleFunctions.getByUser(userLogged.id);
+      //   roles ? (userLogged.roles = roles) : (userLogged.roles = []);
+      // }
+
+      // Limpiar los campos después de un registro exitoso
+      //clearFields();
+
       setShowLoginModal(false);
       //loadCompanies(true);
 
@@ -147,6 +206,8 @@ export const Chat: React.FC<ChatProps> = ({
   };
 
   /* User Profile attributes */
+
+
   const router = useRouter();
   // Función para obtener el color del avatar
   const getAvatarColor = useCallback((userId: string) => {
@@ -160,37 +221,115 @@ export const Chat: React.FC<ChatProps> = ({
   // Verificar la sesión al cargar el componente
   useEffect(() => {
     const checkSession = async () => {
-      console.log("estoy en checkSessoin")
-
-      console.log("🚀 ~ checkSession ~ session:", session?.user)
-      if (!session?.user?.id) {
-        console.log("Usuario no identificado");
-
-        //Alert.alert("Error", "Usuario no identificado");
-        setShowLoginModal(true);
-        return;
+      const session = await getCurrentSession();
+      if (session) {
+        setIsAuthenticated(true);
+        // Obtener o crear el perfil del usuario
+        const profile = await handleUserProfile(session.user);
+        if (profile && profile.id) {
+          setCurrentUserProfile(profile);
+          // Actualizar estado de sesión a "online"
+          await updateUserSessionStatus(profile.id, 'online');
+        }
       }
-      setIsAuthenticated(true);
-      const userProfile  = await getUserProfile(session.user.id);
-      console.log("🚀 ~ checkSession ~ userProfile:", userProfile)      
-      setCurrentUserProfile(userProfile);
-    }
+    };
 
     checkSession();
 
     return () => {
       // Al desmontar el componente, actualizar estado a "offline"
       if (currentUserProfile?.id) {
-        console.log("🚀 ~ if de  ~ currentUserProfile:", currentUserProfile.userId)
-        if (currentUserProfile.userId) {
-          updateUserSessionStatus(currentUserProfile.userId, 'offline');
-        }
+        updateUserSessionStatus(currentUserProfile.id, 'offline');
       }
     };
   }, []);
 
 
+  // const handleGoogleLogin = async () => {
+  //   console.log("handleGoogleLogin")
+  // }
 
+  // Manejar inicio de sesión con Google
+  //  const handleGoogleLogin = async () => {
+  //   try {
+  //     const session = await signInWithGoogle();
+  //     console.log("Session Google", session)
+  //     if (session) {
+  //       setIsAuthenticated(true);
+  //       const profile = await handleUserProfile(session.user);
+  //       console.log("Profile", profile)
+  //       if (profile && profile.id) {
+  //         setCurrentUserProfile(profile);
+  //         await updateUserSessionStatus(profile.id, 'online');
+  //       }
+
+  //       setShowLoginModal(false);
+  //     }
+  //   } catch (error) {
+  //     console.error('Error en login con Google:', error);
+  //     Alert.alert('Error', error as string || 'Ocurrió un error al iniciar sesión');
+  //   }
+  // };
+
+  // Manejar el perfil del usuario (crear o actualizar)
+  const handleUserProfile = async (user: any) => {
+    if (!user) return null;
+
+    // Verificar si ya tiene perfil completo
+    const existingProfile = await getCurrentUser();
+    console.log("Existing Profile", existingProfile)
+    if (existingProfile && existingProfile.age && existingProfile.gender) {
+      return existingProfile;
+    }
+
+    // Si no tiene perfil completo, mostrar modal para completar datos
+    // setUserProfileData({
+    //   age: '',
+    //   gender: existingProfile?.gender || 'hombre'
+    // });
+    // setShowProfileModal(true);
+
+    // Crear/actualizar perfil con datos básicos
+    const profileData = {
+      id: user.id,
+      email: user.email,
+      name: user.user_metadata?.full_name || user.email,
+      avatar: user.user_metadata?.avatar_url,
+      status: 'online' as 'online' | 'offline' | 'typing'
+
+    };
+
+    return await upsertUserProfile(profileData);
+  };
+
+  // Manejar envío de datos del perfil
+  const handleProfileSubmit = async () => {
+    if (!userProfileData.age || !userProfileData.gender) {
+      Alert.alert('Error', 'Por favor completa todos los campos');
+      return;
+    }
+
+    const session = await getCurrentSession();
+    if (!session?.user) {
+      Alert.alert('Error', 'No hay sesión activa');
+      return;
+    }
+
+    const profile = await upsertUserProfile({
+      id: session.user.id,
+      name: session.user.user_metadata?.full_name || session.user.email,
+      email: session.user.email,
+      avatar: session.user.user_metadata?.avatar_url,
+      age: parseInt(userProfileData.age),
+      gender: userProfileData.gender,
+      status: 'online'
+    });
+
+    if (profile) {
+      setCurrentUserProfile(profile);
+      setShowProfileModal(false);
+    }
+  };
 
   // Formatear hora del mensaje
   const formatTime = useCallback((date: Date) => {
@@ -235,12 +374,17 @@ export const Chat: React.FC<ChatProps> = ({
 
   // Enviar mensaje
   const handleSend = useCallback(async () => {
-    console.log("🚀 ~ handleSend ~ newMessage:", isAuthenticated, currentUserProfile)
     if (!newMessage.trim()) return;
 
     // Verificar si el usuario está autenticado
     if (!isAuthenticated || !currentUserProfile) {
       setShowLoginModal(true);
+      return;
+    }
+
+    // Verificar si el perfil está completo
+    if (!currentUserProfile.age || !currentUserProfile.gender) {
+      setShowProfileModal(true);
       return;
     }
 
@@ -589,7 +733,7 @@ export const Chat: React.FC<ChatProps> = ({
             <View style={globalStyles.modalButtonContainer}>
               <TouchableOpacity
                 style={globalStyles.modalUpdateButton}
-                onPress={handleCreateAccount}
+                onPress={handleSave}
                 disabled={loading}
               >
                 {loading ? (
@@ -613,7 +757,68 @@ export const Chat: React.FC<ChatProps> = ({
 
       </Modal>
 
+      {/* <Modal
+        visible={showProfileModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowProfileModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>Completa tu perfil</Text>
 
+            <Text style={styles.modalLabel}>Edad</Text>
+            <TextInput
+              style={styles.modalInput}
+              value={userProfileData.age}
+              onChangeText={(text) => setUserProfileData({ ...userProfileData, age: text })}
+              placeholder="Tu edad"
+              keyboardType="numeric"
+            />
+
+            <Text style={styles.modalLabel}>Género</Text>
+            <View style={styles.genderOptions}>
+              <TouchableOpacity
+                style={[
+                  styles.genderOption,
+                  userProfileData.gender === 'male' && styles.genderOptionSelected
+                ]}
+                onPress={() => setUserProfileData({ ...userProfileData, gender: 'male' })}
+              >
+                <Text>Hombre</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.genderOption,
+                  userProfileData.gender === 'female' && styles.genderOptionSelected
+                ]}
+                onPress={() => setUserProfileData({ ...userProfileData, gender: 'female' })}
+              >
+                <Text>Mujer</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.genderOption,
+                  userProfileData.gender === 'other' && styles.genderOptionSelected
+                ]}
+                onPress={() => setUserProfileData({ ...userProfileData, gender: 'other' })}
+              >
+                <Text>Otro</Text>
+              </TouchableOpacity>
+            </View>
+
+            <TouchableOpacity
+              style={styles.modalSubmitButton}
+              onPress={handleProfileSubmit}
+            >
+              <Text style={styles.modalSubmitButtonText}>Guardar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal> */}
+      {/* Sidebar de usuarios (solo para grupo) */}
       {renderSidebar()}
 
       {/* Contenido principal del chat */}

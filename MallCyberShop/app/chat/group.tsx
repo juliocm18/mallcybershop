@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, ActivityIndicator } from 'react-native';
-import { Chat, USER_STATUS } from './components/chat';
+import { Chat } from './components/chat';
 import { useRouter } from 'expo-router';
 import { MessageChat } from './components/types';
 import AsyncStorage from '@react-native-async-storage/async-storage';

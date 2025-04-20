@@ -2,29 +2,21 @@ import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
-  TextInput,
-  Button,
   Modal,
   FlatList,
   TouchableOpacity,
   Alert,
-  Image,
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
 } from "react-native";
 import {
-  fetchCompanies,
-  fetchCompaniesByDepartments,
-  fetchCompaniesByDepartmentsOrNull,
-  fetchCompanyLinks,
   getAllPaged,
-  pickImage,
   updateCompany,
 } from "./functions";
 import { styles } from "./styles";
-import { Company, CompanyLink } from "./company.interface";
+import { Company } from "./company.interface";
 import { TerritoryCompanyItem } from "./territory-company.item";
 import continentsData from "../data/continents.json";
 import countriesData from "../data/countries.json";
