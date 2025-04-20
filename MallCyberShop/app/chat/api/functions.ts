@@ -189,16 +189,18 @@ export const getChatMessages = async (chatId: string): Promise<Message[]> => {
 // Send a message
 export const sendMessage = async (message: Omit<Message, 'id' | 'time' | 'status'>): Promise<Message | null> => {
   try {
-    const newMessage: any = {
+    const newMessage = {
       text: message.text,
-      time: new Date(),
-      status: 'sent',
       chat_id: message.chatId,
       sender_id: message.senderId,
+      time: new Date().toISOString(),
+      status: 'sent',
+      is_liked: false,
+      likes: JSON.stringify([])
     };
 
     const { data, error } = await supabase
-      .from(TABLES.MESSAGE)
+      .from('message')
       .insert(newMessage)
       .select()
       .single();
@@ -520,6 +522,70 @@ export const updateUserSessionStatus = async (userId: string, status: 'online' |
   }
 };
 
+export const blockUser = async (blockerId: string, blockedId: string): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('blocked_users')
+      .insert({
+        blocker_id: blockerId,
+        blocked_id: blockedId,
+        created_at: new Date().toISOString()
+      });
 
+    if (error) throw error;
+    return true;
+  } catch (error) {
+    console.error('Error blocking user:', error);
+    return false;
+  }
+};
+
+export const unblockUser = async (blockerId: string, blockedId: string): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('blocked_users')
+      .delete()
+      .eq('blocker_id', blockerId)
+      .eq('blocked_id', blockedId);
+
+    if (error) throw error;
+    return true;
+  } catch (error) {
+    console.error('Error unblocking user:', error);
+    return false;
+  }
+};
+
+export const getBlockedUsers = async (userId: string): Promise<string[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('blocked_users')
+      .select('blocked_id')
+      .eq('blocker_id', userId);
+
+    if (error) throw error;
+    return data?.map(item => item.blocked_id) || [];
+  } catch (error) {
+    console.error('Error fetching blocked users:', error);
+    return [];
+  }
+};
+
+export const isUserBlocked = async (blockerId: string, blockedId: string): Promise<boolean> => {
+  try {
+    const { data, error } = await supabase
+      .from('blocked_users')
+      .select('*')
+      .eq('blocker_id', blockerId)
+      .eq('blocked_id', blockedId)
+      .maybeSingle();
+
+    if (error) throw error;
+    return !!data;
+  } catch (error) {
+    console.error('Error checking if user is blocked:', error);
+    return false;
+  }
+};
 
 

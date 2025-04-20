@@ -21,6 +21,7 @@ import LottieView from 'lottie-react-native';
 import heartAnimation from '../../../assets/animations/hearth.json';
 
 import { blockUser, unblockUser, getBlockedUsers, isUserBlocked } from '../api/functions';
+import { supabase } from '@/app/supabase';
 
 export const generatePastelColor = (seed: string): { backgroundColor: string; color: string } => {
   // Usamos el ID del usuario como semilla para generar un color consistente
@@ -270,6 +271,65 @@ export const Chat: React.FC<ChatProps> = ({
     }
   };
 
+  useEffect(() => {
+    if (!chatId || !currentUserProfile?.id) return;
+
+    const subscription = supabase
+      .channel('messages_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'message',
+          filter: `chat_id=eq.${chatId}`
+        },
+        (payload) => {
+          switch (payload.eventType) {
+            case 'INSERT':
+              const newMessage = payload.new;
+              if (newMessage.sender_id !== currentUserProfile.id) {
+                setMessages(prev => [
+                  {
+                    id: newMessage.id,
+                    chatId: newMessage.chat_id,
+                    senderId: newMessage.sender_id,
+                    text: newMessage.text,
+                    time: new Date(newMessage.time || newMessage.created_at),
+                    status: newMessage.status,
+                    isLiked: newMessage.is_liked,
+                    likes: newMessage.likes ? JSON.parse(newMessage.likes) : [],
+                    isMe: false,
+                    senderName: '' // Deberás obtener esto del perfil del usuario
+                  },
+                  ...prev
+                ]);
+              }
+              break;
+
+            case 'UPDATE':
+              setMessages(prev => prev.map(msg => {
+                if (msg.id === payload.new.id) {
+                  return {
+                    ...msg,
+                    isLiked: payload.new.is_liked,
+                    likes: payload.new.likes ? JSON.parse(payload.new.likes) : [],
+                    status: payload.new.status
+                  };
+                }
+                return msg;
+              }));
+              break;
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(subscription);
+    };
+  }, [chatId, currentUserProfile?.id]);
+
   // Formatear hora del mensaje
   const formatTime = useCallback((date: Date) => {
     return new Date(date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -328,7 +388,7 @@ export const Chat: React.FC<ChatProps> = ({
     }
 
     // Verificar si estamos en un chat privado con un usuario bloqueado
-    if (chatType === CHAT_TYPES.PRIVATE && recipientUser?.id) {
+    if (chatType === CHAT_TYPES.PRIVATE && recipientUser?.id && currentUserProfile?.id) {
       const isBlocked = await isUserBlocked(currentUserProfile.id, recipientUser.id);
       if (isBlocked) {
         Alert.alert('Usuario bloqueado', 'No puedes enviar mensajes a este usuario porque lo has bloqueado.');
