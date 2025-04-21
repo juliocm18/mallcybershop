@@ -64,15 +64,15 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
         .limit(50);
 
       if (chatType === 'individual' && selectedParticipant) {
-        query
-          .or(`and(user_id.eq.${currentUser.id},recipient_id.eq.${selectedParticipant}),and(user_id.eq.${selectedParticipant},recipient_id.eq.${currentUser.id})`);
+        // For private chats, get messages between the two users
+        query.or(`and(user_id.eq.${currentUser.id},recipient_id.eq.${selectedParticipant}),and(user_id.eq.${selectedParticipant},recipient_id.eq.${currentUser.id})`);
       }
 
-      const { data, error: fetchError } = await query;
+      const { data: messages, error } = await query;
 
-      if (fetchError) throw fetchError;
-      
-      const transformedData = (data || []).map(message => ({
+      if (error) throw error;
+
+      const transformedData = (messages || []).map((message: any) => ({
         id: message.id,
         content: message.content,
         created_at: message.created_at,
@@ -122,12 +122,9 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
               room_id: payload.new.room_id,
               recipient_id: payload.new.recipient_id,
               is_private: payload.new.is_private,
-              user: userData ? {
-                name: userData.name || 'Unknown',
-                avatar_url: userData.avatar_url
-              } : {
-                name: 'Unknown',
-                avatar_url: null
+              user: {
+                name: userData?.name || 'Unknown',
+                avatar_url: userData?.avatar_url
               }
             };
 
@@ -162,7 +159,10 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
 
   const handleParticipantSelect = (participant: UserProfile) => {
     setSelectedParticipant(participant.id);
-    onParticipantSelect?.(participant.id);
+    if (onParticipantSelect && 'roomId' in participant) {
+      onParticipantSelect(participant as UserProfile & { roomId: string });
+    }
+    setIsDrawerOpen(false); // Close drawer after selection
   };
 
   return (
@@ -183,12 +183,12 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
         </Text>
       </View>
 
-      <ParticipantList
+      {/* <ParticipantList
         roomId={roomId}
         onParticipantClick={handleParticipantSelect}
         selectedParticipant={selectedParticipant}
         currentUserId={currentUser.id}
-      />
+      /> */}
 
       {loading ? (
         <ActivityIndicator size="large" color="#0000ff" />

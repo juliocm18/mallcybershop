@@ -8,6 +8,7 @@ export interface UserProfile {
     is_online: boolean;
     last_seen: string;
   };
+  roomId?: string;
 }
 
 export interface Message {
@@ -43,7 +44,7 @@ export interface ChatRoomProps {
   };
   chatType?: 'group' | 'individual';
   recipientId?: string;
-  onParticipantSelect?: (participantId: string) => void;
+  onParticipantSelect?: (user: UserProfile & { roomId: string }) => void;
 }
 
 export interface MessageBubbleProps {
@@ -74,4 +75,11 @@ export interface UserStatus {
   user_id: string;
   is_online: boolean;
   last_seen: string;
+}
+
+export interface OnlineUsersDrawerProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onUserSelect: (user: UserProfile & { roomId: string }) => void;
+  currentUserId: string;
 }

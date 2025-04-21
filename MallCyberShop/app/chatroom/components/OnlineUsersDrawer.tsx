@@ -55,13 +55,13 @@ export const OnlineUsersDrawer: React.FC<OnlineUsersDrawerProps> = ({
 
       if (error) throw error;
 
-      const formattedUsers: UserProfile[] = (data || []).map(user => ({
+      const formattedUsers: UserProfile[] = (data || []).map((user: any) => ({
         id: user.id,
         name: user.name || 'Anonymous',
         avatar_url: user.avatar_url,
         status: {
-          is_online: user.status?.[0]?.is_online || false,
-          last_seen: user.status?.[0]?.last_seen || new Date().toISOString()
+          is_online: user.status?.is_online || false,
+          last_seen: user.status?.last_seen || new Date().toISOString()
         }
       }));
 
@@ -88,6 +88,43 @@ export const OnlineUsersDrawer: React.FC<OnlineUsersDrawerProps> = ({
         }
       )
       .subscribe();
+  };
+
+  const handleUserSelect = async (user: UserProfile) => {
+    try {
+      // Check if a private room already exists between these users
+      const { data: existingRoom } = await supabase
+        .from('rooms')
+        .select('id')
+        .eq('type', 'individual')
+        .or(`created_by.eq.${currentUserId},recipient_id.eq.${user.id}`)
+        .or(`created_by.eq.${user.id},recipient_id.eq.${currentUserId}`)
+        .single();
+
+      if (existingRoom) {
+        onUserSelect({ ...user, roomId: existingRoom.id });
+      } else {
+        // Create a new private room
+        const { data: newRoom, error } = await supabase
+          .from('rooms')
+          .insert({
+            name: `Chat with ${user.name}`,
+            type: 'individual',
+            created_by: currentUserId,
+            recipient_id: user.id,
+            is_private: true
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+        onUserSelect({ ...user, roomId: newRoom.id });
+      }
+
+      onClose();
+    } catch (error) {
+      console.error('Error creating private chat:', error);
+    }
   };
 
   return (
@@ -118,10 +155,7 @@ export const OnlineUsersDrawer: React.FC<OnlineUsersDrawerProps> = ({
               <TouchableOpacity
                 key={user.id}
                 style={styles.drawerUserItem}
-                onPress={() => {
-                  onUserSelect(user);
-                  onClose();
-                }}
+                onPress={() => handleUserSelect(user)}
               >
                 <View style={styles.drawerUserAvatarContainer}>
                   <Image
