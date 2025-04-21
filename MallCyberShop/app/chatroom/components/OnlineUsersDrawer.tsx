@@ -100,14 +100,19 @@ export const OnlineUsersDrawer: React.FC<OnlineUsersDrawerProps> = ({
         .eq('is_private', true)
         .or(`and(created_by.eq.${currentUserId},recipient_id.eq.${user.id}),and(created_by.eq.${user.id},recipient_id.eq.${currentUserId})`);
 
-      if (findError) throw findError;
+      if (findError) {
+        console.error('Error finding room:', findError);
+        throw findError;
+      }
 
-      //console.log('Existing rooms:', existingRooms); // Debug log
+      console.log('Existing rooms:', existingRooms); // Debug log
 
       if (existingRooms && existingRooms.length > 0) {
+        console.log('Using existing room:', existingRooms[0]); // Debug log
         onUserSelect({ ...user, roomId: existingRooms[0].id });
       } else {
         // Create a new private room
+        console.log('Creating new room for users:', { currentUserId, userId: user.id }); // Debug log
         const { data: newRoom, error } = await supabase
           .from('rooms')
           .insert({
@@ -120,7 +125,12 @@ export const OnlineUsersDrawer: React.FC<OnlineUsersDrawerProps> = ({
           .select()
           .single();
 
-        if (error) throw error;
+        if (error) {
+          console.error('Error creating room:', error);
+          throw error;
+        }
+
+        console.log('Created new room:', newRoom); // Debug log
         onUserSelect({ ...user, roomId: newRoom.id });
       }
 

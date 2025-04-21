@@ -9,7 +9,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { supabase } from '@/app/supabase';
-import { Message, ChatRoomProps, UserProfile, REALTIME_LISTEN_TYPES } from './types';
+import { Message, ChatRoomProps, UserProfile, REALTIME_LISTEN_TYPES, RoomDetails } from './types';
 import { MessageBubble } from './components/MessageBubble';
 import { ChatInput } from './components/ChatInput';
 import { ParticipantList } from './components/ParticipantList';
@@ -29,6 +29,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [selectedParticipant, setSelectedParticipant] = useState<string | undefined>(recipientId);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [roomName, setRoomName] = useState<string>('Chat Room');
   const flatListRef = useRef<FlatList>(null);
 
   const fetchMessages = async () => {
@@ -65,7 +66,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
         throw error;
       }
 
-      console.log('Fetched messages:', messages); // Debug log
+      //console.log('Fetched messages:', messages); // Debug log
 
       const transformedData = (messages || []).map((message: any) => ({
         id: message.id,
@@ -133,6 +134,79 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
     // Fetch initial messages
     fetchMessages();
 
+    const fetchRoomDetails = async () => {
+      try {
+        // First check if room exists
+        const { data: room, error } = await supabase
+          .from('rooms')
+          .select(`
+            id,
+            type,
+            name,
+            created_by,
+            recipient_id,
+            creator:profiles!rooms_created_by_fkey (
+              name,
+              avatar_url
+            ),
+            recipient:profiles!rooms_recipient_id_fkey (
+              name,
+              avatar_url
+            )
+          `)
+          .eq('id', roomId)
+          .single();
+
+        if (error) {
+          console.error('Error fetching room:', error);
+          setRoomName('Chat Room'); // Default fallback
+          return;
+        }
+        if (!room) {
+          console.log('No room found with id:', roomId);
+          setRoomName('Chat Room'); // Default fallback
+          return;
+        }        
+
+        console.log('Room data:', JSON.stringify(room, null, 2)); // Debug log
+
+        // Transform the Supabase response to match our RoomDetails type
+        const roomDetails: RoomDetails = {
+          id: room.id,
+          type: room.type,
+          name: room.name,
+          created_by: room.created_by,
+          recipient_id: room.recipient_id,
+          creator: room.creator ? { 
+            name: room.creator.name, 
+            avatar_url: room.creator.avatar_url 
+          } : undefined,
+          recipient: room.recipient ? { 
+            name: room.recipient.name, 
+            avatar_url: room.recipient.avatar_url 
+          } : undefined
+        };
+
+        //console.log('Room details:', JSON.stringify(roomDetails, null, 2)); // Debug log
+
+        if (roomDetails && roomDetails.type === 'individual') {
+          const creatorName = roomDetails.creator?.name || 'Unknown';
+          const recipientName = roomDetails.recipient?.name || 'Unknown';
+          console.log('Names:', { creatorName, recipientName }); // Debug log
+          setRoomName(`Chat between ${creatorName} and ${recipientName}`);
+        } else if (roomDetails?.name) {
+          setRoomName(roomDetails.name);
+        } else {
+          setRoomName('Chat Room'); // Default fallback
+        }
+      } catch (error) {
+        console.error('Error fetching room details:', error);
+        setRoomName('Chat Room'); // Default fallback
+      }
+    };
+
+    fetchRoomDetails();
+
     return () => {
       channel.unsubscribe();
     };
@@ -181,7 +255,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
           <Ionicons name="menu" size={24} color="#000" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>
-          {chatType === 'individual' && selectedParticipant ? 'Private Chat' : 'Group Chat'}
+          {roomName}
         </Text>
       </View>
 

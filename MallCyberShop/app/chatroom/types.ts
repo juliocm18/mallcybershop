@@ -37,6 +37,31 @@ export interface Room {
   last_message?: Message;
 }
 
+interface Profile {
+  name: string;
+  avatar_url?: string;
+}
+
+interface RoomResponse {
+  id: string;
+  type: 'group' | 'individual';
+  name?: string;
+  created_by: string;
+  recipient_id?: string;
+  creator: Profile;
+  recipient: Profile;
+}
+
+export interface RoomDetails {
+  id: string;
+  type: 'group' | 'individual';
+  name?: string;
+  created_by: string;
+  recipient_id?: string;
+  creator?: Profile;
+  recipient?: Profile;
+}
+
 export interface ChatRoomProps {
   roomId: string;
   currentUser: {
