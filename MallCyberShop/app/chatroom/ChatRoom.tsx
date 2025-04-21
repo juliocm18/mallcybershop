@@ -192,8 +192,8 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
         if (roomDetails && roomDetails.type === 'individual') {
           const creatorName = roomDetails.creator?.name || 'Unknown';
           const recipientName = roomDetails.recipient?.name || 'Unknown';
-          console.log('Names:', { creatorName, recipientName }); // Debug log
-          setRoomName(`Chat between ${creatorName} and ${recipientName}`);
+          //console.log('Names:', { creatorName, recipientName }); // Debug log
+          setRoomName(`${creatorName} & ${recipientName}`);
         } else if (roomDetails?.name) {
           setRoomName(roomDetails.name);
         } else {
