@@ -93,16 +93,19 @@ export const OnlineUsersDrawer: React.FC<OnlineUsersDrawerProps> = ({
   const handleUserSelect = async (user: UserProfile) => {
     try {
       // Check if a private room already exists between these users
-      const { data: existingRoom } = await supabase
+      const { data: existingRooms, error: findError } = await supabase
         .from('rooms')
         .select('id')
         .eq('type', 'individual')
-        .or(`created_by.eq.${currentUserId},recipient_id.eq.${user.id}`)
-        .or(`created_by.eq.${user.id},recipient_id.eq.${currentUserId}`)
-        .single();
+        .eq('is_private', true)
+        .or(`and(created_by.eq.${currentUserId},recipient_id.eq.${user.id}),and(created_by.eq.${user.id},recipient_id.eq.${currentUserId})`);
 
-      if (existingRoom) {
-        onUserSelect({ ...user, roomId: existingRoom.id });
+      if (findError) throw findError;
+
+      //console.log('Existing rooms:', existingRooms); // Debug log
+
+      if (existingRooms && existingRooms.length > 0) {
+        onUserSelect({ ...user, roomId: existingRooms[0].id });
       } else {
         // Create a new private room
         const { data: newRoom, error } = await supabase

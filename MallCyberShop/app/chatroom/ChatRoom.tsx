@@ -31,20 +31,10 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const flatListRef = useRef<FlatList>(null);
 
-  useEffect(() => {
-    fetchMessages();
-    const channel = subscribeToMessages();
-
-    return () => {
-      if (channel) {
-        supabase.removeChannel(channel);
-      }
-    };
-  }, [roomId, selectedParticipant]);
-
   const fetchMessages = async () => {
     try {
-      const query = supabase
+      setLoading(true);
+      let query = supabase
         .from('messages')
         .select(`
           id,
@@ -54,7 +44,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
           user_id,
           recipient_id,
           is_private,
-          profile:profiles!messages_user_id_fkey (
+          profile:profiles (
             name,
             avatar_url
           )
@@ -63,14 +53,19 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
         .order('created_at', { ascending: false })
         .limit(50);
 
-      if (chatType === 'individual' && selectedParticipant) {
-        // For private chats, get messages between the two users
-        query.or(`and(user_id.eq.${currentUser.id},recipient_id.eq.${selectedParticipant}),and(user_id.eq.${selectedParticipant},recipient_id.eq.${currentUser.id})`);
+      if (chatType === 'individual') {
+        // For private chats, get messages where either user is sender or recipient
+        query = query.or(`and(user_id.eq.${currentUser.id},recipient_id.eq.${recipientId}),and(user_id.eq.${recipientId},recipient_id.eq.${currentUser.id}),and(user_id.eq.${currentUser.id},is_private.eq.true),and(user_id.eq.${recipientId},is_private.eq.true)`);
       }
 
       const { data: messages, error } = await query;
 
-      if (error) throw error;
+      if (error) {
+        console.error('Database error:', error);
+        throw error;
+      }
+
+      console.log('Fetched messages:', messages); // Debug log
 
       const transformedData = (messages || []).map((message: any) => ({
         id: message.id,
@@ -85,7 +80,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
           avatar_url: message.profile?.avatar_url
         }
       })).reverse();
-      
+
       setMessages(transformedData);
     } catch (error) {
       console.error('Error fetching messages:', error);
@@ -95,46 +90,53 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
     }
   };
 
-  const subscribeToMessages = () => {
-    return supabase
-      .channel('messages')
+  useEffect(() => {
+    // Subscribe to new messages in the room
+    const channel = supabase
+      .channel('room_messages')
       .on(
         'postgres_changes',
         {
-          event: '*',
+          event: 'INSERT',
           schema: 'public',
           table: 'messages',
-          filter: `room_id=eq.${roomId}`,
+          filter: chatType === 'individual' 
+            ? `room_id=eq.${roomId}`
+            : `room_id=eq.${roomId}`
         },
         async (payload) => {
-          if (payload.eventType === REALTIME_LISTEN_TYPES.INSERT) {
-            const { data: userData } = await supabase
-              .from('profiles')
-              .select('name, avatar_url')
-              .eq('id', payload.new.user_id)
-              .single();
+          const { data: userData } = await supabase
+            .from('profiles')
+            .select('name, avatar_url')
+            .eq('id', payload.new.user_id)
+            .single();
 
-            const newMessage: Message = {
-              id: payload.new.id,
-              content: payload.new.content,
-              created_at: payload.new.created_at,
-              user_id: payload.new.user_id,
-              room_id: payload.new.room_id,
-              recipient_id: payload.new.recipient_id,
-              is_private: payload.new.is_private,
-              user: {
-                name: userData?.name || 'Unknown',
-                avatar_url: userData?.avatar_url
-              }
-            };
+          const newMessage: Message = {
+            id: payload.new.id,
+            content: payload.new.content,
+            created_at: payload.new.created_at,
+            user_id: payload.new.user_id,
+            room_id: payload.new.room_id,
+            recipient_id: payload.new.recipient_id,
+            is_private: payload.new.is_private,
+            user: {
+              name: userData?.name || 'Unknown',
+              avatar_url: userData?.avatar_url
+            }
+          };
 
-            setMessages(prev => [...prev, newMessage]);
-            flatListRef.current?.scrollToEnd({ animated: true });
-          }
+          setMessages(prev => [...prev, newMessage]);
         }
       )
       .subscribe();
-  };
+
+    // Fetch initial messages
+    fetchMessages();
+
+    return () => {
+      channel.unsubscribe();
+    };
+  }, [roomId, chatType, recipientId]);
 
   const handleSendMessage = async (content: string) => {
     try {
@@ -142,7 +144,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
         content,
         room_id: roomId,
         user_id: currentUser.id,
-        recipient_id: chatType === 'individual' ? selectedParticipant : null,
+        recipient_id: chatType === 'individual' ? recipientId : null,
         is_private: chatType === 'individual'
       };
 
@@ -151,9 +153,9 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
         .insert(messageData);
 
       if (error) throw error;
+
     } catch (error) {
       console.error('Error sending message:', error);
-      setError('Failed to send message');
     }
   };
 
@@ -190,25 +192,31 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
         currentUserId={currentUser.id}
       /> */}
 
-      {loading ? (
-        <ActivityIndicator size="large" color="#0000ff" />
-      ) : error ? (
-        <Text style={styles.errorText}>{error}</Text>
-      ) : (
-        <FlatList
-          ref={flatListRef}
-          data={messages}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <MessageBubble
-              message={item}
-              isOwnMessage={item.user_id === currentUser.id}
-            />
-          )}
-          contentContainerStyle={styles.messagesContainer}
-          inverted={false}
-        />
-      )}
+      <View style={styles.messageList}>
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#0084ff" />
+          </View>
+        ) : error ? (
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>{error}</Text>
+          </View>
+        ) : (
+          <FlatList
+            ref={flatListRef}
+            data={messages}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+              <MessageBubble
+                message={item}
+                isOwnMessage={item.user_id === currentUser.id}
+              />
+            )}
+            onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
+            onLayout={() => flatListRef.current?.scrollToEnd({ animated: true })}
+          />
+        )}
+      </View>
 
       <ChatInput
         onSendMessage={handleSendMessage}

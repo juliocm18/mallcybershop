@@ -6,10 +6,25 @@ ADD COLUMN IF NOT EXISTS created_by uuid REFERENCES auth.users(id),
 ADD COLUMN IF NOT EXISTS recipient_id uuid REFERENCES auth.users(id),
 ADD COLUMN IF NOT EXISTS is_private boolean DEFAULT false;
 
+-- Update messages table for private chat support
+ALTER TABLE messages
+ADD COLUMN IF NOT EXISTS recipient_id uuid REFERENCES auth.users(id),
+ADD COLUMN IF NOT EXISTS is_private boolean DEFAULT false;
+
+-- Add foreign key for user profiles in messages
+ALTER TABLE messages
+ADD CONSTRAINT messages_user_id_fkey
+FOREIGN KEY (user_id)
+REFERENCES profiles(id)
+ON DELETE CASCADE;
+
 -- Add indexes for better query performance
 CREATE INDEX IF NOT EXISTS idx_rooms_type ON rooms(type);
 CREATE INDEX IF NOT EXISTS idx_rooms_created_by ON rooms(created_by);
 CREATE INDEX IF NOT EXISTS idx_rooms_recipient_id ON rooms(recipient_id);
+CREATE INDEX IF NOT EXISTS idx_messages_room_id ON messages(room_id);
+CREATE INDEX IF NOT EXISTS idx_messages_user_id ON messages(user_id);
+CREATE INDEX IF NOT EXISTS idx_messages_recipient_id ON messages(recipient_id);
 
 -- Add RLS policies for private chats
 ALTER TABLE rooms ENABLE ROW LEVEL SECURITY;
@@ -30,6 +45,32 @@ CREATE POLICY "Users can update their own private chats"
 ON rooms FOR UPDATE
 USING (auth.uid() = created_by)
 WITH CHECK (auth.uid() = created_by);
+
+-- Add RLS policies for messages
+ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view messages in their rooms"
+ON messages FOR SELECT
+USING (
+  room_id IN (
+    SELECT id FROM rooms
+    WHERE created_by = auth.uid() 
+    OR recipient_id = auth.uid()
+    OR (type = 'group' AND is_private = false)
+  )
+);
+
+CREATE POLICY "Users can insert messages"
+ON messages FOR INSERT
+WITH CHECK (
+  auth.uid() = user_id AND
+  room_id IN (
+    SELECT id FROM rooms
+    WHERE created_by = auth.uid() 
+    OR recipient_id = auth.uid()
+    OR (type = 'group' AND is_private = false)
+  )
+);
 
 -- Add trigger to automatically add participants when a private chat is created
 CREATE OR REPLACE FUNCTION add_private_chat_participants()

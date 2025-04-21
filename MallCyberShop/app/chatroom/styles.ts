@@ -23,6 +23,10 @@ export const styles = StyleSheet.create({
   menuButton: {
     padding: 8,
   },
+  messageList: {
+    flex: 1,
+    backgroundColor: '#f0f0f0',
+  },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
