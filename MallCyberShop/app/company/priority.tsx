@@ -1,5 +1,6 @@
 import React from "react";
 import {TextInput, View, StyleSheet, Text} from "react-native";
+import { globalStyles } from "../styles";
 
 type PriorityInputProps = {
   priority: string;
@@ -17,7 +18,7 @@ const PriorityInput: React.FC<PriorityInputProps> = ({
 
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>Prioridad:</Text>
+      <Text style={globalStyles.label}>Prioridad:</Text>
       <TextInput
         style={styles.input}
         keyboardType="numeric"
@@ -33,16 +34,13 @@ const styles = StyleSheet.create({
   container: {
     marginVertical: 10,
   },
-  label: {
-    fontSize: 16,
-    marginBottom: 5,
-  },
   input: {
     height: 40,
     borderWidth: 1,
     borderColor: "#ccc",
     borderRadius: 8,
     paddingHorizontal: 10,
+    marginBottom:10
   },
 });
 

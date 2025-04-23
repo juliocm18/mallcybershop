@@ -225,9 +225,5 @@ export const globalStyles = StyleSheet.create({
     fontWeight: "bold",
     textAlign: "center",
   },
-  modalButtonText: {
-    color: "#fff",
-    fontWeight: "bold",
-    textAlign: "center",
-  },
+  label: {fontSize: 16, marginBottom: 5, color: "#898989"},
 });

@@ -12,6 +12,7 @@ export const getCategories = async (): Promise<Category[] | null> => {
   }
 };
 
+
 export const getFormattedRoutes = async (
   categoryNames: string[]
 ): Promise<categoryHashMap[]> => {
