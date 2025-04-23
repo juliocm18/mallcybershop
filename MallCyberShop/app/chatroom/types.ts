@@ -42,14 +42,14 @@ interface Profile {
   avatar_url?: string;
 }
 
-interface RoomResponse {
+export interface RoomResponse {
   id: string;
   type: 'group' | 'individual';
   name?: string;
   created_by: string;
   recipient_id?: string;
-  creator: Profile;
-  recipient: Profile;
+  creator: Profile | null;
+  recipient: Profile | null;
 }
 
 export interface RoomDetails {

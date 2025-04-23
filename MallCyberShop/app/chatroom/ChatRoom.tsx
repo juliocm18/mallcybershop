@@ -9,7 +9,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { supabase } from '@/app/supabase';
-import { Message, ChatRoomProps, UserProfile, REALTIME_LISTEN_TYPES, RoomDetails } from './types';
+import { Message, ChatRoomProps, UserProfile, REALTIME_LISTEN_TYPES, RoomDetails, RoomResponse } from './types';
 import { MessageBubble } from './components/MessageBubble';
 import { ChatInput } from './components/ChatInput';
 import { ParticipantList } from './components/ParticipantList';
@@ -155,7 +155,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
             )
           `)
           .eq('id', roomId)
-          .single();
+          .single() as { data: RoomResponse | null; error: any };
 
         if (error) {
           console.error('Error fetching room:', error);
@@ -177,14 +177,8 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
           name: room.name,
           created_by: room.created_by,
           recipient_id: room.recipient_id,
-          creator: room.creator ? { 
-            name: room.creator.name, 
-            avatar_url: room.creator.avatar_url 
-          } : undefined,
-          recipient: room.recipient ? { 
-            name: room.recipient.name, 
-            avatar_url: room.recipient.avatar_url 
-          } : undefined
+          creator: room.creator || undefined,
+          recipient: room.recipient || undefined
         };
 
         //console.log('Room details:', JSON.stringify(roomDetails, null, 2)); // Debug log
