@@ -26,9 +26,10 @@ const Select: React.FC<SelectProps> = ({
 >
   <Picker.Item
     style={{
-      color: selectedValue === "" ? "#fb8436" : "#000",
+      color: selectedValue === "" ? "#fb8436" : "#000"
+
     }}
-    label={`Selecciona ${label.toLowerCase()}`}
+    label={`-- SELECCIONA ${label.toUpperCase()} --`}
     value=""
   />
   {items.map((item) => (
@@ -54,7 +55,7 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   label: {
-    fontSize: 16,
+    fontSize: 25,
     fontWeight: "bold",
     marginBottom: 5,
   },

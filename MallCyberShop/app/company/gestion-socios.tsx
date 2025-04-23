@@ -44,7 +44,7 @@ import RoleFunctions from "../role/functions";
 import { globalStyles } from "../styles";
 import ConfirmationModal from "../components/confirmation-modal";
 import Select from "../components/select";
-import { getCategories } from "../category/functions";
+import { getCategories, getCategoriesOrderByName } from "../category/functions";
 import { Category } from "../category/types";
 
 const CompanyScreen = () => {
@@ -81,12 +81,12 @@ const CompanyScreen = () => {
 
   /* Pagination */
   const [page, setPage] = useState(0);
-  const pageSize = 20; // Cantidad de registros por página
+  const pageSize = 50; // Cantidad de registros por página
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
 
   const [categoryList, setCategoryList] = useState<Category[]>([]);
-  const [selectedCategoyListItem, setSelectedCategoyListItem] = useState<string>("");
+  const [selectedCategoyListItem, setSelectedCategoyListItem] = useState<string>("INTELIGENCIAS ARTIFICIALES");
   /* pagination end */
 
 
@@ -94,9 +94,9 @@ const CompanyScreen = () => {
     if (editingId) {
       setEditingImage(true);
     }
-    const uri = await pickImage(); // 📥 Llamamos a la función externa
+    const uri = await pickImage(); // 
     if (uri) {
-      setLogoUri(uri); // ✅ Guardamos la imagen en useState
+      setLogoUri(uri); // 
     }
   };
 
@@ -118,17 +118,18 @@ const CompanyScreen = () => {
   };
 
   useEffect(() => {
-    loadCompanies(true);
+    loadCompanies(true, selectedCategoyListItem);
     loadLinks();
     loadCategories();
   }, []);
 
   const loadCategories = async () => {
-    const categories = await getCategories();
+    const categories = await getCategoriesOrderByName();
     if (categories) setCategoryList(categories);
   };
 
-  const loadCompanies = async (reset: boolean = false, categoryName = "INTELIGENCIAS ARTIFICIALES") => {
+  const loadCompanies = async (reset: boolean = false, categoryName?: string) => {
+    if (!categoryName && !selectedCategoyListItem) console.log("no hay categoria seleccionada");
     if (loadingMore) return;
     setLoadingMore(true);
     const from = reset ? 0 : page * pageSize;
@@ -144,8 +145,7 @@ const CompanyScreen = () => {
         (role) => role.name === "CEO" || role.name === "Superadministrador"
       )
     ) {
-      const data = await getAllPagedByCategory(from, to, "name", categoryName );
-      //console.log("data", data);
+      const data = await getAllPagedByCategory(from, to, "name", categoryName || selectedCategoyListItem);
 
       if (reset) {
         if (data) setCompanies(data);
@@ -179,8 +179,9 @@ const CompanyScreen = () => {
   };
 
   const loadMore = () => {
+    //console.log("....hasMore", hasMore);
     if (hasMore) {
-      loadCompanies(false);
+      loadCompanies(false, selectedCategoyListItem);
     }
   };
 
@@ -223,7 +224,7 @@ const CompanyScreen = () => {
         if (updatedCategory) {
           clearFields();
           setModalVisible(false);
-          loadCompanies(true);
+          loadCompanies(true, selectedCategoyListItem);
           Alert.alert("Aviso", "Registro actualizado");
         }
       } else {
@@ -234,7 +235,7 @@ const CompanyScreen = () => {
         const uploadedUrl = await uploadImage(logoUri);
         // console.log("uploadedUrl", uploadedUrl);
         if (uploadedUrl) {
-          console.log("📤 Imagen subida con éxito:", uploadedUrl);
+          console.log(" Imagen subida con éxito:", uploadedUrl);
         } else {
           return;
         }
@@ -257,7 +258,7 @@ const CompanyScreen = () => {
         clearFields();
 
         setModalVisible(false);
-        loadCompanies(true);
+        loadCompanies(true, selectedCategoyListItem);
       }
     } catch (error: any) {
       console.error("Error creating company:", error.message);
@@ -352,8 +353,7 @@ const CompanyScreen = () => {
     setDeletingId(id);
     try {
       await deleteCompany(id);
-      //await fetchCompanies("name");
-      loadCompanies(true);
+      loadCompanies(true, selectedCategoyListItem);
     } catch (error: any) {
       Alert.alert("Error", error.message);
     } finally {
@@ -391,9 +391,8 @@ const CompanyScreen = () => {
   };
 
   const handleChangeCategoryFilter = (categoryName: string) => {
-    console.log("voy a asignar ", categoryName)
     setSelectedCategoyListItem(categoryName);
-    loadCompanies(true, categoryName);
+    loadCompanies(true, categoryName); // Pass categoryName directly instead of using state
   };
 
   const handleSelectedLink = (linkId: number) => {
@@ -426,7 +425,7 @@ const CompanyScreen = () => {
       
 
       <FlatList
-        style={{ height: "92%" }}
+        style={{ height: "80%" }}
         data={companies}
         keyExtractor={(item, index) => (index).toString()}
         renderItem={({ item }) => (
