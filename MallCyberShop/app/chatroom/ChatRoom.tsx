@@ -7,7 +7,8 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
-  FlatList
+  FlatList,
+  SafeAreaView
 } from 'react-native';
 import { supabase } from '@/app/supabase';
 import { Message, ChatRoomProps, UserProfile, RoomDetails, RoomResponse } from './types';
@@ -405,49 +406,52 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
   );
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
+    <KeyboardAvoidingView 
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
     >
-      <View style={styles.header}>
-        <View style={styles.headerContent}>
-          <Text style={styles.roomName}>{roomName}</Text>
-          <TouchableOpacity
-            style={styles.participantsButton}
-            onPress={() => setIsDrawerOpen(true)}
-          >
-            <Ionicons name="people" size={22} color="#ffffff" />
-          </TouchableOpacity>
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <View style={styles.headerContent}>
+            <Text style={styles.roomName}>{roomName}</Text>
+            <TouchableOpacity
+              style={styles.participantsButton}
+              onPress={() => setIsDrawerOpen(true)}
+            >
+              <Ionicons name="people" size={22} color="#ffffff" />
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
 
-      <View style={styles.messagesContainer}>
-        {loading ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#0084ff" />
-          </View>
-        ) : error ? (
-          <View style={styles.errorContainer}>
-            <Text style={styles.errorText}>{error}</Text>
-          </View>
-        ) : (
-          <FlatList
-            ref={flatListRef}
-            data={messages}
-            keyExtractor={(item) => item.id.toString()}
-            renderItem={renderMessage}
-            contentContainerStyle={{ paddingVertical: 16 }}
-            onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
-            onLayout={() => flatListRef.current?.scrollToEnd({ animated: true })}
-          />
-        )}
-      </View>
+        <View style={styles.messagesContainer}>
+          {loading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#0084ff" />
+            </View>
+          ) : error ? (
+            <View style={styles.errorContainer}>
+              <Text style={styles.errorText}>{error}</Text>
+            </View>
+          ) : (
+            <FlatList
+              ref={flatListRef}
+              data={messages}
+              keyExtractor={(item) => item.id.toString()}
+              renderItem={renderMessage}
+              contentContainerStyle={{ paddingVertical: 16 }}
+              onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
+              onLayout={() => flatListRef.current?.scrollToEnd({ animated: true })}
+              keyboardShouldPersistTaps="handled"
+            />
+          )}
+        </View>
 
-      <ChatInput
-        onSendMessage={handleSendMessage}
-        disabled={loading || !!error}
-      />
+        <ChatInput
+          onSendMessage={handleSendMessage}
+          disabled={loading || !!error}
+        />
+      </SafeAreaView>
 
       <OnlineUsersDrawer
         isOpen={isDrawerOpen}
