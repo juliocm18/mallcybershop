@@ -1,142 +1,42 @@
-import React, { useEffect, useState } from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  Image,
-  Modal,
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, Modal } from 'react-native';
+import { UserProfile, OnlineUsersDrawerProps } from '../types';
 import { supabase } from '@/app/supabase';
-import { styles } from '../styles';
-import { UserProfile } from '../types';
-
-interface OnlineUsersDrawerProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onUserSelect: (participant: UserProfile) => void;
-  currentUserId: string;
-}
+import { useEffect, useState } from 'react';
+import { router } from 'expo-router';
 
 export const OnlineUsersDrawer: React.FC<OnlineUsersDrawerProps> = ({
   isOpen,
   onClose,
   onUserSelect,
   currentUserId,
+  chatType
 }) => {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (isOpen) {
-      fetchOnlineUsers();
-      const channel = subscribeToUserStatus();
-      return () => {
-        supabase.removeChannel(channel);
-      };
-    }
-  }, [isOpen]);
+    fetchOnlineUsers();
+  }, []);
 
   const fetchOnlineUsers = async () => {
     try {
-      const { data, error } = await supabase
+      const { data: profiles, error } = await supabase
         .from('profiles')
-        .select(`
-          id,
-          name,
-          avatar_url,
-          status:user_status (
-            is_online,
-            last_seen
-          )
-        `)
+        .select('*')
         .neq('id', currentUserId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching online users:', error);
+        return;
+      }
 
-      const formattedUsers: UserProfile[] = (data || []).map((user: any) => ({
-        id: user.id,
-        name: user.name || 'Anonymous',
-        avatar_url: user.avatar_url,
-        status: {
-          is_online: user.status?.is_online || false,
-          last_seen: user.status?.last_seen || new Date().toISOString()
-        }
-      }));
-
-      setUsers(formattedUsers);
+      if (profiles) {
+        setUsers(profiles);
+      }
     } catch (error) {
-      console.error('Error fetching online users:', error);
+      console.error('Error:', error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const subscribeToUserStatus = () => {
-    return supabase
-      .channel('online-users')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'user_status',
-        },
-        () => {
-          fetchOnlineUsers();
-        }
-      )
-      .subscribe();
-  };
-
-  const handleUserSelect = async (user: UserProfile) => {
-    try {
-      // Check if a private room already exists between these users
-      const { data: existingRooms, error: findError } = await supabase
-        .from('rooms')
-        .select('id')
-        .eq('type', 'individual')
-        .eq('is_private', true)
-        .or(`and(created_by.eq.${currentUserId},recipient_id.eq.${user.id}),and(created_by.eq.${user.id},recipient_id.eq.${currentUserId})`);
-
-      if (findError) {
-        console.error('Error finding room:', findError);
-        throw findError;
-      }
-
-      console.log('Existing rooms:', existingRooms); // Debug log
-
-      if (existingRooms && existingRooms.length > 0) {
-        console.log('Using existing room:', existingRooms[0]); // Debug log
-        onUserSelect({ ...user, roomId: existingRooms[0].id });
-      } else {
-        // Create a new private room
-        console.log('Creating new room for users:', { currentUserId, userId: user.id }); // Debug log
-        const { data: newRoom, error } = await supabase
-          .from('rooms')
-          .insert({
-            name: `Chat with ${user.name}`,
-            type: 'individual',
-            created_by: currentUserId,
-            recipient_id: user.id,
-            is_private: true
-          })
-          .select()
-          .single();
-
-        if (error) {
-          console.error('Error creating room:', error);
-          throw error;
-        }
-
-        console.log('Created new room:', newRoom); // Debug log
-        onUserSelect({ ...user, roomId: newRoom.id });
-      }
-
-      onClose();
-    } catch (error) {
-      console.error('Error creating private chat:', error);
     }
   };
 
@@ -147,53 +47,135 @@ export const OnlineUsersDrawer: React.FC<OnlineUsersDrawerProps> = ({
       transparent={true}
       onRequestClose={onClose}
     >
-      <View style={styles.drawerContainer}>
-        <View style={styles.drawerHeader}>
-          <Text style={styles.drawerTitle}>Online Users</Text>
-          <TouchableOpacity
-            onPress={onClose}
-            style={styles.drawerCloseButton}
-          >
-            <Ionicons name="close" size={24} color="#000" />
-          </TouchableOpacity>
-        </View>
-
-        <ScrollView style={styles.drawerUserList}>
-          {loading ? (
-            <View style={styles.loadingContainer}>
-              <Text>Loading users...</Text>
-            </View>
-          ) : (
-            users.map((user) => (
-              <TouchableOpacity
-                key={user.id}
-                style={styles.drawerUserItem}
-                onPress={() => handleUserSelect(user)}
-              >
-                <View style={styles.drawerUserAvatarContainer}>
-                  <Image
-                    source={
-                      user.avatar_url
-                        ? { uri: user.avatar_url }
-                        : require('./default-avatar.png')
-                    }
-                    style={styles.drawerUserAvatarImage}
-                  />
-                  {user.status?.is_online && (
-                    <View style={styles.onlineBadge} />
-                  )}
-                </View>
-                <View>
-                  <Text style={styles.drawerUserName}>{user.name}</Text>
-                  <Text style={styles.drawerUserStatus}>
-                    {user.status?.is_online ? 'Online' : 'Offline'}
-                  </Text>
-                </View>
+      <View style={styles.modalOverlay}>
+        <View style={styles.drawer}>
+          <View style={styles.container}>
+            <View style={styles.header}>
+              <Text style={styles.title}>Online Users</Text>
+              <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+                <Text style={styles.closeButtonText}>×</Text>
               </TouchableOpacity>
-            ))
-          )}
-        </ScrollView>
+            </View>
+
+            {chatType === 'individual' && (
+              <TouchableOpacity
+                style={styles.groupChatButton}
+                onPress={() => {
+                  onClose();
+                  router.push('/chatroom');
+                }}
+              >
+                <Text style={styles.groupChatButtonText}>Go to Group Chat</Text>
+              </TouchableOpacity>
+            )}
+
+            <ScrollView style={styles.userList}>
+              {loading ? (
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator size="large" color="#0000ff" />
+                </View>
+              ) : (
+                users.map((user) => (
+                  <TouchableOpacity
+                    key={user.id}
+                    style={styles.userItem}
+                    onPress={() => {
+                      onUserSelect({ ...user, roomId: '' });
+                      onClose();
+                    }}
+                  >
+                    <Text style={styles.userName}>{user.name}</Text>
+                    <View
+                      style={[
+                        styles.statusDot,
+                        user.status?.is_online ? styles.online : styles.offline,
+                      ]}
+                    />
+                  </TouchableOpacity>
+                ))
+              )}
+            </ScrollView>
+          </View>
+        </View>
       </View>
     </Modal>
   );
 };
+
+const styles = StyleSheet.create({
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  drawer: {
+    backgroundColor: '#fff',
+    height: '80%',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+  },
+  container: {
+    flex: 1,
+    padding: 16,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: '600',
+  },
+  closeButton: {
+    padding: 8,
+  },
+  closeButtonText: {
+    fontSize: 24,
+    color: '#666',
+  },
+  groupChatButton: {
+    backgroundColor: '#4A90E2',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 16,
+    alignItems: 'center',
+  },
+  groupChatButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  userList: {
+    flex: 1,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingTop: 20,
+  },
+  userItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E5EA',
+  },
+  userName: {
+    fontSize: 16,
+  },
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  online: {
+    backgroundColor: '#34C759',
+  },
+  offline: {
+    backgroundColor: '#FF3B30',
+  },
+});

@@ -107,4 +107,5 @@ export interface OnlineUsersDrawerProps {
   onClose: () => void;
   onUserSelect: (user: UserProfile & { roomId: string }) => void;
   currentUserId: string;
+  chatType: 'individual' | 'group';
 }

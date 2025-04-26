@@ -407,24 +407,12 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
       <View style={styles.header}>
         <View style={styles.headerContent}>
           <Text style={styles.roomName}>{roomName}</Text>
-          <View style={styles.headerButtons}>
-            {chatType === 'individual' && (
-              <TouchableOpacity
-                style={styles.groupChatButton}
-                onPress={() => {
-                  router.push('/chatroom');
-                }}
-              >
-                <Text style={styles.groupChatButtonText}>Go to Group Chat</Text>
-              </TouchableOpacity>
-            )}
-            <TouchableOpacity
-              style={styles.participantsButton}
-              onPress={() => setIsDrawerOpen(true)}
-            >
-              <Text style={styles.participantsButtonText}>Participants</Text>
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity
+            style={styles.participantsButton}
+            onPress={() => setIsDrawerOpen(true)}
+          >
+            <Text style={styles.participantsButtonText}>Participants</Text>
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -462,8 +450,9 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
       <OnlineUsersDrawer
         isOpen={isDrawerOpen}
         onClose={() => setIsDrawerOpen(false)}
-        currentUserId={currentUser.id}
         onUserSelect={handleParticipantSelect}
+        currentUserId={currentUser.id}
+        chatType={chatType}
       />
     </KeyboardAvoidingView>
   );
@@ -494,18 +483,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-  },
-  groupChatButton: {
-    backgroundColor: '#4A90E2',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 6,
-    marginRight: 8,
-  },
-  groupChatButtonText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '500',
   },
   participantsButton: {
     backgroundColor: '#34C759',
