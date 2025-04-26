@@ -7,15 +7,16 @@ import {
   KeyboardAvoidingView,
   Platform,
   TouchableOpacity,
+  StyleSheet
 } from 'react-native';
 import { supabase } from '@/app/supabase';
 import { Message, ChatRoomProps, UserProfile, RoomDetails, RoomResponse } from './types';
 import { MessageBubble } from './components/MessageBubble';
 import { ChatInput } from './components/ChatInput';
 import { OnlineUsersDrawer } from './components/OnlineUsersDrawer';
-import { styles } from './styles';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { router } from 'expo-router';
 
 export const ChatRoom: React.FC<ChatRoomProps> = ({
   roomId,
@@ -83,12 +84,11 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
         .order('created_at', { ascending: true });
 
       if (chatType === 'individual') {
-        // For private chats, get messages where either user is sender or recipient
-        query = query.or(`
-          and(user_id.eq.${currentUser.id},recipient_id.eq.${recipientId}),
-          and(user_id.eq.${recipientId},recipient_id.eq.${currentUser.id}),
-          and(user_id.eq.${currentUser.id},is_private.eq.true),
-          and(user_id.eq.${recipientId},is_private.eq.true)`);
+        // For private chats, get messages between both users in either direction
+        query = query.or(
+          `and(user_id.eq.${currentUser.id},recipient_id.eq.${recipientId}),` +
+          `and(user_id.eq.${recipientId},recipient_id.eq.${currentUser.id})`
+        );
       }
 
       const { data: messages, error } = await query;
@@ -215,8 +215,8 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
 
       // Check if this is an individual chat or public chat
       if (recipientId) {
-        // Individual chat
-        const { data: room, error } = await supabase
+        // Individual chat - check both directions for existing room
+        const { data: existingRoom, error: findError } = await supabase
           .from('rooms')
           .select(`
             id,
@@ -234,12 +234,19 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
             )
           `)
           .eq('type', 'individual')
-          .eq('created_by', currentUser.id)
-          .eq('recipient_id', recipientId)
+          .or(`and(created_by.eq.${currentUser.id},recipient_id.eq.${recipientId}),and(created_by.eq.${recipientId},recipient_id.eq.${currentUser.id})`)
           .single() as { data: RoomResponse | null; error: any };
 
-        if (!room) {
-          // Create new individual chat room
+        if (findError && findError.code !== 'PGRST116') { // PGRST116 is "not found" error
+          console.error('Error finding individual room:', findError);
+          setRoomName('Private Chat Error');
+          return;
+        }
+
+        if (existingRoom) {
+          roomData = existingRoom;
+        } else {
+          // Create new individual chat room only if no existing room was found
           const { data: newRoom, error: createError } = await supabase
             .from('rooms')
             .insert({
@@ -272,8 +279,6 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
           }
 
           roomData = newRoom;
-        } else {
-          roomData = room;
         }
       } else {
         // Public chat
@@ -356,13 +361,13 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
       // Store the actual room ID
       setActualRoomId(roomDetails.id);
 
-      console.log("room details", roomDetails);
+      //console.log("room details", roomDetails);
 
       if (roomDetails.type === 'individual') {
         console.log('Individual room details:');
         const creatorName = roomDetails.creator?.name || 'Unknown';
         const recipientName = roomDetails.recipient?.name || 'Unknown';
-        setRoomName(`${creatorName} & ${recipientName}`);
+        setRoomName(`${creatorName.split(' ')[0]} & ${recipientName.split(' ')[0]}`);
       } else if (roomDetails.name) {
         setRoomName(roomDetails.name);
       } else {
@@ -400,15 +405,27 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
       keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
     >
       <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => setIsDrawerOpen(true)}
-          style={styles.menuButton}
-        >
-          <Ionicons name="menu" size={24} color="#000" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>
-          {roomName}
-        </Text>
+        <View style={styles.headerContent}>
+          <Text style={styles.roomName}>{roomName}</Text>
+          <View style={styles.headerButtons}>
+            {chatType === 'individual' && (
+              <TouchableOpacity
+                style={styles.groupChatButton}
+                onPress={() => {
+                  router.push('/chatroom');
+                }}
+              >
+                <Text style={styles.groupChatButtonText}>Go to Group Chat</Text>
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity
+              style={styles.participantsButton}
+              onPress={() => setIsDrawerOpen(true)}
+            >
+              <Text style={styles.participantsButtonText}>Participants</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
       </View>
 
       <View style={styles.messageList}>
@@ -451,3 +468,74 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
     </KeyboardAvoidingView>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  header: {
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E5EA',
+    padding: 16,
+  },
+  headerContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  roomName: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#000',
+  },
+  headerButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  groupChatButton: {
+    backgroundColor: '#4A90E2',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+    marginRight: 8,
+  },
+  groupChatButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  participantsButton: {
+    backgroundColor: '#34C759',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
+  participantsButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  messageList: {
+    flex: 1,
+    padding: 16,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  errorText: {
+    color: 'red',
+    textAlign: 'center',
+    fontSize: 16,
+  },
+});
