@@ -272,6 +272,7 @@ const CompanyScreen = () => {
     setEditingId(company.id || 0);
     setKey(company.key);
     setName(company.name);
+    setIsGlobal(company.is_global);
     setPriority(company.priority.toString());
     setPackageType(company.package);
     setLogoUri(company.logo);

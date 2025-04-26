@@ -28,6 +28,12 @@ export const globalStyles = StyleSheet.create({
     backgroundColor: "#ea822c",
     paddingTop: 10,
   },
+  whiteContainer: {
+    flex: 1,
+    backgroundColor: "#fff",
+    paddingTop: 20,
+    paddingHorizontal: 20,
+  },
   logoContainer: {
     width: 80, // Ancho fijo para mantener consistencia
     //height: 130, // Altura total del contenedor
@@ -197,9 +203,9 @@ export const globalStyles = StyleSheet.create({
   input: {
     borderWidth: 1,
     borderColor: "#ccc",
-    padding: 10,
     marginBottom: 15,
     borderRadius: 5,
+    backgroundColor: 'white',
   },
   modalButtonContainer: {
     flexDirection: "row",

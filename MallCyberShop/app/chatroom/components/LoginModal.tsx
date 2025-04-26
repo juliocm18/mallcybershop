@@ -9,6 +9,8 @@ import {
   StyleSheet,
 } from 'react-native';
 import { supabase } from '@/app/supabase';
+import { globalStyles } from '@/app/styles';
+import { useRouter } from 'expo-router';
 
 interface LoginModalProps {
   isVisible: boolean;
@@ -20,6 +22,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isVisible, onLoginSucces
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
+  
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -48,11 +52,17 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isVisible, onLoginSucces
     }
   };
 
+  const onGoToRegister = () => {
+    router.push('/user/registerUser');
+  };
+
   return (
     <Modal visible={isVisible} animationType="slide" transparent>
       <View style={styles.modalContainer}>
         <View style={styles.modalContent}>
-          <Text style={styles.title}>Login</Text>
+          <Text style={globalStyles.modalTitle}>Iniciar Sesión</Text>
+
+          <Text style={globalStyles.label}>Debe iniciar sesión para usar el chat</Text>
           
           {error && <Text style={styles.error}>{error}</Text>}
           
@@ -74,16 +84,21 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isVisible, onLoginSucces
           />
           
           <TouchableOpacity
-            style={[styles.button, loading && styles.buttonDisabled]}
+            style={[globalStyles.globalButton, loading && styles.buttonDisabled]}
             onPress={handleLogin}
             disabled={loading}
           >
             {loading ? (
               <ActivityIndicator color="#fff" />
             ) : (
-              <Text style={styles.buttonText}>Login</Text>
+              <Text style={styles.buttonText}>Iniciar Sesión</Text>
             )}
           </TouchableOpacity>
+          
+          <Text style={styles.link}>
+            ¿No tienes una cuenta? <Text style={styles.linkText} onPress={() => onGoToRegister()}>Regístrate</Text>
+          </Text>
+
         </View>
       </View>
     </Modal>
@@ -135,5 +150,15 @@ const styles = StyleSheet.create({
     color: 'red',
     marginBottom: 12,
     textAlign: 'center',
+  },
+  link: {
+    color: '#0084ff',
+    textDecorationLine: 'underline',
+    marginTop: 10,
+    textAlign: 'center',
+  },
+  linkText: {
+    color: '#0084ff',
+    fontWeight: 'bold',
   },
 });
