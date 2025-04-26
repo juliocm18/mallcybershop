@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
-  FlatList,
-  ActivityIndicator,
   Text,
+  TouchableOpacity,
+  StyleSheet,
   KeyboardAvoidingView,
   Platform,
-  TouchableOpacity,
-  StyleSheet
+  ActivityIndicator,
+  FlatList
 } from 'react-native';
 import { supabase } from '@/app/supabase';
 import { Message, ChatRoomProps, UserProfile, RoomDetails, RoomResponse } from './types';
@@ -364,7 +364,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
       //console.log("room details", roomDetails);
 
       if (roomDetails.type === 'individual') {
-        console.log('Individual room details:');
+        //console.log('Individual room details:');
         const creatorName = roomDetails.creator?.name || 'Unknown';
         const recipientName = roomDetails.recipient?.name || 'Unknown';
         setRoomName(`${creatorName.split(' ')[0]} & ${recipientName.split(' ')[0]}`);
@@ -390,7 +390,6 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
   }, [actualRoomId, chatType, recipientId]);
 
   const handleParticipantSelect = (participant: UserProfile) => {
-    console.log("handleParticipantSelect", participant)
     setSelectedParticipant(participant.id);
     if (onParticipantSelect && 'roomId' in participant) {
       onParticipantSelect(participant as UserProfile & { roomId: string });
@@ -411,12 +410,12 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
             style={styles.participantsButton}
             onPress={() => setIsDrawerOpen(true)}
           >
-            <Text style={styles.participantsButtonText}>Participants</Text>
+            <Ionicons name="people" size={22} color="#ffffff" />
           </TouchableOpacity>
         </View>
       </View>
 
-      <View style={styles.messageList}>
+      <View style={styles.messagesContainer}>
         {loading ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color="#0084ff" />
@@ -461,13 +460,20 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#faf7f7',
   },
   header: {
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E5EA',
-    padding: 16,
+    backgroundColor: '#fb8436',
+    paddingTop: 20,
+    paddingBottom: 12,
+    paddingHorizontal: 16,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
   },
   headerContent: {
     flexDirection: 'row',
@@ -475,29 +481,109 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   roomName: {
-    fontSize: 18,
+    color: '#ffffff',
+    fontSize: 20,
     fontWeight: '600',
-    color: '#000',
-  },
-  headerButtons: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
   },
   participantsButton: {
-    backgroundColor: '#34C759',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 6,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    padding: 8,
+    borderRadius: 20,
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   participantsButtonText: {
-    color: '#FFFFFF',
-    fontSize: 14,
+    color: '#ffffff',
+    fontSize: 13,
     fontWeight: '500',
   },
-  messageList: {
+  messagesContainer: {
     flex: 1,
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+  },
+  messageItem: {
+    marginBottom: 12,
+    maxWidth: '80%',
+  },
+  myMessage: {
+    alignSelf: 'flex-end',
+    backgroundColor: '#fb8436',
+    borderRadius: 16,
+    borderBottomRightRadius: 4,
+    padding: 12,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  otherMessage: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    borderBottomLeftRadius: 4,
+    padding: 12,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  myMessageText: {
+    color: '#ffffff',
+    fontSize: 16,
+  },
+  otherMessageText: {
+    color: '#333333',
+    fontSize: 16,
+  },
+  messageTime: {
+    fontSize: 12,
+    marginTop: 4,
+  },
+  myMessageTime: {
+    color: 'rgba(255, 255, 255, 0.7)',
+    textAlign: 'right',
+  },
+  otherMessageTime: {
+    color: '#999999',
+  },
+  inputContainer: {
+    backgroundColor: '#ffffff',
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0, 0, 0, 0.1)',
+    padding: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  input: {
+    flex: 1,
+    backgroundColor: '#faf7f7',
+    borderRadius: 24,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    marginRight: 8,
+    fontSize: 16,
+  },
+  sendButton: {
+    backgroundColor: '#fb8436',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+  },
+  sendButtonText: {
+    color: '#ffffff',
+    fontSize: 20,
   },
   loadingContainer: {
     flex: 1,
@@ -511,7 +597,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   errorText: {
-    color: 'red',
+    color: '#ff3b30',
     textAlign: 'center',
     fontSize: 16,
   },
