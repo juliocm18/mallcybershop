@@ -123,7 +123,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
           filter: `room_id=eq.${actualRoomId}`
         },
         (payload) => {
-          console.log('New message received:', payload);
+          //console.log('New message received:', payload);
           // Fetch the complete message with user info
           const fetchNewMessage = async () => {
             const { data: newMessage } = await supabase
@@ -467,7 +467,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#faf7f7',
+    backgroundColor: '#fff5ef', // Light orange background
   },
   header: {
     backgroundColor: '#fb8436',

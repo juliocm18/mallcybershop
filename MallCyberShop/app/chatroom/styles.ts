@@ -205,11 +205,11 @@ export const styles = StyleSheet.create({
     color: '#666',
   },
   ownMessage: {
-    backgroundColor: '#0084ff',
+    backgroundColor: '#FFA060',
     borderTopRightRadius: 4,
   },
   otherMessage: {
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 4,
   },
   messageText: {
