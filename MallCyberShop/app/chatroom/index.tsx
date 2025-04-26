@@ -7,6 +7,7 @@ import { ChatRoom } from './ChatRoom';
 import { LoginModal } from './components/LoginModal';
 import { styles } from './styles';
 import { UserProfile } from './types';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function ChatRoomScreen() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);

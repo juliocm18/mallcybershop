@@ -143,7 +143,7 @@ function MainLayout() {
       if (session) {
         router.replace("/adminhome");
       } else {
-        router.replace("/user/registerUser");
+        router.replace("/locationhome");
       }
     }
   }, [session, loading, isVideoFinished]);

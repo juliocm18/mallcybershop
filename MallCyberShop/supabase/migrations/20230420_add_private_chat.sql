@@ -32,28 +32,28 @@ CREATE INDEX IF NOT EXISTS idx_messages_user_id ON messages(user_id);
 CREATE INDEX IF NOT EXISTS idx_messages_recipient_id ON messages(recipient_id);
 
 -- Add RLS policies for private chats
-ALTER TABLE rooms ENABLE ROW LEVEL SECURITY;
+-- ALTER TABLE rooms ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS "Users can view their own private chats" ON rooms;
-CREATE POLICY "Users can view their own private chats"
-ON rooms FOR SELECT
-USING (
-  auth.uid() IN (
-    SELECT id FROM profiles WHERE id = created_by OR id = recipient_id
-  ) OR 
-  (type = 'group' AND is_private = false)
-);
+-- DROP POLICY IF EXISTS "Users can view their own private chats" ON rooms;
+-- CREATE POLICY "Users can view their own private chats"
+-- ON rooms FOR SELECT
+-- USING (
+--   auth.uid() IN (
+--     SELECT id FROM profiles WHERE id = created_by OR id = recipient_id
+--   ) OR 
+--   (type = 'group' AND is_private = false)
+-- );
 
-DROP POLICY IF EXISTS "Users can create private chats" ON rooms;
-CREATE POLICY "Users can create private chats"
-ON rooms FOR INSERT
-WITH CHECK (auth.uid() IN (SELECT id FROM profiles WHERE id = created_by));
+-- DROP POLICY IF EXISTS "Users can create private chats" ON rooms;
+-- CREATE POLICY "Users can create private chats"
+-- ON rooms FOR INSERT
+-- WITH CHECK (auth.uid() IN (SELECT id FROM profiles WHERE id = created_by));
 
-DROP POLICY IF EXISTS "Users can update their own private chats" ON rooms;
-CREATE POLICY "Users can update their own private chats"
-ON rooms FOR UPDATE
-USING (auth.uid() IN (SELECT id FROM profiles WHERE id = created_by))
-WITH CHECK (auth.uid() IN (SELECT id FROM profiles WHERE id = created_by));
+-- DROP POLICY IF EXISTS "Users can update their own private chats" ON rooms;
+-- CREATE POLICY "Users can update their own private chats"
+-- ON rooms FOR UPDATE
+-- USING (auth.uid() IN (SELECT id FROM profiles WHERE id = created_by))
+-- WITH CHECK (auth.uid() IN (SELECT id FROM profiles WHERE id = created_by));
 
 -- Add RLS policies for messages
 ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
