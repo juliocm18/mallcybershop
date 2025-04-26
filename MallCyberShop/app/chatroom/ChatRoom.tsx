@@ -397,11 +397,18 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
     setIsDrawerOpen(false); // Close drawer after selection
   };
 
+  const renderMessage = ({ item }: { item: Message }) => (
+    <MessageBubble
+      message={item}
+      isOwnMessage={item.user_id === currentUser.id}
+    />
+  );
+
   return (
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
     >
       <View style={styles.header}>
         <View style={styles.headerContent}>
@@ -428,13 +435,9 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
           <FlatList
             ref={flatListRef}
             data={messages}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <MessageBubble
-                message={item}
-                isOwnMessage={item.user_id === currentUser.id}
-              />
-            )}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={renderMessage}
+            contentContainerStyle={{ paddingVertical: 16 }}
             onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
             onLayout={() => flatListRef.current?.scrollToEnd({ animated: true })}
           />
@@ -443,7 +446,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
 
       <ChatInput
         onSendMessage={handleSendMessage}
-        disabled={loading}
+        disabled={loading || !!error}
       />
 
       <OnlineUsersDrawer
