@@ -8,18 +8,21 @@
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/images/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
     "ios": {
       "supportsTablet": true
     },
     "android": {
       "permissions": ["READ_PHONE_STATE"],
-      
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
       "package": "com.burbitstudio.mallcybershop"
-      
     },
     "web": {
       "bundler": "metro",
@@ -28,7 +31,7 @@
     },
     "plugins": [
       "expo-router",
-       [
+      [
         "expo-video",
         {
           "image": "./assets/images/splash-icon.png",
