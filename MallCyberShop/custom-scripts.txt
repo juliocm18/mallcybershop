@@ -18,3 +18,7 @@ supabase functions deploy list-users
 
 Color primario para letras:
 #fb8436
+
+---------------------------
+
+npx expo prebuild

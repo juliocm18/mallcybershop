@@ -25,9 +25,7 @@ const ChatButton = () => {
     }, []);
 
   return (
-    <Pressable onPress={() => router.push({
-      pathname: "/chat/group",
-    })}>
+    <Pressable onPress={() => router.push('../chatroom')}>
       <Text
         style={{
           color,

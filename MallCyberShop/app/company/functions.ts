@@ -121,6 +121,34 @@ export const getAllPaged = async (from: number, to: number, order: string) => {
   return data;
 };
 
+export const getAllPagedByCategory = async (from: number, to: number, order: string, categoryName: string) => {
+  const {data, error} = await supabase
+    .from("company")
+    .select("*")
+    .range(from, to)
+    .overlaps("categories", [categoryName])
+    .order(order, {ascending: true});
+  if (error) { 
+    console.log(error);
+    throw new Error(error.message)
+  };
+  return data;
+};
+
+export const getAllPagedByCategoryNoGlobal = async (from: number, to: number, order: string, categoryName: string) => {
+  const {data, error} = await supabase
+    .from("company")
+    .select("*")
+    .range(from, to)
+    .overlaps("categories", [categoryName])
+    .eq("is_global", false)
+    .order(order, {ascending: true});
+  if (error) { 
+    console.log(error);
+    throw new Error(error.message)};
+  return data;
+};
+
 export const fetchCompaniesByDepartments = async (
   order: string,
   departments: string[],

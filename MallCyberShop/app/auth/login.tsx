@@ -5,12 +5,12 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from "react-native";
-import {useState} from "react";
-import {useAuth} from "../context/AuthContext";
-import {useRouter} from "expo-router";
-import {Ionicons} from "@expo/vector-icons";
+import { useState } from "react";
+import { useAuth } from "../context/AuthContext";
+import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import RoleFunctions from "../role/functions";
-import {globalStyles} from "../styles";
+import { globalStyles } from "../styles";
 import { ActivityIndicator } from "react-native-paper";
 import { useTranslation } from "react-i18next";
 export default function Login() {
@@ -18,7 +18,7 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
-  const {signIn} = useAuth();
+  const { signIn } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
@@ -79,22 +79,22 @@ export default function Login() {
       {error && <Text style={styles.errorText}>{error}</Text>}
 
       <TouchableOpacity
-                style={styles.button}
-                onPress={handleLogin}
-                disabled={loading}
-              >
-                {loading ? (
-                  <ActivityIndicator color="#fff" />
-                ) : (
-                  <Text style={styles.buttonText}>
-                    {t('auth.loginButton')}
-                  </Text>
-                )}
-              </TouchableOpacity>
+        style={styles.button}
+        onPress={handleLogin}
+        disabled={loading}
+      >
+        {loading ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.buttonText}>
+            {t('auth.loginButton')}
+          </Text>
+        )}
+      </TouchableOpacity>
 
       <TouchableOpacity
         style={styles.button}
-        onPress={() => router.push("../home/home")}
+        onPress={() => router.push("../locationhome")}
       >
         <Text style={styles.buttonText}>{t('auth.goToStore')}</Text>
       </TouchableOpacity>

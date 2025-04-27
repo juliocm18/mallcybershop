@@ -24,3 +24,9 @@ export type User = {
 // role: string;
 // updated_at: string;
 // is_anonymous: boolean;
+
+export interface clientProfile {
+  avatar_url: string;
+  name: string;
+  birth_date: string;
+}

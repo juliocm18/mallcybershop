@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from "react";
+import { Checkbox } from "react-native-paper";
+
 import {
   View,
   Text,
@@ -22,6 +24,7 @@ import {
   fetchCompaniesByDepartments,
   fetchCompanyLinks,
   getAllPaged,
+  getAllPagedByCategory,
   pickImage,
   updateCompany,
   updateCompanyLink,
@@ -41,6 +44,8 @@ import RoleFunctions from "../role/functions";
 import { globalStyles } from "../styles";
 import ConfirmationModal from "../components/confirmation-modal";
 import Select from "../components/select";
+import { getCategories, getCategoriesOrderByName } from "../category/functions";
+import { Category } from "../category/types";
 
 const CompanyScreen = () => {
   const [companies, setCompanies] = useState<Company[]>([]);
@@ -66,6 +71,8 @@ const CompanyScreen = () => {
   const [confirmModalVisible, setConfirmModalVisible] = useState(false);
   const [deletingName, setDeletingName] = useState<string>();
   const [confirmModalLinkVisible, setConfirmModalLinkVisible] = useState(false);
+  const [isGlobal, setIsGlobal] = useState(false);
+
   const [link, setLink] = useState<Link>();
 
   const [selectedLinkId, setSelectedLinkId] = useState<number>();
@@ -74,9 +81,12 @@ const CompanyScreen = () => {
 
   /* Pagination */
   const [page, setPage] = useState(0);
-  const pageSize = 20; // Cantidad de registros por página
+  const pageSize = 50; // Cantidad de registros por página
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+
+  const [categoryList, setCategoryList] = useState<Category[]>([]);
+  const [selectedCategoyListItem, setSelectedCategoyListItem] = useState<string>("INTELIGENCIAS ARTIFICIALES");
   /* pagination end */
 
 
@@ -84,9 +94,9 @@ const CompanyScreen = () => {
     if (editingId) {
       setEditingImage(true);
     }
-    const uri = await pickImage(); // 📥 Llamamos a la función externa
+    const uri = await pickImage(); // 
     if (uri) {
-      setLogoUri(uri); // ✅ Guardamos la imagen en useState
+      setLogoUri(uri); // 
     }
   };
 
@@ -99,6 +109,7 @@ const CompanyScreen = () => {
     setCategories("");
     setPriority("");
     setEditingId(null);
+    setIsGlobal(false);
   };
 
   const handleAddCompany = () => {
@@ -107,11 +118,18 @@ const CompanyScreen = () => {
   };
 
   useEffect(() => {
-    loadCompanies(true);
+    loadCompanies(true, selectedCategoyListItem);
     loadLinks();
+    loadCategories();
   }, []);
 
-  const loadCompanies = async (reset: boolean = false) => {
+  const loadCategories = async () => {
+    const categories = await getCategoriesOrderByName();
+    if (categories) setCategoryList(categories);
+  };
+
+  const loadCompanies = async (reset: boolean = false, categoryName?: string) => {
+    if (!categoryName && !selectedCategoyListItem) console.log("no hay categoria seleccionada");
     if (loadingMore) return;
     setLoadingMore(true);
     const from = reset ? 0 : page * pageSize;
@@ -127,7 +145,7 @@ const CompanyScreen = () => {
         (role) => role.name === "CEO" || role.name === "Superadministrador"
       )
     ) {
-      const data = await getAllPaged(from, to, "name");
+      const data = await getAllPagedByCategory(from, to, "name", categoryName || selectedCategoyListItem);
 
       if (reset) {
         if (data) setCompanies(data);
@@ -161,8 +179,9 @@ const CompanyScreen = () => {
   };
 
   const loadMore = () => {
+    //console.log("....hasMore", hasMore);
     if (hasMore) {
-      loadCompanies(false);
+      loadCompanies(false, selectedCategoyListItem);
     }
   };
 
@@ -172,7 +191,7 @@ const CompanyScreen = () => {
   };
 
   const handleSave = async () => {
-    if (!key || !name || !packageType || !categories) {
+    if (!name || !categories) {
       Alert.alert("Error", "Campos requeridos");
       return;
     }
@@ -190,10 +209,12 @@ const CompanyScreen = () => {
         } else {
           uploadedUrl = logoUri;
         }
+        console.log("isGlobal", isGlobal);
         const newCompany = {
-          key,
+          //key,
           name,
-          package: packageType,
+          //package: packageType,
+          is_global: isGlobal,
           logo: uploadedUrl || "",
           categories: categories.split(",").map((c) => c.trim()),
           priority: parseInt(priority),
@@ -203,7 +224,7 @@ const CompanyScreen = () => {
         if (updatedCategory) {
           clearFields();
           setModalVisible(false);
-          loadCompanies(true);
+          loadCompanies(true, selectedCategoyListItem);
           Alert.alert("Aviso", "Registro actualizado");
         }
       } else {
@@ -214,18 +235,20 @@ const CompanyScreen = () => {
         const uploadedUrl = await uploadImage(logoUri);
         // console.log("uploadedUrl", uploadedUrl);
         if (uploadedUrl) {
-          console.log("📤 Imagen subida con éxito:", uploadedUrl);
+          console.log(" Imagen subida con éxito:", uploadedUrl);
         } else {
           return;
         }
 
+        console.log("isGlobal", isGlobal);
         const newCompany = {
-          key,
+          //key,
           name,
-          package: packageType,
+          //package: packageType,
           logo: uploadedUrl,
           categories: categories.split(",").map((c) => c.trim()),
           priority: parseInt(priority),
+          is_global: isGlobal,
         };
 
         await createCompany(newCompany);
@@ -235,7 +258,7 @@ const CompanyScreen = () => {
         clearFields();
 
         setModalVisible(false);
-        loadCompanies(true);
+        loadCompanies(true, selectedCategoyListItem);
       }
     } catch (error: any) {
       console.error("Error creating company:", error.message);
@@ -249,6 +272,7 @@ const CompanyScreen = () => {
     setEditingId(company.id || 0);
     setKey(company.key);
     setName(company.name);
+    setIsGlobal(company.is_global);
     setPriority(company.priority.toString());
     setPackageType(company.package);
     setLogoUri(company.logo);
@@ -330,8 +354,7 @@ const CompanyScreen = () => {
     setDeletingId(id);
     try {
       await deleteCompany(id);
-      //await fetchCompanies("name");
-      loadCompanies(true);
+      loadCompanies(true, selectedCategoyListItem);
     } catch (error: any) {
       Alert.alert("Error", error.message);
     } finally {
@@ -368,6 +391,11 @@ const CompanyScreen = () => {
     setConfirmModalLinkVisible(true);
   };
 
+  const handleChangeCategoryFilter = (categoryName: string) => {
+    setSelectedCategoyListItem(categoryName);
+    loadCompanies(true, categoryName); // Pass categoryName directly instead of using state
+  };
+
   const handleSelectedLink = (linkId: number) => {
     const link = links.find((link) => link.id === linkId);
     setUrl(link?.prefix || "");
@@ -375,7 +403,8 @@ const CompanyScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={globalStyles.pageTitle}>Administración de S.E</Text>
+      <Text style={globalStyles.pageTitle}>Administración de S.E.</Text>
+      
       <TouchableOpacity
         style={globalStyles.globalButton}
         onPress={handleAddCompany}
@@ -387,8 +416,17 @@ const CompanyScreen = () => {
         <FontAwesome style={globalStyles.globalButtonIcon} name="plus" size={24} color="white" />
       </TouchableOpacity>
 
+      <Select
+        label="Filtrar por Categoría"
+        selectedValue={ selectedCategoyListItem }
+        onValueChange={(itemValue) => handleChangeCategoryFilter(itemValue)}
+        items={categoryList.map((category) => ({ id: category.name || "", name: category.name || "" }))}
+      />
+
+      
+
       <FlatList
-        style={{ height: "92%" }}
+        style={{ height: "80%" }}
         data={companies}
         keyExtractor={(item, index) => (index).toString()}
         renderItem={({ item }) => (
@@ -416,33 +454,53 @@ const CompanyScreen = () => {
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <Text style={styles.socialModaltitle}>
-              {editingId ? "Actualizar" : "Guardar"} S.E
+              {editingId ? "Actualizar" : "Guardar"} S.E.
             </Text>
-            <Text style={styles.label}>Identificador</Text>
-            <TextInput style={styles.input} value={key} onChangeText={setKey} />
+            {/* <Text style={styles.label}>Identificador</Text>
+            <TextInput style={styles.input} value={key} onChangeText={setKey} /> */}
 
-            <Text style={styles.label}>Nombre</Text>
+            <Text style={globalStyles.label}>Nombre</Text>
             <TextInput
               style={styles.input}
               value={name}
               onChangeText={setName}
             />
 
-            <Text style={styles.label}>Código de Aplicación</Text>
+            <PriorityInput priority={priority} setPriority={setPriority} />
+
+            {/* <Text style={styles.label}>Código de Aplicación</Text>
             <TextInput
               style={styles.input}
               value={packageType}
               onChangeText={setPackageType}
-            />
+            /> */}
 
-            <PriorityInput priority={priority} setPriority={setPriority} />
 
-            <Text style={styles.label}>Categorías (separados por coma)</Text>
+
+            <Text style={globalStyles.label}>Categorías (separados por coma)</Text>
             <TextInput
               style={styles.input}
               value={categories}
               onChangeText={setCategories}
             />
+
+            <View style={{ marginTop: 15 }}>
+              <Text style={globalStyles.label}>¿Es global?</Text>
+              <TouchableOpacity
+                style={{ flexDirection: "row", alignItems: "center", marginTop: 5 }}
+                onPress={() => setIsGlobal(!isGlobal)}
+              >
+                <Checkbox
+                  status={isGlobal ? 'checked' : 'unchecked'}
+                  onPress={() => setIsGlobal(!isGlobal)}
+                  color="#fb8436"
+                  uncheckedColor="#aaa"
+                />
+                <Text style={{ fontSize: 16, color: "#333", marginLeft: 10 }}>
+                  {isGlobal ? "Sí" : "No"}
+                </Text>
+              </TouchableOpacity>
+            </View>
 
             <TouchableOpacity
               style={styles.imagePicker}
@@ -451,9 +509,12 @@ const CompanyScreen = () => {
               <Text style={styles.imagePickerText}>Seleccione el logotipo</Text>
             </TouchableOpacity>
 
+
             {logoUri && (
               <Image source={{ uri: logoUri }} style={styles.logoPreview} />
             )}
+
+
 
             <View style={styles.modalButtonContainer}>
               <TouchableOpacity

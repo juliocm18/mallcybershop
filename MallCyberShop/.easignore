@@ -1,0 +1,60 @@
+# Dependencies
+node_modules/
+.yarn/
+.pnp/
+
+# Build outputs
+dist/
+build/
+web-build/
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+
+# Development files
+.git/
+.github/
+.vscode/
+.idea/
+*.log
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# Environment and config files
+.env*
+!.env.example
+
+# Testing
+__tests__/
+coverage/
+jest/
+*.test.js
+*.spec.js
+
+# Documentation
+docs/
+*.md
+LICENSE
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Debug files
+*.map
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+tmp/

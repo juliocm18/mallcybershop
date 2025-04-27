@@ -2,7 +2,7 @@ import {useAuth} from "../context/AuthContext";
 import RoleFunctions from "../role/functions";
 import {Role} from "../role/model";
 import {supabase} from "../supabase";
-import {User} from "./model";
+import {clientProfile, User} from "./model";
 
 export default class UserFunctions {
   static save = async (email: string, password: string): Promise<User> => {
@@ -105,4 +105,29 @@ export default class UserFunctions {
     if (error) throw new Error(error.message);
     return true;
   };
+
+  static saveClient = async (email: string, password: string): Promise<User> => {
+    const CLIENTE = 4;
+    const {data, error} = await supabase.auth.signUp({email, password});
+    if (error) throw new Error(error.message);
+    if (!data.user) throw new Error("No hay data de usuario");
+    await supabase
+      .from("user_role")
+      .insert({user_id: data.user.id, role_id: CLIENTE});
+    return {
+      id: data.user.id,
+      email: data.user.email || "",
+    };
+  };
+
+
+  static saveClientProfile = async (clientProfile: clientProfile): Promise<boolean> => {
+    const {error} = await supabase.from("profiles").insert(clientProfile);
+    if (error) throw new Error(error.message);
+    return true;
+  };
+
+
 }
+
+

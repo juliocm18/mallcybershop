@@ -8,6 +8,7 @@ export interface Company {
   logo: string;
   categories: string[];
   priority: number;
+  is_global: boolean;
   departments: string[] | [];
   countries?: string[];
 }

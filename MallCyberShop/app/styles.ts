@@ -28,6 +28,12 @@ export const globalStyles = StyleSheet.create({
     backgroundColor: "#ea822c",
     paddingTop: 10,
   },
+  whiteContainer: {
+    flex: 1,
+    backgroundColor: "#fff",
+    paddingTop: 20,
+    paddingHorizontal: 20,
+  },
   logoContainer: {
     width: 80, // Ancho fijo para mantener consistencia
     //height: 130, // Altura total del contenedor
@@ -194,4 +200,36 @@ export const globalStyles = StyleSheet.create({
     color: "#d32f2f",
     textAlign: "center",
   },
+  input: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    marginBottom: 15,
+    borderRadius: 5,
+    backgroundColor: 'white',
+  },
+  modalButtonContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingTop: 10,
+  },
+  modalCancelButton: {
+    backgroundColor: "#898989",
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    borderRadius: 5,
+    width: "45%",
+  },
+  modalUpdateButton: {
+    backgroundColor: "#ff9f61",
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    borderRadius: 5,
+    width: "45%",
+  },
+  modalButtonText: {
+    color: "#fff",
+    fontWeight: "bold",
+    textAlign: "center",
+  },
+  label: {fontSize: 16, marginBottom: 5, color: "#898989"},
 });

@@ -1,16 +1,14 @@
-import { TabView, SceneMap, TabBar } from "react-native-tab-view";
-import React, { useState, useEffect, useRef } from "react";
+import { TabView, TabBar } from "react-native-tab-view";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
-  TouchableOpacity,
   Image,
   useWindowDimensions,
   ScrollView,
 } from "react-native";
-import { FontAwesome } from "@expo/vector-icons";
 import { DraggableGrid } from "react-native-draggable-grid";
-import { openWhatsApp, handleLinkPress, getDeviceIdentifier } from "../functions";
+import { handleLinkPress, getDeviceIdentifier } from "../functions";
 import { useRouter } from "expo-router";
 import { globalStyles } from "../styles";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -65,7 +63,7 @@ const DynamicTabsScreen = () => {
   const [routes, setRoutes] = useState<{ key: string; title: string }[]>([]);
   const [currentDepartment, setCurrentDepartment] = useState<string>("");
   const [currentCountry, setCurrentCountry] = useState<string>("");
-  const [clickCount, setClickCount] = useState(0);
+  
 
   let { department } = useLocalSearchParams<{ department?: string }>();
   let { country } = useLocalSearchParams<{ country?: string }>();
@@ -99,6 +97,8 @@ const DynamicTabsScreen = () => {
         // const storedIcons = await getIconOrder();
         const remoteData = await fetchCompanies("priority");
 
+        //console.log("remoteData", remoteData);
+
         const uniqueCategories = await getCategoryNames();
         const companyByCategory = new Map<string, any[]>();
 
@@ -107,8 +107,8 @@ const DynamicTabsScreen = () => {
         );
         
 
-        const companiesByDepartment = remoteData.filter((company) =>
-          company.departments?.includes(department)
+        const companiesByDepartment = remoteData.filter((company) =>        
+          company.departments?.includes(department) || company.is_global         
         );
 
 
@@ -191,19 +191,6 @@ const DynamicTabsScreen = () => {
     );
   }
 
-  const handleGoLoginPress = () => {
-    setClickCount((prev) => prev + 1);
-
-    setTimeout(() => {
-      setClickCount(0); // Resetea el contador si no hay 3 clics seguidos
-    }, 1000);
-
-    if (clickCount + 1 === 3) {
-      setClickCount(0); // Reinicia el contador después de los 3 clics
-      router.push("../auth/login"); // Cambia "OtraPantalla" por el nombre de tu pantalla
-    }
-  };
-
   /* Tabs management */
   const layout = useWindowDimensions();
   const [index, setIndex] = useState(0);
@@ -248,13 +235,9 @@ const DynamicTabsScreen = () => {
     </ScrollView>
   );
   /* Tabs management */
-
   return (
-    <View style={globalStyles.container}>      
-      <TouchableOpacity onPress={handleGoLoginPress} activeOpacity={1}>
+    <View style={globalStyles.container}>
         <LocationZoneHome country={currentCountry} department={currentDepartment} />
-      </TouchableOpacity>
-
       <TabView
         navigationState={{ index, routes }}
         renderScene={renderScene}
@@ -272,7 +255,6 @@ const DynamicTabsScreen = () => {
           />
         )}
       />
-
       <SocialLinksModal
         visible={isModalSocialVisible}
         companyLinks={links}
@@ -280,7 +262,6 @@ const DynamicTabsScreen = () => {
         handleLinkPress={handleLinkPress}
         onClose={() => setModalSocialVisible(false)}
       />
-
       {/* <TouchableOpacity
         style={styles.floatingWhatsAppButton}
         onPress={openWhatsApp}

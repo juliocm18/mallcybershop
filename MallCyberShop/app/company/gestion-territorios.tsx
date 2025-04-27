@@ -2,29 +2,22 @@ import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
-  TextInput,
-  Button,
   Modal,
   FlatList,
   TouchableOpacity,
   Alert,
-  Image,
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
 } from "react-native";
 import {
-  fetchCompanies,
-  fetchCompaniesByDepartments,
-  fetchCompaniesByDepartmentsOrNull,
-  fetchCompanyLinks,
   getAllPaged,
-  pickImage,
+  getAllPagedByCategoryNoGlobal,
   updateCompany,
 } from "./functions";
 import { styles } from "./styles";
-import { Company, CompanyLink } from "./company.interface";
+import { Company } from "./company.interface";
 import { TerritoryCompanyItem } from "./territory-company.item";
 import continentsData from "../data/continents.json";
 import countriesData from "../data/countries.json";
@@ -33,6 +26,8 @@ import Select from "../components/select";
 import UserFunctions from "../user/functions";
 import { useAuth } from "../context/AuthContext";
 import { globalStyles } from "../styles";
+import { Category } from "../category/types";
+import { getCategoriesOrderByName } from "../category/functions";
 const GestionTerritorios = () => {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [modalTerritoryVisible, setModalTerritoryVisible] = useState(false);
@@ -58,6 +53,9 @@ const GestionTerritorios = () => {
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   /* pagination end */
+
+  const [categoryList, setCategoryList] = useState<Category[]>([]);
+  const [selectedCategoyListItem, setSelectedCategoyListItem] = useState<string>("INTELIGENCIAS ARTIFICIALES");
 
   const toggleSelection = (department: string) => {
     setSelectedDepartments(
@@ -98,10 +96,18 @@ const GestionTerritorios = () => {
   }, [country]);
 
   useEffect(() => {
-    loadCompanies(true);
+    loadCategories();
+    loadCompanies(true, selectedCategoyListItem);
+
   }, []);
 
-  const loadCompanies = async (reset: boolean) => {
+  const loadCategories = async () => {
+    const categories = await getCategoriesOrderByName();
+    if (categories) setCategoryList(categories);
+  };
+
+  const loadCompanies = async (reset: boolean, categoryName?: string) => {
+    if (!categoryName && !selectedCategoyListItem) console.log("no hay categoria seleccionada");
     if (loadingMore) return;
     setLoadingMore(true);
     const from = reset ? 0 : page * pageSize;
@@ -110,8 +116,8 @@ const GestionTerritorios = () => {
     // const userDepartments = await UserFunctions.getDepartmentsByUser(
     //   session?.user?.id || ""
     // );
-    console.log("Loading companies from", from, "to", to);
-    const data = await getAllPaged(from, to, "name");
+    //console.log("Loading companies from", from, "to", to);
+    const data = await getAllPagedByCategoryNoGlobal(from, to, "name", categoryName || selectedCategoyListItem);
 
     if (reset) {
       if (data) setCompanies(data);
@@ -126,7 +132,7 @@ const GestionTerritorios = () => {
   };
   const loadMore = () => {
     if (hasMore) {
-      loadCompanies(false);
+      loadCompanies(false, selectedCategoyListItem);
     }
   };
 
@@ -160,42 +166,42 @@ const GestionTerritorios = () => {
         if (!session?.user?.id) {
           Alert.alert("Error", "Usuario no identificado");
           return;
-        }      
+        }
 
-        const userDepartments : string[] = await UserFunctions.getDepartmentsByUser(session?.user?.id);
+        const userDepartments: string[] = await UserFunctions.getDepartmentsByUser(session?.user?.id);
 
         if (!Array.isArray(userDepartments)) {
-            Alert.alert("Error", "No se pudieron obtener los departamentos del usuario");
-            return;
+          Alert.alert("Error", "No se pudieron obtener los departamentos del usuario");
+          return;
         }
 
         if (!Array.isArray(companyObj.departments)) {
-            Alert.alert("Error", "Los departamentos de la empresa no son válidos");
-            return;
+          Alert.alert("Error", "Los departamentos de la empresa no son válidos");
+          return;
         }
 
         let hasPermission = true;
-        
+
 
         for (const dep of companyObj.departments) {
           if (!userDepartments.includes(dep)) {
             hasPermission = false;
             break;
           }
-        }          
+        }
 
 
         if (!hasPermission) {
-            Alert.alert("Error", "El territorio que desea asignar no le corresponde");
-            return;
-}
+          Alert.alert("Error", "El territorio que desea asignar no le corresponde");
+          return;
+        }
 
-        
+
         const updatedCompany = await updateCompany(editingId, companyObj);
         if (updatedCompany) {
           clearFields();
           setModalTerritoryVisible(false);
-          loadCompanies(true);
+          loadCompanies(true, selectedCategoyListItem);
           Alert.alert("Aviso", "Registro actualizado");
         }
       } else {
@@ -221,7 +227,7 @@ const GestionTerritorios = () => {
         if (updatedCompany) {
           clearFields();
           setModalCountryVisible(false);
-          loadCompanies(true);
+          loadCompanies(true, selectedCategoyListItem);
           Alert.alert("Aviso", "Registro actualizado");
         }
       }
@@ -240,11 +246,22 @@ const GestionTerritorios = () => {
     setCompanyName(company.name || "");
   };
 
+  const handleChangeCategoryFilter = (categoryName: string) => {
+    setSelectedCategoyListItem(categoryName);
+    loadCompanies(true, categoryName); // Pass categoryName directly instead of using state
+  };
+
   return (
     <View style={styles.container}>
-      <Text style={globalStyles.pageTitle}>Asignación de Territorios a S.E</Text>
+      <Text style={globalStyles.pageTitle}>Asignación de Territorios a S.E.</Text>
+      <Select
+        label="Filtrar por Categoría"
+        selectedValue={selectedCategoyListItem}
+        onValueChange={(itemValue) => handleChangeCategoryFilter(itemValue)}
+        items={categoryList.map((category) => ({ id: category.name || "", name: category.name || "" }))}
+      />
       <FlatList
-        style={{ height: "92%" }}
+        style={{ height: "85%" }}
         data={companies}
         keyExtractor={(item, index) => (index).toString()}
         renderItem={({ item }) => (

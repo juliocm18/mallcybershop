@@ -12,6 +12,18 @@ export const getCategories = async (): Promise<Category[] | null> => {
   }
 };
 
+export const getCategoriesOrderByName = async (): Promise<Category[] | null> => {
+  try {
+    const {data, error} = await supabase.from("category").select("*").order("name", {ascending: true});
+    if (error) throw error;
+    return data;
+  } catch (error: any) {
+    console.error("Error fetching categories:", error.message);
+    return null;
+  }
+};
+
+
 export const getFormattedRoutes = async (
   categoryNames: string[]
 ): Promise<categoryHashMap[]> => {
