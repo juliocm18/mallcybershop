@@ -1,12 +1,7 @@
-import { v4 as uuidv4 } from 'uuid';
 
 
-import { Chat, Message, UserProfile, UserSession } from '../models';
 import { supabase } from '@/app/supabase';
-import * as AuthSession from 'expo-auth-session';
-import * as WebBrowser from 'expo-web-browser';
-import { Platform } from 'react-native';
-import { makeRedirectUri } from 'expo-auth-session';
+import { Chat, Message, UserProfile, UserSession } from '../models';
 
 const ENV_REDIRECT_URL = 'exp://192.168.18.22:8081';
 const TABLES = {
@@ -16,8 +11,8 @@ const TABLES = {
   MESSAGE: 'message'
 };
 
-import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
 
 // Configura esto al iniciar tu aplicación (por ejemplo, en tu App.tsx o contexto de autenticación)
 GoogleSignin.configure({
@@ -35,15 +30,15 @@ export const signInWithGoogle = async () => {
 
     // 2. Iniciar sesión
     const { data } = await GoogleSignin.signIn();
-
+    console.log("data google signin",data)
     if (!data?.idToken) throw new Error("No se obtuvo token de Google");
-
+    
     // 3. Autenticar con Supabase
     const { data: { session }, error } = await supabase.auth.signInWithIdToken({
       provider: 'google',
       token: data.idToken,
     });
-
+    console.log("data google signin supabase", session)
     if (error || !session) throw error || new Error("Sesión no creada");
 
     return session;
@@ -196,7 +191,7 @@ export const sendMessage = async (message: Omit<Message, 'id' | 'time' | 'status
       time: new Date().toISOString(),
       status: 'sent',
       is_liked: false,
-      likes: JSON.stringify([])
+      likes: []
     };
 
     const { data, error } = await supabase
@@ -258,15 +253,15 @@ export const getOnlineUsersByChatLocation = async (
       .from(TABLES.USER_PROFILE)
       .select(`
         *,
-        user_session:user_id (
-          isOnline,
+        user_session (
+          is_online,
           typing,
           last_seen_at
         )
       `)
       .eq('country', chat.country)
       .eq('city', chat.city)
-      .eq('user_session.isOnline', true);
+      .eq('user_session.is_online', true);
 
     // Filtro adicional para typing si se solicita
     if (!includeTyping) {
@@ -502,6 +497,7 @@ export const upsertUserProfile = async (userProfile: UserProfile): Promise<UserP
 // Función para actualizar el estado de la sesión del usuario
 export const updateUserSessionStatus = async (userId: string, status: 'online' | 'offline', country?: string, city?: string) => {
   try {
+    console.log("userID" ,userId)
     const { data, error } = await supabase
       .from('user_session')
       .upsert({
@@ -525,7 +521,7 @@ export const updateUserSessionStatus = async (userId: string, status: 'online' |
 export const blockUser = async (blockerId: string, blockedId: string): Promise<boolean> => {
   try {
     const { error } = await supabase
-      .from('blocked_users')
+      .from('blocked_user')
       .insert({
         blocker_id: blockerId,
         blocked_id: blockedId,
@@ -543,7 +539,7 @@ export const blockUser = async (blockerId: string, blockedId: string): Promise<b
 export const unblockUser = async (blockerId: string, blockedId: string): Promise<boolean> => {
   try {
     const { error } = await supabase
-      .from('blocked_users')
+      .from('blocked_user')
       .delete()
       .eq('blocker_id', blockerId)
       .eq('blocked_id', blockedId);
@@ -559,7 +555,7 @@ export const unblockUser = async (blockerId: string, blockedId: string): Promise
 export const getBlockedUsers = async (userId: string): Promise<string[]> => {
   try {
     const { data, error } = await supabase
-      .from('blocked_users')
+      .from('blocked_user')
       .select('blocked_id')
       .eq('blocker_id', userId);
 
@@ -574,7 +570,7 @@ export const getBlockedUsers = async (userId: string): Promise<string[]> => {
 export const isUserBlocked = async (blockerId: string, blockedId: string): Promise<boolean> => {
   try {
     const { data, error } = await supabase
-      .from('blocked_users')
+      .from('blocked_user')
       .select('*')
       .eq('blocker_id', blockerId)
       .eq('blocked_id', blockedId)

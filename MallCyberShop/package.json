@@ -5,7 +5,7 @@
   "scripts": {
     "start": "expo start",
     "start:dev": "expo start --offline",
-    "clean:android": "npx expo clean:android",
+    "clean:android": "npx expo prebuild --clean",
     "run:android": "npx expo run:android",
     "run:ios": "expo run:ios",
     "reset-project": "node ./scripts/reset-project.js",

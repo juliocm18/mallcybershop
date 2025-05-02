@@ -117,7 +117,7 @@ export const Chat: React.FC<ChatProps> = ({
   const getAvatarColor = useCallback((userId: string) => {
     return generatePastelColor(userId);
   }, []);
-  // // Efecto para combinar mensajes iniciales con los de ejemplo si no hay iniciales
+  
   useEffect(() => {
     setMessages(initialMessages);
   }, [initialMessages]);
@@ -275,7 +275,7 @@ export const Chat: React.FC<ChatProps> = ({
     if (!chatId || !currentUserProfile?.id) return;
 
     const subscription = supabase
-      .channel('messages_changes')
+      .channel('custom-all-channel')
       .on(
         'postgres_changes',
         {
@@ -575,7 +575,7 @@ export const Chat: React.FC<ChatProps> = ({
         activeAnimationId={activeAnimationId}
       />
     );
-  }, [chatType, currentUserProfile?.id, handleLike, handleUserPress, activeAnimationId, getAvatarColor]);
+  }, [chatType, currentUserProfile?.id, handleLike, handleUserPress, activeAnimationId, getAvatarColor, messages]);
 
   // Renderizar item de usuario en el sidebar
   const renderUserItem = useCallback(({ item }: { item: UserProfile }) => {
