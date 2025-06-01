@@ -7,7 +7,7 @@ import {
   useWindowDimensions,
   ScrollView,
 } from "react-native";
-import { DraggableGrid } from "react-native-draggable-grid";
+//import { DraggableGrid } from "react-native-draggable-grid";
 import { handleLinkPress, getDeviceIdentifier } from "../functions";
 import { useRouter } from "expo-router";
 import { globalStyles } from "../styles";
@@ -23,6 +23,9 @@ import { confirmButtonStyles } from "react-native-modal-datetime-picker";
 import LocationHome from "../locationhome";
 import LocationZoneHome from "./location-home";
 import ChatButton from "./chat-button";
+import { IconItem } from "./icon-item";
+import { GridItem } from "./grid-item";
+import { categoryHashMap } from "../category/category";
 
 const STORAGE_KEY = "icon_order";
 
@@ -202,7 +205,7 @@ const DynamicTabsScreen = () => {
       scrollEnabled={scrollEnabled}
     >
       <View style={{ flex: 1, backgroundColor: "#ffdcbf" }}>
-        <DraggableGrid
+        {/* <DraggableGrid
           numColumns={4}
           renderItem={(item: IconItem) => (
             <View style={globalStyles.logoContainer}>
@@ -225,12 +228,12 @@ const DynamicTabsScreen = () => {
           data={companyByCategory.get(route.title) || []}
           onItemPress={toggleModalSocial}
           onDragStart={() => setScrollEnabled(false)} // Deshabilita el scroll al arrastrar
-          onDragRelease={(newData) => {
+          onDragRelease={(newData: IconItem[]) => {
             if (isAllowReorder) {
               saveIconOrder(newData);
             }
           }}
-        />
+        /> */}
       </View>
     </ScrollView>
   );
