@@ -32,7 +32,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, disabled })
           style={styles.input}
           value={message}
           onChangeText={setMessage}
-          placeholder="Type a message..."
+          placeholder="Escribe un mensaje..."
           placeholderTextColor="#999"
           multiline
           maxLength={500}

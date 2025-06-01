@@ -51,7 +51,7 @@ export const OnlineUsersDrawer: React.FC<OnlineUsersDrawerProps> = ({
         <View style={styles.drawer}>
           <View style={styles.container}>
             <View style={styles.header}>
-              <Text style={styles.title}>Online Users</Text>
+              <Text style={styles.title}>Usuarios en línea</Text>
               <TouchableOpacity onPress={onClose} style={styles.closeButton}>
                 <Text style={styles.closeButtonText}>×</Text>
               </TouchableOpacity>
@@ -65,7 +65,7 @@ export const OnlineUsersDrawer: React.FC<OnlineUsersDrawerProps> = ({
                   router.push('/chatroom');
                 }}
               >
-                <Text style={styles.groupChatButtonText}>Go to Group Chat</Text>
+                <Text style={styles.groupChatButtonText}>Ir al chat de grupo</Text>
               </TouchableOpacity>
             )}
 
