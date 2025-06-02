@@ -239,7 +239,7 @@ const DynamicTabsScreen = () => {
   );
   /* Tabs management */
   return (
-    <View style={globalStyles.container}>
+    <View style={[globalStyles.container, {paddingTop: 25}]}>
         <LocationZoneHome country={currentCountry} department={currentDepartment} />
       <TabView
         navigationState={{ index, routes }}
