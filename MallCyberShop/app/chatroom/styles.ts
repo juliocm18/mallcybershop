@@ -7,6 +7,47 @@ export const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
+  headerButtonsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+  },
+  headerButton: {
+    alignItems: 'center',
+    marginHorizontal: 8,
+    padding: 4,
+  },
+  headerButtonText: {
+    fontSize: 12,
+    color: '#007AFF',
+    marginTop: 2,
+  },
+  badgeContainer: {
+    position: 'absolute',
+    top: -5,
+    right: -10,
+    backgroundColor: 'red',
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  badgeText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+  },
+  backButtonText: {
+    color: '#007AFF',
+    fontSize: 16,
+    marginLeft: 4,
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -231,6 +272,50 @@ export const styles = StyleSheet.create({
     color: 'rgba(255, 255, 255, 0.7)',
   },
   otherMessageTime: {
+    color: '#666',
+  },
+  messageFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  messageOptionsButton: {
+    padding: 4,
+    marginLeft: 8,
+  },
+  messageOptionsContainer: {
+    position: 'absolute',
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    padding: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+    zIndex: 1000,
+    width: 150,
+  },
+  ownMessageOptions: {
+    right: 0,
+    bottom: '100%',
+    marginBottom: 8,
+  },
+  otherMessageOptions: {
+    left: 0,
+    bottom: '100%',
+    marginBottom: 8,
+  },
+  messageOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  messageOptionText: {
+    marginLeft: 8,
+    fontSize: 14,
     color: '#666',
   },
 });

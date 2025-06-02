@@ -1,15 +1,56 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Platform, SafeAreaView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { supabase } from '@/app/supabase';
 
 interface ChatInputProps {
   onSendMessage: (message: string) => Promise<void>;
   disabled?: boolean;
+  roomId: string;
+  currentUserId: string;
+  userName: string;
 }
 
-export const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, disabled }) => {
+export const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, disabled, roomId, currentUserId, userName }) => {
   const [message, setMessage] = useState('');
   const [sending, setSending] = useState(false);
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  
+  // Broadcast typing status when user types
+  const broadcastTypingStatus = async () => {
+    try {
+      await supabase
+        .channel(`typing-${roomId}`)
+        .send({
+          type: 'broadcast',
+          event: 'typing',
+          payload: {
+            user_id: currentUserId,
+            name: userName
+          }
+        });
+    } catch (error) {
+      console.error('Error broadcasting typing status:', error);
+    }
+  };
+  
+  // Debounced typing indicator
+  const handleTyping = () => {
+    // Clear any existing timeout
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+    
+    // Only broadcast if there's actual content
+    if (message.trim().length > 0) {
+      broadcastTypingStatus();
+    }
+    
+    // Set a new timeout
+    typingTimeoutRef.current = setTimeout(() => {
+      typingTimeoutRef.current = null;
+    }, 3000);
+  };
 
   const handleSend = async () => {
     if (!message.trim() || sending || disabled) return;
@@ -31,7 +72,10 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, disabled })
         <TextInput
           style={styles.input}
           value={message}
-          onChangeText={setMessage}
+          onChangeText={(text) => {
+            setMessage(text);
+            handleTyping();
+          }}
           placeholder="Escribe un mensaje..."
           placeholderTextColor="#999"
           multiline

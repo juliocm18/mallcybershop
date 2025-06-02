@@ -66,6 +66,7 @@ export interface ChatRoomProps {
   roomId: string;
   currentUser: {
     id: string;
+    name?: string;
   };
   chatType?: 'group' | 'individual';
   recipientId?: string;
@@ -75,6 +76,7 @@ export interface ChatRoomProps {
 export interface MessageBubbleProps {
   message: Message;
   isOwnMessage: boolean;
+  currentUserId: string;
 }
 
 export interface ParticipantListProps {
@@ -99,7 +101,7 @@ export const REALTIME_LISTEN_TYPES = {
 export interface UserStatus {
   user_id: string;
   is_online: boolean;
-  last_seen: string;
+  last_seen?: string;
 }
 
 export interface OnlineUsersDrawerProps {

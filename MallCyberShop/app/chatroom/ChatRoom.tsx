@@ -1,20 +1,21 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View,
+  FlatList,
+  ActivityIndicator,
   Text,
   TouchableOpacity,
-  StyleSheet,
-  KeyboardAvoidingView,
   Platform,
-  ActivityIndicator,
-  FlatList,
-  SafeAreaView
+  SafeAreaView,
+  KeyboardAvoidingView,
+  StyleSheet
 } from 'react-native';
 import { supabase } from '@/app/supabase';
-import { Message, ChatRoomProps, UserProfile, RoomDetails, RoomResponse } from './types';
 import { MessageBubble } from './components/MessageBubble';
 import { ChatInput } from './components/ChatInput';
 import { OnlineUsersDrawer } from './components/OnlineUsersDrawer';
+import { TypingIndicator } from './components/TypingIndicator';
+import { ChatRoomProps, Message, UserProfile, RoomDetails, RoomResponse, UserStatus } from './types';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
@@ -29,10 +30,18 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [roomDetails, setRoomDetails] = useState<RoomDetails | null>(null);
   const [roomName, setRoomName] = useState('');
   const [actualRoomId, setActualRoomId] = useState<string | null>(null);
+  const [showParticipants, setShowParticipants] = useState(false);
   const [selectedParticipant, setSelectedParticipant] = useState<string | null>(null);
+  const [onlineUsers, setOnlineUsers] = useState<UserStatus[]>([]);
+  const [showOnlineUsers, setShowOnlineUsers] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [hasMoreMessages, setHasMoreMessages] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [page, setPage] = useState(0);
+  const PAGE_SIZE = 20; // Number of messages to load per page
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messageIdsRef = useRef(new Set<string>());
   const flatListRef = useRef<FlatList>(null);
@@ -59,12 +68,22 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
     }
   });
 
-  const fetchMessages = async () => {
+  const fetchMessages = async (isLoadingMore = false) => {
     try {
       if (!actualRoomId) {
         console.log('No valid room ID available yet');
         return;
       }
+
+      if (isLoadingMore) {
+        setIsLoadingMore(true);
+      } else {
+        setLoading(true);
+      }
+
+      // Calculate range for pagination
+      const from = isLoadingMore ? page * PAGE_SIZE : 0;
+      const to = from + PAGE_SIZE - 1;
 
       let query = supabase
         .from('messages')
@@ -82,7 +101,8 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
           )
         `)
         .eq('room_id', actualRoomId)
-        .order('created_at', { ascending: true });
+        .order('created_at', { ascending: false }) // Newest first for pagination
+        .range(from, to);
 
       if (chatType === 'individual') {
         // For private chats, get messages between both users in either direction
@@ -92,21 +112,40 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
         );
       }
 
-      const { data: messages, error } = await query;
+      const { data: fetchedMessages, error } = await query;
 
       if (error) {
         throw error;
       }
 
-      if (messages) {
-        const transformedMessages = messages.map(transformMessage);
-        messageIdsRef.current = new Set(transformedMessages.map(msg => msg.id));
-        setMessages(transformedMessages);
+      if (fetchedMessages) {
+        // Check if we have more messages to load
+        setHasMoreMessages(fetchedMessages.length === PAGE_SIZE);
+        
+        // Transform and update messages
+        const transformedMessages = fetchedMessages.map(transformMessage).reverse(); // Reverse to get chronological order
+        
+        if (isLoadingMore) {
+          // Add new messages to the beginning of the list
+          const newMessageIds = new Set(transformedMessages.map(msg => msg.id));
+          const updatedMessageIds = new Set([...newMessageIds, ...messageIdsRef.current]);
+          messageIdsRef.current = updatedMessageIds;
+          
+          setMessages(prevMessages => [...transformedMessages, ...prevMessages]);
+          setPage(prevPage => prevPage + 1);
+        } else {
+          // Replace all messages
+          messageIdsRef.current = new Set(transformedMessages.map(msg => msg.id));
+          setMessages(transformedMessages);
+          setPage(1); // Reset to page 1 since we loaded the first page
+        }
       }
     } catch (error) {
       console.error('Error fetching messages:', error);
+      setError('Failed to load messages');
     } finally {
       setLoading(false);
+      setIsLoadingMore(false);
     }
   };
 
@@ -282,7 +321,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
           roomData = newRoom;
         }
       } else {
-        // Public chat
+        // Public chat - use maybeSingle() instead of single() to avoid error when no room is found
         const { data: roomChat, error: roomError } = await supabase
           .from('rooms')
           .select(`
@@ -302,9 +341,37 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
           `)
           .eq('name', roomPublicName)
           .eq('type', 'group')
-          .single() as { data: RoomResponse | null; error: any };
-
-        roomData = roomChat;
+          .limit(1);
+          
+        if (roomError) {
+          console.error('Error fetching room details:', roomError);
+          setRoomName('Chat Error');
+          return;
+        }
+        
+        // Transform the array result to match RoomResponse type
+        if (roomChat && roomChat.length > 0) {
+          const room = roomChat[0];
+          roomData = {
+            id: room.id,
+            type: room.type,
+            name: room.name,
+            created_by: room.created_by,
+            recipient_id: room.recipient_id,
+            creator: room.creator && Array.isArray(room.creator) && room.creator.length > 0 
+              ? { name: room.creator[0].name, avatar_url: room.creator[0].avatar_url }
+              : room.creator 
+                ? { name: room.creator.name, avatar_url: room.creator.avatar_url }
+                : null,
+            recipient: room.recipient && Array.isArray(room.recipient) && room.recipient.length > 0
+              ? { name: room.recipient[0].name, avatar_url: room.recipient[0].avatar_url }
+              : room.recipient
+                ? { name: room.recipient.name, avatar_url: room.recipient.avatar_url }
+                : null
+          };
+        } else {
+          roomData = null;
+        }
         if (!roomData) {
           // Create new public room
           const { data: newRoom, error: createError } = await supabase
@@ -402,6 +469,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
     <MessageBubble
       message={item}
       isOwnMessage={item.user_id === currentUser.id}
+      currentUserId={currentUser.id}
     />
   );
 
@@ -426,13 +494,11 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
 
         <View style={styles.messagesContainer}>
           {loading ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color="#0084ff" />
+            <View style={{ flex: 1 }}>
+              <ActivityIndicator size="large" color="#fb8436" style={{ marginTop: 20 }} />
             </View>
           ) : error ? (
-            <View style={styles.errorContainer}>
-              <Text style={styles.errorText}>{error}</Text>
-            </View>
+            <Text style={{ color: 'red', textAlign: 'center', marginTop: 20 }}>{error}</Text>
           ) : (
             <FlatList
               ref={flatListRef}
@@ -443,6 +509,38 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
               onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
               onLayout={() => flatListRef.current?.scrollToEnd({ animated: true })}
               keyboardShouldPersistTaps="handled"
+              ListHeaderComponent={
+                hasMoreMessages ? (
+                  <TouchableOpacity 
+                    style={{
+                      padding: 10,
+                      backgroundColor: '#f0f0f0',
+                      borderRadius: 20,
+                      alignItems: 'center',
+                      marginVertical: 10,
+                      flexDirection: 'row',
+                      justifyContent: 'center'
+                    }}
+                    onPress={() => fetchMessages(true)}
+                    disabled={isLoadingMore}
+                  >
+                    {isLoadingMore ? (
+                      <ActivityIndicator size="small" color="#fb8436" style={{ marginRight: 8 }} />
+                    ) : (
+                      <Ionicons name="arrow-up" size={16} color="#666" style={{ marginRight: 8 }} />
+                    )}
+                    <Text style={{ color: '#666' }}>
+                      {isLoadingMore ? 'Loading...' : 'Load older messages'}
+                    </Text>
+                  </TouchableOpacity>
+                ) : null
+              }
+            />
+          )}
+          {actualRoomId && (
+            <TypingIndicator
+              roomId={actualRoomId}
+              currentUserId={currentUser.id}
             />
           )}
         </View>
@@ -450,6 +548,9 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
         <ChatInput
           onSendMessage={handleSendMessage}
           disabled={loading || !!error}
+          roomId={actualRoomId || ''}
+          currentUserId={currentUser.id}
+          userName={currentUser.name || 'Anonymous User'}
         />
       </SafeAreaView>
 
