@@ -15,6 +15,7 @@ import { MessageBubble } from './components/MessageBubble';
 import { ChatInput } from './components/ChatInput';
 import { OnlineUsersDrawer } from './components/OnlineUsersDrawer';
 import { TypingIndicator } from './components/TypingIndicator';
+import { UserAliasModal } from './components/UserAliasModal';
 import { ChatRoomProps, Message, UserProfile, RoomDetails, RoomResponse, UserStatus } from './types';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -42,6 +43,8 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [page, setPage] = useState(0);
   const PAGE_SIZE = 20; // Number of messages to load per page
+  const [showAliasModal, setShowAliasModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messageIdsRef = useRef(new Set<string>());
   const flatListRef = useRef<FlatList>(null);
@@ -465,17 +468,31 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
     setIsDrawerOpen(false); // Close drawer after selection
   };
 
-  const renderMessage = ({ item }: { item: Message }) => (
-    <MessageBubble
-      message={item}
-      isOwnMessage={item.user_id === currentUser.id}
-      currentUserId={currentUser.id}
-    />
-  );
+  const renderMessage = ({ item }: { item: Message }) => {
+    const isOwnMessage = item.user_id === currentUser.id;
+    return (
+      <MessageBubble 
+        message={item} 
+        isOwnMessage={isOwnMessage} 
+        currentUserId={currentUser.id} 
+        onUserPress={handleUserPress}
+      />
+    );
+  };
+
+  const handleUserPress = (user: UserProfile) => {
+    setSelectedUser(user);
+    setShowAliasModal(true);
+  };
+  
+  const handleCloseAliasModal = () => {
+    setShowAliasModal(false);
+    setSelectedUser(null);
+  };
 
   return (
     <KeyboardAvoidingView 
-      style={{ flex: 1 }}
+      style={{ flex: 1, marginBottom: 50 }}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
     >
@@ -560,6 +577,13 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
         onUserSelect={handleParticipantSelect}
         currentUserId={currentUser.id}
         chatType={chatType}
+      />
+      
+      <UserAliasModal
+        isVisible={showAliasModal}
+        onClose={handleCloseAliasModal}
+        user={selectedUser}
+        currentUserId={currentUser.id}
       />
     </KeyboardAvoidingView>
   );

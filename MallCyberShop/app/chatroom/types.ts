@@ -1,5 +1,14 @@
 import { User } from '@supabase/supabase-js';
 
+export interface UserAlias {
+  id: string;
+  user_id: string;
+  target_user_id: string;
+  alias: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface UserProfile {
   id: string;
   name: string;
@@ -9,6 +18,25 @@ export interface UserProfile {
     last_seen: string;
   };
   roomId?: string;
+  alias?: string; // Custom alias set by the current user
+}
+
+export type MessageType = 'text' | 'image' | 'pdf' | 'video' | 'audio' | 'location';
+
+export interface MediaInfo {
+  url: string;
+  filename?: string;
+  filesize?: number;
+  duration?: number; // For audio/video in seconds
+  thumbnail_url?: string; // For video thumbnails
+}
+
+export interface LocationInfo {
+  url: string;
+  name?: string;
+  address?: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface Message {
@@ -19,6 +47,9 @@ export interface Message {
   user_id: string;
   recipient_id?: string;
   is_private: boolean;
+  message_type: MessageType;
+  media_info?: MediaInfo;
+  location_info?: LocationInfo;
   user: {
     name: string;
     avatar_url?: string;
@@ -77,6 +108,7 @@ export interface MessageBubbleProps {
   message: Message;
   isOwnMessage: boolean;
   currentUserId: string;
+  onUserPress?: (user: UserProfile) => void;
 }
 
 export interface ParticipantListProps {
