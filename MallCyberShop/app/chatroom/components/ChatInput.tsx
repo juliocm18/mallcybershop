@@ -186,7 +186,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, disabled, r
         const fileInfo = await FileSystem.getInfoAsync(selectedVideo.uri);
 
         // Check file size (10MB limit)
-        if (fileInfo.size && fileInfo.size > 10 * 1024 * 1024) {
+        if (fileInfo.size && fileInfo.size > 15 * 1024 * 1024) {
           Alert.alert('File too large', 'Please select a video smaller than 10MB');
           return;
         }

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, Image, TouchableOpacity, Alert, Clipboard, Modal, TextInput, Linking, ActivityIndicator, StyleSheet, Dimensions, Platform } from 'react-native';
+import { View, Text, Image, TouchableOpacity, Alert, Clipboard, Modal, TextInput, Linking, ActivityIndicator, StyleSheet, Dimensions, Platform, SafeAreaView } from 'react-native';
 import { MessageBubbleProps } from '../types';
 import { styles as baseStyles } from '../styles';
 import { MessageReactions } from './MessageReactions';
@@ -9,7 +9,7 @@ import * as FileSystem from 'expo-file-system';
 import * as WebBrowser from 'expo-web-browser';
 // We'll use these modules without type checking for now
 // @ts-ignore
-import { Audio, Video } from 'expo-av';
+import { Audio, ResizeMode, Video } from 'expo-av';
 // @ts-ignore
 import * as MediaLibrary from 'expo-media-library';
 // @ts-ignore
@@ -201,8 +201,8 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isOwnMess
   const [showFullImage, setShowFullImage] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [reportReason, setReportReason] = useState('');
-  const [downloadProgress, setDownloadProgress] = useState(0);
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState(0);
   const [audioPlaybackPosition, setAudioPlaybackPosition] = useState(0);
   const [audioSound, setAudioSound] = useState<Audio.Sound | null>(null);
   const [userAlias, setUserAlias] = useState<string | null>(null);
@@ -337,7 +337,66 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isOwnMess
     return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
   };
 
+
   const downloadFile = async () => {
+    if (!message.media_info?.url) return;
+
+    try {
+      setDownloadProgress(0);
+
+      const url = message.media_info.url;
+      const fileName = message.media_info.filename || 'downloaded_file.png';
+
+      // Descargar en cache temporal
+      const fileUri = `${FileSystem.cacheDirectory}${fileName}`;
+
+      const downloadResumable = FileSystem.createDownloadResumable(
+        url,
+        fileUri,
+        {},
+        (progress) => {
+          if (progress.totalBytesExpectedToWrite > 0) {
+            const progressPercent = progress.totalBytesWritten / progress.totalBytesExpectedToWrite;
+            setDownloadProgress(Math.round(progressPercent * 100));
+          }
+        }
+      );
+
+      const result = await downloadResumable.downloadAsync();
+
+      if (!result || !result.uri) {
+        throw new Error('No se pudo descargar el archivo correctamente.');
+      }
+
+      const uri = result.uri;
+
+      // Solicitar permisos para galería
+      const { status } = await MediaLibrary.requestPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permiso denegado', 'No se puede guardar la imagen sin permiso.');
+        return;
+      }
+
+      // Crear asset multimedia
+      const asset = await MediaLibrary.createAssetAsync(uri);
+
+      if (Platform.OS === 'android') {
+        // En Android, guardamos en álbum "Download"
+        await MediaLibrary.createAlbumAsync('Download', asset, false);
+      } else {
+        // En iOS, solo crear asset ya la galería lo detecta
+        // Opcional: podrías crear álbum personalizado también si quieres
+      }
+
+      Alert.alert('Descarga completa', 'La imagen se guardó en tu galería.');
+    } catch (error) {
+      console.error('Error downloading file:', error);
+      Alert.alert('Error', 'No se pudo descargar el archivo');
+    }
+  };
+
+  const downloadFile2 = async () => {
+    console.log("message.media_info", message.media_info);
     if (!message.media_info?.url) return;
 
     try {
@@ -362,7 +421,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isOwnMess
       const result = await downloadResumable.downloadAsync();
 
       if (result) {
-        Alert.alert('Download Complete', `File saved to ${result.uri}`, [
+        Alert.alert('Download Complete1', `File saved to ${result.uri}`, [
           { text: 'OK' },
         ]);
       }
@@ -378,19 +437,19 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isOwnMess
         Alert.alert('Error', 'Location information not available');
         return;
       }
-      
+
       // Try to open in Google Maps or Apple Maps
       const { latitude, longitude } = message.location_info;
       let url = '';
-      
+
       if (Platform.OS === 'ios') {
         url = `maps:?q=${latitude},${longitude}`;
       } else {
         url = `geo:${latitude},${longitude}?q=${latitude},${longitude}`;
       }
-      
+
       const canOpen = await Linking.canOpenURL(url);
-      
+
       if (canOpen) {
         await Linking.openURL(url);
       } else {
@@ -439,8 +498,22 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isOwnMess
 
   // openLocation function is already defined above
 
+  const openPdfPreview = async () => {
+    try {
+      if (!message.media_info?.url) {
+        Alert.alert('Error', 'PDF URL not available');
+        return;
+      }
+      const viewerUrl = `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(message.media_info.url)}`;
+      // Use WebBrowser to open the PDF in an in-app browser
+      await WebBrowser.openBrowserAsync(viewerUrl);
+    } catch (error) {
+      console.error('Error opening PDF preview:', error);
+      Alert.alert('Error', 'Failed to open PDF preview');
+    }
+  };
+
   const renderMessageContent = () => {
-    console.log("message.message_type", message.message_type);
     switch (message.message_type) {
       case 'image':
         return (
@@ -461,7 +534,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isOwnMess
 
       case 'pdf':
         return (
-          <TouchableOpacity style={mediaStyles.documentContainer} onPress={downloadFile}>
+          <TouchableOpacity style={mediaStyles.documentContainer} onPress={openPdfPreview}>
             <View style={mediaStyles.documentIconContainer}>
               <MaterialIcons name="picture-as-pdf" size={36} color="#e74c3c" />
             </View>
@@ -473,7 +546,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isOwnMess
                 PDF • {formatFileSize(message.media_info?.filesize)}
               </Text>
             </View>
-            <Ionicons name="download-outline" size={24} color="#fb8436" />
+            <Ionicons name="eye-outline" size={24} color="#fb8436" />
           </TouchableOpacity>
         );
 
@@ -550,7 +623,6 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isOwnMess
         );
 
       case 'text':
-        console.log('estoy en texto', message.content);
         if (message.content) {
           return (
             <Text style={[baseStyles.messageText, isOwnMessage ? baseStyles.ownMessageText : baseStyles.otherMessageText]}>
@@ -581,7 +653,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isOwnMess
 
       <View style={[baseStyles.messageBubble, isOwnMessage ? baseStyles.ownMessage : baseStyles.otherMessage]}>
         {!isOwnMessage && (
-          <TouchableOpacity 
+          <TouchableOpacity
             onPress={() => {
               if (onUserPress && message.user) {
                 onUserPress({
@@ -599,7 +671,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isOwnMess
             </Text>
           </TouchableOpacity>
         )}
-        
+
         {renderMessageContent()}
 
         <View style={baseStyles.messageFooter}>
