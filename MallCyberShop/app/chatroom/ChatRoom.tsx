@@ -16,7 +16,7 @@ import { ChatInput } from './components/ChatInput';
 import { OnlineUsersDrawer } from './components/OnlineUsersDrawer';
 import { TypingIndicator } from './components/TypingIndicator';
 import { UserAliasModal } from './components/UserAliasModal';
-import { ChatRoomProps, Message, UserProfile, RoomDetails, RoomResponse, UserStatus } from './types';
+import { ChatRoomProps, Message, UserProfile, RoomDetails, RoomResponse, UserStatus, MessageType, MediaInfo, LocationInfo } from './types';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
@@ -64,6 +64,9 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
     user_id: msg.user_id,
     recipient_id: msg.recipient_id,
     is_private: msg.is_private,
+    message_type: msg.message_type || 'text',
+    media_info: msg.media_info || undefined,
+    location_info: msg.location_info || undefined,
     user: {
       name: msg.user?.name || 'Unknown',
       avatar_url: msg.user?.avatar_url
@@ -97,6 +100,9 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
           user_id,
           recipient_id,
           is_private,
+          message_type,
+          media_info,
+          location_info,
           user:profiles!messages_user_id_fkey (
             name,
             avatar_url
@@ -177,6 +183,9 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
                 user_id,
                 recipient_id,
                 is_private,
+                message_type,
+                media_info,
+                location_info,
                 user:profiles!messages_user_id_fkey (
                   name,
                   avatar_url
@@ -200,9 +209,14 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
     };
   }, [actualRoomId]);
 
-  const handleSendMessage = async (content: string) => {
+  const handleSendMessage = async (
+    content: string,
+    messageType: MessageType = 'text',
+    mediaInfo?: MediaInfo,
+    locationInfo?: LocationInfo
+  ) => {
     try {
-      console.log('Sending message:', content);
+      console.log('Sending message:', content, 'type:', messageType);
 
       if (!actualRoomId) {
         console.error('No valid room ID available');
@@ -215,7 +229,9 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
         user_id: currentUser.id,
         recipient_id: chatType === 'individual' ? recipientId : null,
         is_private: chatType === 'individual',
-       
+        message_type: messageType,
+        media_info: mediaInfo || null,
+        location_info: locationInfo || null
       };
 
       const { data: newMessage, error } = await supabase
@@ -229,6 +245,9 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
           user_id,
           recipient_id,
           is_private,
+          message_type,
+          media_info,
+          location_info,
           user:profiles!messages_user_id_fkey (
             name,
             avatar_url

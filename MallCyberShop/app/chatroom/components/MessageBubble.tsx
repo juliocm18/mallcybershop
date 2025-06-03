@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, Image, TouchableOpacity, Alert, Clipboard, Modal, TextInput, Linking, ActivityIndicator, StyleSheet, Dimensions } from 'react-native';
+import { View, Text, Image, TouchableOpacity, Alert, Clipboard, Modal, TextInput, Linking, ActivityIndicator, StyleSheet, Dimensions, Platform } from 'react-native';
 import { MessageBubbleProps } from '../types';
 import { styles as baseStyles } from '../styles';
 import { MessageReactions } from './MessageReactions';
@@ -369,8 +369,39 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isOwnMess
     } catch (error) {
       console.error('Error downloading file:', error);
       Alert.alert('Error', 'Failed to download file');
-    } finally {
-      setDownloadProgress(0);
+    }
+  };
+
+  const openLocation = async () => {
+    try {
+      if (!message.location_info) {
+        Alert.alert('Error', 'Location information not available');
+        return;
+      }
+      
+      // Try to open in Google Maps or Apple Maps
+      const { latitude, longitude } = message.location_info;
+      let url = '';
+      
+      if (Platform.OS === 'ios') {
+        url = `maps:?q=${latitude},${longitude}`;
+      } else {
+        url = `geo:${latitude},${longitude}?q=${latitude},${longitude}`;
+      }
+      
+      const canOpen = await Linking.canOpenURL(url);
+      
+      if (canOpen) {
+        await Linking.openURL(url);
+      } else {
+        // Fallback to Google Maps web URL
+        await Linking.openURL(
+          `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`
+        );
+      }
+    } catch (error) {
+      console.error('Error opening location:', error);
+      Alert.alert('Error', 'Failed to open location');
     }
   };
 
@@ -406,13 +437,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isOwnMess
     }
   };
 
-  const openLocation = () => {
-    if (message.location_info?.url) {
-      Linking.openURL(message.location_info.url).catch(() => {
-        Alert.alert('Error', 'Could not open the location');
-      });
-    }
-  };
+  // openLocation function is already defined above
 
   const renderMessageContent = () => {
     console.log("message.message_type", message.message_type);
@@ -427,7 +452,8 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isOwnMess
             />
             {message.media_info?.filename && (
               <Text style={mediaStyles.mediaCaption}>
-                {message.media_info.filename} ({formatFileSize(message.media_info.filesize)})
+                {/*{message.media_info.filename} */}
+                ({formatFileSize(message.media_info.filesize)})
               </Text>
             )}
           </TouchableOpacity>

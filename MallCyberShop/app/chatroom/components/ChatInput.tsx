@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-  View, 
-  TextInput, 
-  TouchableOpacity, 
-  StyleSheet, 
-  ActivityIndicator, 
-  Platform, 
-  SafeAreaView, 
-  Modal, 
+import {
+  View,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  ActivityIndicator,
+  Platform,
+  SafeAreaView,
+  Modal,
   Text,
   Alert,
   Linking
@@ -20,6 +20,7 @@ import { Audio } from 'expo-av';
 import { Ionicons, MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
 import { supabase } from '@/app/supabase';
 import { MediaInfo, LocationInfo, MessageType } from '../types';
+import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 
 interface ChatInputProps {
   onSendMessage: (message: string, messageType: MessageType, mediaInfo?: MediaInfo, locationInfo?: LocationInfo) => Promise<void>;
@@ -40,7 +41,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, disabled, r
   const [uploadProgress, setUploadProgress] = useState(0);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const recordingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  
+
   // Broadcast typing status when user types
   const broadcastTypingStatus = async () => {
     try {
@@ -58,19 +59,19 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, disabled, r
       console.error('Error broadcasting typing status:', error);
     }
   };
-  
+
   // Debounced typing indicator
   const handleTyping = () => {
     // Clear any existing timeout
     if (typingTimeoutRef.current) {
       clearTimeout(typingTimeoutRef.current);
     }
-    
+
     // Only broadcast if there's actual content
     if (message.trim().length > 0) {
       broadcastTypingStatus();
     }
-    
+
     // Set a new timeout
     typingTimeoutRef.current = setTimeout(() => {
       typingTimeoutRef.current = null;
@@ -90,48 +91,51 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, disabled, r
       setSending(false);
     }
   };
-  
+
   const toggleMediaOptions = () => {
     setShowMediaOptions(!showMediaOptions);
   };
-  
-  // Image handling
-  const pickImage = async () => {
-    try {
-      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (!permissionResult.granted) {
-        Alert.alert('Permission required', 'You need to grant permission to access your photos');
-        return;
-      }
-      
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        quality: 0.8,
-        allowsMultipleSelection: false,
-      });
-      
-      if (!result.canceled && result.assets && result.assets.length > 0) {
-        const selectedImage = result.assets[0];
-        const fileInfo = await FileSystem.getInfoAsync(selectedImage.uri);
-        
-        // Check file size (10MB limit)
-        if (fileInfo.size && fileInfo.size > 10 * 1024 * 1024) {
-          Alert.alert('File too large', 'Please select an image smaller than 10MB');
-          return;
-        }
-        
-        // Upload to Supabase storage
-        await uploadAndSendMedia(selectedImage.uri, 'image', selectedImage.fileName || 'image.jpg');
-      }
-    } catch (error) {
-      console.error('Error picking image:', error);
-      Alert.alert('Error', 'Failed to select image');
+
+  const pickImage = async (): Promise<void> => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      allowsEditing: true,
+      quality: 1,
+      selectionLimit: 1, // Solo permite una imagen
+      mediaTypes: ["images"], // Solo imágenes
+    });
+
+    if (result.canceled || result.assets.length === 0) {
+      return;
     }
-    
-    setShowMediaOptions(false);
+    const image = result.assets[0];
+
+    if (image.width > 1000) {
+      try {
+        const aspectRatio = image.height / image.width;
+        const newWidth = 1000;
+        const newHeight = Math.round(newWidth * aspectRatio);
+
+        const manipResult = await manipulateAsync(
+          image.uri,
+          [{ resize: { width: newWidth, height: newHeight } }],
+          { compress: 0.7, format: SaveFormat.PNG }
+        );
+
+        await uploadAndSendMedia(manipResult.uri, 'image', image.fileName || 'image.png');
+        return;
+      } catch (error) {
+        throw new Error("No se pudo comprimir la imagen");
+      }
+    }
+
+    // 🔍 Validar tipo de imagen
+    if (!["image/png"].includes(image.mimeType || "")) {
+      throw new Error("Solo son permitidos PNG.");
+    }
+
+    await uploadAndSendMedia(image.uri, 'image', image.fileName || 'image.jpg');
   };
-  
+
   // Document handling (PDF)
   const pickDocument = async () => {
     try {
@@ -139,17 +143,17 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, disabled, r
         type: 'application/pdf',
         copyToCacheDirectory: true,
       });
-      
+
       if (result.canceled === false && result.assets && result.assets.length > 0) {
         const selectedDoc = result.assets[0];
         const fileInfo = await FileSystem.getInfoAsync(selectedDoc.uri);
-        
+
         // Check file size (10MB limit)
         if (fileInfo.size && fileInfo.size > 10 * 1024 * 1024) {
           Alert.alert('File too large', 'Please select a PDF smaller than 10MB');
           return;
         }
-        
+
         // Upload to Supabase storage
         await uploadAndSendMedia(selectedDoc.uri, 'pdf', selectedDoc.name);
       }
@@ -157,10 +161,10 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, disabled, r
       console.error('Error picking document:', error);
       Alert.alert('Error', 'Failed to select document');
     }
-    
+
     setShowMediaOptions(false);
   };
-  
+
   // Video handling
   const pickVideo = async () => {
     try {
@@ -169,24 +173,24 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, disabled, r
         Alert.alert('Permission required', 'You need to grant permission to access your videos');
         return;
       }
-      
+
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Videos,
         allowsEditing: true,
         quality: 0.8,
         videoMaxDuration: 300, // 5 minutes max
       });
-      
+
       if (!result.canceled && result.assets && result.assets.length > 0) {
         const selectedVideo = result.assets[0];
         const fileInfo = await FileSystem.getInfoAsync(selectedVideo.uri);
-        
+
         // Check file size (10MB limit)
         if (fileInfo.size && fileInfo.size > 10 * 1024 * 1024) {
           Alert.alert('File too large', 'Please select a video smaller than 10MB');
           return;
         }
-        
+
         // Upload to Supabase storage
         await uploadAndSendMedia(selectedVideo.uri, 'video', selectedVideo.fileName || 'video.mp4');
       }
@@ -194,10 +198,10 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, disabled, r
       console.error('Error picking video:', error);
       Alert.alert('Error', 'Failed to select video');
     }
-    
+
     setShowMediaOptions(false);
   };
-  
+
   // Audio recording
   const toggleAudioRecording = async () => {
     if (isRecording) {
@@ -206,7 +210,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, disabled, r
       await startRecording();
     }
   };
-  
+
   const startRecording = async () => {
     try {
       const permissionResult = await Audio.requestPermissionsAsync();
@@ -214,19 +218,19 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, disabled, r
         Alert.alert('Permission required', 'You need to grant permission to record audio');
         return;
       }
-      
+
       await Audio.setAudioModeAsync({
         allowsRecordingIOS: true,
         playsInSilentModeIOS: true,
       });
-      
+
       const recording = new Audio.Recording();
       await recording.prepareToRecordAsync(Audio.RecordingOptionsPresets.HIGH_QUALITY);
       await recording.startAsync();
       setRecordingInstance(recording);
       setIsRecording(true);
       setRecordingDuration(0);
-      
+
       // Start timer for recording duration
       recordingTimerRef.current = setInterval(() => {
         setRecordingDuration(prev => {
@@ -243,31 +247,31 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, disabled, r
       Alert.alert('Error', 'Failed to start recording');
     }
   };
-  
+
   const stopRecording = async () => {
     try {
       if (!recordingInstance) return;
-      
+
       // Clear timer
       if (recordingTimerRef.current) {
         clearInterval(recordingTimerRef.current);
         recordingTimerRef.current = null;
       }
-      
+
       await recordingInstance.stopAndUnloadAsync();
       const uri = recordingInstance.getURI();
       setRecordingUri(uri);
       setIsRecording(false);
-      
+
       if (uri) {
         const fileInfo = await FileSystem.getInfoAsync(uri);
-        
+
         // Check file size (10MB limit)
         if (fileInfo.size && fileInfo.size > 10 * 1024 * 1024) {
           Alert.alert('File too large', 'Audio recording is larger than 10MB');
           return;
         }
-        
+
         // Upload to Supabase storage
         await uploadAndSendMedia(uri, 'audio', 'audio_recording.m4a', recordingDuration);
       }
@@ -276,7 +280,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, disabled, r
       Alert.alert('Error', 'Failed to save recording');
     }
   };
-  
+
   // Location sharing
   const shareLocation = async () => {
     try {
@@ -285,13 +289,13 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, disabled, r
         Alert.alert('Permission required', 'You need to grant permission to access your location');
         return;
       }
-      
+
       const location = await Location.getCurrentPositionAsync({});
       const { latitude, longitude } = location.coords;
-      
+
       // Create Google Maps URL
       const googleMapsUrl = `https://www.google.com/maps?q=${latitude},${longitude}`;
-      
+
       // Get address information if possible
       let address = '';
       try {
@@ -299,7 +303,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, disabled, r
           latitude,
           longitude
         });
-        
+
         if (addressResponse && addressResponse.length > 0) {
           const addressInfo = addressResponse[0];
           address = [
@@ -313,7 +317,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, disabled, r
       } catch (error) {
         console.log('Error getting address:', error);
       }
-      
+
       const locationInfo: LocationInfo = {
         url: googleMapsUrl,
         name: 'My Location',
@@ -321,49 +325,67 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, disabled, r
         latitude,
         longitude
       };
-      
+
       await onSendMessage('Shared a location', 'location', undefined, locationInfo);
     } catch (error) {
       console.error('Error sharing location:', error);
       Alert.alert('Error', 'Failed to share location');
     }
-    
+
     setShowMediaOptions(false);
   };
-  
-  // Upload media to Supabase storage and send message
+
+  const uriToFormData = async (uri: string): Promise<FormData> => {
+    const fileExt = uri.split(".").pop() || "png"; // Extraer la extensión
+    const fileName = `${Date.now()}.${fileExt}`; // Nombre único
+
+    const formData = new FormData();
+    formData.append("file", {
+      uri,
+      name: fileName,
+      type: `image/${fileExt}`, // Tipo MIME correcto
+    } as any); // `as any` evita errores de tipado en React Native
+
+    return formData;
+  };
+
+
   const uploadAndSendMedia = async (uri: string, type: MessageType, filename: string, duration?: number) => {
     try {
       setSending(true);
       setUploadProgress(0);
-      
-      // Generate a unique filename
-      const fileExt = filename.split('.').pop();
-      const uniqueFilename = `${Date.now()}_${Math.floor(Math.random() * 1000)}.${fileExt}`;
-      const storagePath = `${roomId}/${currentUserId}/${uniqueFilename}`;
-      
-      // Read file as base64
-      const fileContent = await FileSystem.readAsStringAsync(uri, { encoding: FileSystem.EncodingType.Base64 });
-      
-      // Upload to Supabase storage
-      const { data, error } = await supabase.storage
-        .from('chat_media')
-        .upload(storagePath, fileContent, {
-          contentType: type === 'image' ? 'image/jpeg' : 
-                      type === 'pdf' ? 'application/pdf' : 
-                      type === 'video' ? 'video/mp4' : 'audio/m4a',
-          upsert: false
-        });
-      
-      if (error) {
-        throw error;
+
+      const formData = await uriToFormData(uri); // ✅ Convertir URI a FormData
+
+      const fileExt = uri.split(".").pop();
+      const fileName = `${Date.now()}.${fileExt}`;
+      const storageName = "chat-media";
+      const filePath = `${storageName}/${fileName}`; // Ruta en Supabase
+
+      let contentType = ``;
+      if (type === 'image') {
+        contentType = 'image/' + fileExt;
+      } else if (type === 'pdf') {
+        contentType = 'application/pdf';
+      } else if (type === 'video') {
+        contentType = 'video/' + fileExt;
+      } else if (type === 'audio') {
+        contentType = 'audio/' + fileExt;
       }
-      
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('chat_media')
-        .getPublicUrl(storagePath);
-      
+      const { data, error } = await supabase.storage
+        .from(storageName)
+        .upload(filePath, formData, {
+          contentType,
+          cacheControl: "3600",
+          upsert: false,
+        });
+
+      if (error) throw new Error("No se pudo comprimir la imagen");
+
+      // ✅ Obtener la URL pública correctamente
+      const publicUrl = supabase.storage.from(storageName).getPublicUrl(filePath)
+        .data.publicUrl;
+
       // Create media info object
       const mediaInfo: MediaInfo = {
         url: publicUrl,
@@ -371,7 +393,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, disabled, r
         filesize: (await FileSystem.getInfoAsync(uri)).size,
         duration: duration // Only for audio/video
       };
-      
+
       // Send message with media info
       const typeLabel = {
         'image': 'Sent an image',
@@ -379,9 +401,9 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, disabled, r
         'video': 'Sent a video',
         'audio': 'Sent an audio recording'
       }[type];
-      
+
       await onSendMessage(typeLabel, type, mediaInfo);
-      
+
     } catch (error) {
       console.error(`Error uploading ${type}:`, error);
       Alert.alert('Error', `Failed to upload ${type}`);
@@ -390,7 +412,68 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, disabled, r
       setUploadProgress(0);
     }
   };
-  
+
+
+  // Upload media to Supabase storage and send message
+  const uploadAndSendMedia2 = async (uri: string, type: MessageType, filename: string, duration?: number) => {
+    try {
+      setSending(true);
+      setUploadProgress(0);
+
+      // Generate a unique filename
+      const fileExt = filename.split('.').pop();
+      const uniqueFilename = `${Date.now()}_${Math.floor(Math.random() * 1000)}.${fileExt}`;
+      const storagePath = `${roomId}/${currentUserId}/${uniqueFilename}`;
+
+      // Read file as base64
+      const fileContent = await FileSystem.readAsStringAsync(uri, { encoding: FileSystem.EncodingType.Base64 });
+
+      // Upload to Supabase storage
+      const { data, error } = await supabase.storage
+        .from('chat-media')
+        .upload(storagePath, fileContent, {
+          contentType: type === 'image' ? 'image/jpeg' :
+            type === 'pdf' ? 'application/pdf' :
+              type === 'video' ? 'video/mp4' : 'audio/m4a',
+          upsert: false
+        });
+
+      if (error) {
+        throw error;
+      }
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('chat-media')
+        .getPublicUrl(storagePath);
+
+      // Create media info object
+      const mediaInfo: MediaInfo = {
+        url: publicUrl,
+        filename,
+        filesize: (await FileSystem.getInfoAsync(uri)).size,
+        duration: duration // Only for audio/video
+      };
+
+      // Send message with media info
+      const typeLabel = {
+        'image': 'Sent an image',
+        'pdf': 'Sent a PDF document',
+        'video': 'Sent a video',
+        'audio': 'Sent an audio recording'
+      }[type];
+
+      await onSendMessage(typeLabel, type, mediaInfo);
+
+    } catch (error) {
+      console.error(`Error uploading ${type}:`, error);
+      Alert.alert('Error', `Failed to upload ${type}`);
+    } finally {
+      setSending(false);
+      setUploadProgress(0);
+    }
+  };
+
   // Format recording duration
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -415,7 +498,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, disabled, r
           </View>
         </View>
       </Modal>
-      
+
       {/* Media options modal */}
       <Modal
         visible={showMediaOptions}
@@ -433,22 +516,22 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, disabled, r
               <Ionicons name="image-outline" size={24} color="#fb8436" />
               <Text style={styles.mediaOptionText}>Image</Text>
             </TouchableOpacity>
-            
+
             <TouchableOpacity style={styles.mediaOption} onPress={pickDocument}>
               <Ionicons name="document-outline" size={24} color="#fb8436" />
               <Text style={styles.mediaOptionText}>PDF</Text>
             </TouchableOpacity>
-            
+
             <TouchableOpacity style={styles.mediaOption} onPress={pickVideo}>
               <Ionicons name="videocam-outline" size={24} color="#fb8436" />
               <Text style={styles.mediaOptionText}>Video</Text>
             </TouchableOpacity>
-            
+
             <TouchableOpacity style={styles.mediaOption} onPress={toggleAudioRecording}>
               <Ionicons name="mic-outline" size={24} color="#fb8436" />
               <Text style={styles.mediaOptionText}>Audio</Text>
             </TouchableOpacity>
-            
+
             <TouchableOpacity style={styles.mediaOption} onPress={shareLocation}>
               <Ionicons name="location-outline" size={24} color="#fb8436" />
               <Text style={styles.mediaOptionText}>Location</Text>
@@ -456,7 +539,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, disabled, r
           </View>
         </TouchableOpacity>
       </Modal>
-      
+
       {/* Recording indicator */}
       {isRecording && (
         <View style={styles.recordingContainer}>
@@ -469,7 +552,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, disabled, r
           </TouchableOpacity>
         </View>
       )}
-      
+
       <View style={styles.inputContainer}>
         <TouchableOpacity
           style={styles.attachButton}
@@ -478,7 +561,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, disabled, r
         >
           <Ionicons name="add-circle-outline" size={24} color="#fb8436" />
         </TouchableOpacity>
-        
+
         <TextInput
           style={styles.input}
           value={message}
@@ -492,7 +575,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, disabled, r
           maxLength={500}
           editable={!disabled && !isRecording}
         />
-        
+
         {message.trim() ? (
           <TouchableOpacity
             style={[
