@@ -415,6 +415,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isOwnMess
   };
 
   const renderMessageContent = () => {
+    console.log("message.message_type", message.message_type);
     switch (message.message_type) {
       case 'image':
         return (
@@ -523,6 +524,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isOwnMess
         );
 
       case 'text':
+        console.log('estoy en texto', message.content);
         if (message.content) {
           return (
             <Text style={[baseStyles.messageText, isOwnMessage ? baseStyles.ownMessageText : baseStyles.otherMessageText]}>

@@ -16,11 +16,11 @@ import GroupsScreen from './GroupsScreen';
 
 export default function ChatRoomScreen() {
   const params = useLocalSearchParams();
-  const roomIdParam = params.roomId as string | undefined;
+  const roomIdParam = params.roomId as string;
   
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
-  const [currentRoomId, setCurrentRoomId] = useState<string>(roomIdParam || "749646af-04ad-44ee-b1f2-2ad0e684a6d3");
+  const [currentRoomId, setCurrentRoomId] = useState<string>(roomIdParam);
   const [chatType, setChatType] = useState<'group' | 'individual'>('group');
   const [selectedRecipient, setSelectedRecipient] = useState<string | undefined>();
   const [isCreateGroupModalVisible, setIsCreateGroupModalVisible] = useState(false);
@@ -63,6 +63,7 @@ export default function ChatRoomScreen() {
   // Fetch room details
   const fetchRoomDetails = async (roomId: string) => {
     try {
+      console.log("Fetching room details for room ID:", roomId)
       const { data, error } = await supabase
         .from('rooms')
         .select('id, name, is_private')
@@ -73,6 +74,7 @@ export default function ChatRoomScreen() {
       setRoomDetails(data);
       setCurrentRoomIsPrivate(data?.is_private || false);
     } catch (error) {
+      console.error("Error 1");
       console.error('Error fetching room details:', error);
     }
   };
@@ -153,6 +155,7 @@ export default function ChatRoomScreen() {
   };
 
   const handleParticipantSelect = (user: UserProfile & { roomId: string }) => {
+    console.log("Participant selected:", user);
     setCurrentRoomId(user.roomId);
     setSelectedRecipient(user.id);
     setChatType('individual');
@@ -259,7 +262,6 @@ export default function ChatRoomScreen() {
             <GroupsScreen currentUserId={currentUser.id} />
           ) : (
             <ChatRoom
-              roomId={currentRoomId}
               currentUser={currentUser}
               chatType={chatType}
               recipientId={selectedRecipient}

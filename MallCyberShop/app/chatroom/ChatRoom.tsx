@@ -22,7 +22,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 
 export const ChatRoom: React.FC<ChatRoomProps> = ({
-  roomId,
   currentUser,
   recipientId,
   onParticipantSelect,
@@ -215,7 +214,8 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
         room_id: actualRoomId,
         user_id: currentUser.id,
         recipient_id: chatType === 'individual' ? recipientId : null,
-        is_private: chatType === 'individual'
+        is_private: chatType === 'individual',
+       
       };
 
       const { data: newMessage, error } = await supabase
@@ -347,6 +347,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
           .limit(1);
           
         if (roomError) {
+          console.error("Error 2");
           console.error('Error fetching room details:', roomError);
           setRoomName('Chat Error');
           return;
@@ -445,6 +446,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
         setRoomName('Chat Room');
       }
     } catch (error) {
+      console.error("Error 3");
       console.error('Error fetching room details:', error);
       setRoomName('Chat Room');
     }
@@ -470,6 +472,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
 
   const renderMessage = ({ item }: { item: Message }) => {
     const isOwnMessage = item.user_id === currentUser.id;
+    //console.log("item", item);
     return (
       <MessageBubble 
         message={item} 
