@@ -9,7 +9,7 @@ import * as FileSystem from 'expo-file-system';
 import * as WebBrowser from 'expo-web-browser';
 // We'll use these modules without type checking for now
 // @ts-ignore
-import { Audio, ResizeMode, Video } from 'expo-av';
+import { Audio, ResizeMode, Video, VideoFullscreenUpdate } from 'expo-av';
 // @ts-ignore
 import * as MediaLibrary from 'expo-media-library';
 // @ts-ignore
@@ -53,7 +53,7 @@ const mediaStyles = StyleSheet.create({
     color: '#666',
   },
   videoContainer: {
-    width: 200,
+    width: '100%',
     height: 200,
     borderRadius: 10,
     overflow: 'hidden',
@@ -79,6 +79,24 @@ const mediaStyles = StyleSheet.create({
     fontSize: 12,
     color: '#fff',
     marginLeft: 5,
+  },
+  videoPlayer: {
+    width: 250,
+    height: 150,
+    borderRadius: 10,
+    backgroundColor: '#000000',
+  },
+  videoThumbnail: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 10,
+  },
+  playIconOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    borderRadius: 10,
   },
   audioContainer: {
     width: 200,
@@ -203,6 +221,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isOwnMess
   const [reportReason, setReportReason] = useState('');
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
+  const [showVideoPlayer, setShowVideoPlayer] = useState(false);
   const [audioPlaybackPosition, setAudioPlaybackPosition] = useState(0);
   const [audioSound, setAudioSound] = useState<Audio.Sound | null>(null);
   const [userAlias, setUserAlias] = useState<string | null>(null);
@@ -553,18 +572,38 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isOwnMess
       case 'video':
         return (
           <View style={mediaStyles.videoContainer}>
-            <TouchableOpacity onPress={downloadFile}>
-              <View style={mediaStyles.videoPlaceholder}>
-                <Ionicons name="play-circle" size={48} color="#ffffff" />
-              </View>
-              <View style={mediaStyles.videoDurationBadge}>
-                <Ionicons name="time-outline" size={12} color="#ffffff" />
-                <Text style={mediaStyles.videoDurationText}>
-                  {formatDuration(message.media_info?.duration)}
-                </Text>
-              </View>
-            </TouchableOpacity>
-            {message.media_info?.filename && (
+            {showVideoPlayer && message.media_info?.url ? (
+              <Video
+                source={{ uri: message.media_info.url }}
+                style={mediaStyles.videoPlayer}
+                resizeMode={ResizeMode.CONTAIN}
+                useNativeControls
+                shouldPlay
+                onFullscreenUpdate={async ({ fullscreenUpdate }) => {
+                  if (fullscreenUpdate === VideoFullscreenUpdate.PLAYER_DID_DISMISS) {
+                    setShowVideoPlayer(false);
+                  }
+                }}
+              />
+            ) : (
+              <TouchableOpacity onPress={() => setShowVideoPlayer(true)}>
+                <View style={mediaStyles.videoPlaceholder}>
+                  <Image source={{ uri: message.media_info?.thumbnail_url || message.media_info?.url }} style={mediaStyles.videoThumbnail} onError={() => console.log('Error loading thumbnail')} />
+                  <View style={mediaStyles.playIconOverlay}>
+                    <Ionicons name="play-circle" size={48} color="#ffffff" />
+                  </View>
+                  {message.media_info?.duration && (
+                    <View style={mediaStyles.videoDurationBadge}>
+                      <Ionicons name="time-outline" size={12} color="#ffffff" />
+                      <Text style={mediaStyles.videoDurationText}>
+                        {formatDuration(message.media_info.duration)}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              </TouchableOpacity>
+            )}
+            {message.media_info?.filename && !showVideoPlayer && (
               <Text style={mediaStyles.mediaCaption}>
                 {message.media_info.filename} ({formatFileSize(message.media_info.filesize)})
               </Text>
