@@ -274,6 +274,7 @@ export default function ChatRoomScreen() {
             onClose={() => setIsCreateGroupModalVisible(false)}
             currentUserId={currentUser.id}
             onGroupCreated={(roomId) => {
+              console.log("🚀 ~ onGroupCreated ~ roomId:", roomId)
               setCurrentRoomId(roomId);
               setChatType('group');
               setSelectedRecipient(undefined);

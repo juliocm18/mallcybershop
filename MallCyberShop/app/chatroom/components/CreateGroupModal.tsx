@@ -16,6 +16,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { supabase } from '@/app/supabase';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImageManipulator from 'expo-image-manipulator';
+import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 
 interface CreateGroupModalProps {
   isVisible: boolean;
@@ -38,7 +39,7 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
   const [groupImage, setGroupImage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [maxParticipants, setMaxParticipants] = useState('500');
-  const [errors, setErrors] = useState<{name?: string; image?: string}>({});
+  const [errors, setErrors] = useState<{ name?: string; image?: string }>({});
 
   const resetForm = () => {
     setGroupName('');
@@ -55,8 +56,8 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
   };
 
   const validateForm = (): boolean => {
-    const newErrors: {name?: string; image?: string} = {};
-    
+    const newErrors: { name?: string; image?: string } = {};
+
     // Validate group name (required, 3-50 characters)
     if (!groupName.trim()) {
       newErrors.name = 'Group name is required';
@@ -65,80 +66,97 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
     } else if (groupName.trim().length > 50) {
       newErrors.name = 'Group name must be less than 50 characters';
     }
-    
+
     // Validate image size if selected
     if (groupImage && groupImage.length > 5 * 1024 * 1024) { // 5MB in bytes
       newErrors.image = 'Image size must be less than 5MB';
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const pickImage = async () => {
-    try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 0.8,
-      });
+  const pickImage = async (): Promise<string | null> => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      allowsEditing: true,
+      aspect: [10, 10], // Ajustado para mantener la proporción 10:1
+      quality: 1,
+      selectionLimit: 1, // Solo permite una imagen
+      mediaTypes: ["images"], // Solo imágenes
+    });
 
-      if (!result.canceled && result.assets && result.assets.length > 0) {
-        // Resize image to reduce size
-        const manipResult = await ImageManipulator.manipulateAsync(
-          result.assets[0].uri,
-          [{ resize: { width: 400 } }],
-          { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG }
-        );
-        
-        setGroupImage(manipResult.uri);
-      }
-    } catch (error) {
-      console.error('Error picking image:', error);
-      Alert.alert('Error', 'Failed to select image');
-    }
-  };
-
-  const uploadGroupImage = async (groupId: string): Promise<string | null> => {
-    if (!groupImage) return null;
-    
-    try {
-      // Convert URI to Blob
-      const response = await fetch(groupImage);
-      const blob = await response.blob();
-      
-      // Generate a unique filename
-      const fileExt = groupImage.split('.').pop();
-      const fileName = `${groupId}_${Date.now()}.${fileExt}`;
-      const filePath = `group_images/${fileName}`;
-      
-      // Upload to Supabase Storage
-      const { data, error } = await supabase
-        .storage
-        .from('group_images')
-        .upload(filePath, blob);
-      
-      if (error) throw error;
-      
-      // Get public URL
-      const { data: urlData } = supabase
-        .storage
-        .from('group_images')
-        .getPublicUrl(filePath);
-      
-      return urlData.publicUrl;
-    } catch (error) {
-      console.error('Error uploading image:', error);
+    if (result.canceled || result.assets.length === 0) {
       return null;
     }
+    const image = result.assets[0];
+
+    if (image.width > 1000) {
+      try {
+        const aspectRatio = image.height / image.width;
+        const newWidth = 1000;
+        const newHeight = Math.round(newWidth * aspectRatio);
+
+        const manipResult = await manipulateAsync(
+          image.uri,
+          [{ resize: { width: newWidth, height: newHeight } }],
+          { compress: 0.7, format: SaveFormat.PNG }
+        );        
+        //const imageUrl = await uploadImage(manipResult.uri);
+        setGroupImage(manipResult.uri);
+        return manipResult.uri;
+      } catch (error) {
+        throw new Error("No se pudo comprimir la imagen");
+      }
+    } else {
+      //const imageUrl = await uploadImage(image.uri);
+      setGroupImage(image.uri);
+      return image.uri;
+    }
   };
+
+  const uriToFormData = async (uri: string): Promise<FormData> => {
+    const fileExt = uri.split(".").pop() || "png"; // Extraer la extensión
+    const fileName = `${Date.now()}.${fileExt}`; // Nombre único
+
+    const formData = new FormData();
+    formData.append("file", {
+      uri,
+      name: fileName,
+      type: `image/${fileExt}`, // Tipo MIME correcto
+    } as any); // `as any` evita errores de tipado en React Native
+
+    return formData;
+  };
+
+  const uploadImage = async (uri: string): Promise<string> => {
+    const formData = await uriToFormData(uri); // ✅ Convertir URI a FormData
+
+    const fileExt = uri.split(".").pop() || "png";
+    const fileName = `${Date.now()}.${fileExt}`;
+    const storageName = "group-profile";
+    const filePath = `${storageName}/${fileName}`; // Ruta en Supabase
+    const {data, error} = await supabase.storage
+      .from(storageName)
+      .upload(filePath, formData, {
+        contentType: `image/${fileExt}`,
+        cacheControl: "3600",
+        upsert: false,
+      });
+
+    if (error) throw new Error("No se pudo comprimir la imagen");
+
+    // ✅ Obtener la URL pública correctamente
+    const publicUrl = supabase.storage.from(storageName).getPublicUrl(filePath)
+      .data.publicUrl;
+    return publicUrl;
+  };
+
 
   const createGroup = async () => {
     if (!validateForm()) return;
-    
+
     setIsLoading(true);
-    
+
     try {
       // 1. Create the group in the rooms table
       const { data: newGroup, error: groupError } = await supabase
@@ -153,28 +171,28 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
         })
         .select('id')
         .single();
-      
+
       if (groupError || !newGroup) {
         throw groupError || new Error('Failed to create group');
       }
-      
+
       // 2. Upload group image if provided
       if (groupImage) {
-        const imageUrl = await uploadGroupImage(newGroup.id);
-        
+        const imageUrl = await uploadImage(groupImage);
+
         if (imageUrl) {
           // Update the group with the image URL
           const { error: updateError } = await supabase
             .from('rooms')
             .update({ image_url: imageUrl })
             .eq('id', newGroup.id);
-          
+
           if (updateError) {
             console.error('Error updating group image:', updateError);
           }
         }
       }
-      
+
       // 3. Add creator as super admin
       const { error: roleError } = await supabase
         .from('room_participants')
@@ -184,15 +202,15 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
           role: 'super_admin',
           joined_at: new Date().toISOString()
         });
-      
+
       if (roleError) {
         console.error('Error adding creator as super admin:', roleError);
       }
-      
+
       // 4. Notify success and close modal
       onGroupCreated(newGroup.id);
       handleClose();
-      
+
     } catch (error) {
       console.error('Error creating group:', error);
       Alert.alert('Error', 'Failed to create group. Please try again.');
@@ -212,12 +230,12 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
     >
       <View style={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.title}>Create New Group</Text>
+          <Text style={styles.title}>Crear nuevo grupo</Text>
           <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
             <Ionicons name="close" size={24} color="#333" />
           </TouchableOpacity>
         </View>
-        
+
         <ScrollView style={styles.formContainer}>
           {/* Group Image */}
           <View style={styles.imageContainer}>
@@ -227,43 +245,43 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
               ) : (
                 <View style={styles.placeholderImage}>
                   <Ionicons name="image-outline" size={40} color="#999" />
-                  <Text style={styles.placeholderText}>Add Group Image</Text>
+                  <Text style={styles.placeholderText}>Agregar imagen</Text>
                 </View>
               )}
             </TouchableOpacity>
             {errors.image && <Text style={styles.errorText}>{errors.image}</Text>}
           </View>
-          
+
           {/* Group Name */}
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Group Name *</Text>
+            <Text style={styles.label}>Nombre del grupo *</Text>
             <TextInput
               style={[styles.input, errors.name && styles.inputError]}
               value={groupName}
               onChangeText={setGroupName}
-              placeholder="Enter group name (3-50 characters)"
+              placeholder="Ingrese el nombre del grupo (3-50 caracteres)"
               maxLength={50}
             />
             {errors.name && <Text style={styles.errorText}>{errors.name}</Text>}
           </View>
-          
+
           {/* Description */}
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Description (Optional)</Text>
+            <Text style={styles.label}>Descripción (Opcional)</Text>
             <TextInput
               style={styles.textArea}
               value={description}
               onChangeText={setDescription}
-              placeholder="Enter group description (max 200 characters)"
+              placeholder="Ingrese la descripción del grupo (max 200 caracteres)"
               multiline
               numberOfLines={4}
               maxLength={200}
             />
           </View>
-          
+
           {/* Group Type */}
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Group Type</Text>
+            <Text style={styles.label}>Tipo de grupo</Text>
             <View style={styles.pickerContainer}>
               <Picker
                 selectedValue={groupType}
@@ -275,29 +293,29 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
               </Picker>
             </View>
           </View>
-          
+
           {/* Max Participants */}
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Maximum Participants</Text>
+            <Text style={styles.label}>Número máximo de participantes</Text>
             <TextInput
               style={styles.input}
               value={maxParticipants}
               onChangeText={setMaxParticipants}
-              placeholder="Maximum number of participants"
+              placeholder="Número máximo de participantes"
               keyboardType="numeric"
             />
           </View>
-          
+
           {/* Create Button */}
-          <TouchableOpacity 
-            style={styles.createButton} 
+          <TouchableOpacity
+            style={styles.createButton}
             onPress={createGroup}
             disabled={isLoading}
           >
             {isLoading ? (
               <ActivityIndicator color="#fff" />
             ) : (
-              <Text style={styles.createButtonText}>Create Group</Text>
+              <Text style={styles.createButtonText}>Crear grupo</Text>
             )}
           </TouchableOpacity>
         </ScrollView>

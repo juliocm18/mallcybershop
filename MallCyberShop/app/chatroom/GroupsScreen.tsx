@@ -207,7 +207,7 @@ export default function GroupsScreen({ currentUserId: propUserId }: GroupsScreen
 
   const handleJoinGroup = async (group: Group) => {
     if (!currentUserId) {
-      Alert.alert('Error', 'You must be logged in to join a group');
+      Alert.alert('Error', 'Debes iniciar sesión para unirte a un grupo');
       return;
     }
 
@@ -215,14 +215,14 @@ export default function GroupsScreen({ currentUserId: propUserId }: GroupsScreen
       // Navigate to the chat room if already a member
       router.push({
         pathname: '/chatroom',
-        params: { roomId: group.id }
+        params: { roomIdParam: group.id }
       });
       return;
     }
 
     try {
       if (group.is_private) {
-        Alert.alert('Closed Group', 'This is a closed group. You need an invitation to join.');
+        Alert.alert('Grupo Cerrado', 'Este es un grupo cerrado. Necesitas una invitación para unirte.');
         return;
       }
 
@@ -257,7 +257,7 @@ export default function GroupsScreen({ currentUserId: propUserId }: GroupsScreen
       // Navigate to the chat room
       router.push({
         pathname: '/chatroom',
-        params: { roomId: group.id }
+        params: { roomIdParam: group.id }
       });
     } catch (error) {
       console.error('Error joining group:', error);
@@ -325,7 +325,7 @@ export default function GroupsScreen({ currentUserId: propUserId }: GroupsScreen
           onPress={() => handleJoinGroup(item)}
         >
           <Text style={[styles.joinButtonText, item.is_member && styles.joinedButtonText]}>
-            {item.is_member ? 'Open' : (item.is_private ? 'Closed' : 'Join')}
+            {item.is_member ? 'Abrir' : (item.is_private ? 'Cerrado' : 'Unirse')}
           </Text>
         </TouchableOpacity>
       </View>
@@ -341,7 +341,7 @@ export default function GroupsScreen({ currentUserId: propUserId }: GroupsScreen
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Groups</Text>
+        <Text style={styles.title}>Grupos</Text>
         <View style={styles.headerButtons}>
           {pendingInvitationsCount > 0 && (
             <TouchableOpacity 
@@ -385,13 +385,13 @@ export default function GroupsScreen({ currentUserId: propUserId }: GroupsScreen
             <View style={styles.emptyContainer}>
               <Ionicons name="people-outline" size={48} color="#ccc" />
               <Text style={styles.emptyText}>
-                {searchQuery ? 'No groups found matching your search' : 'No groups available'}
+                {searchQuery ? 'No grupos encontrados que coincidan con su búsqueda' : 'No grupos disponibles'}
               </Text>
               <TouchableOpacity 
                 style={styles.createFirstButton}
                 onPress={() => setIsCreateModalVisible(true)}
               >
-                <Text style={styles.createFirstButtonText}>Create First Group</Text>
+                <Text style={styles.createFirstButtonText}>Crear Primer Grupo</Text>
               </TouchableOpacity>
             </View>
           }
