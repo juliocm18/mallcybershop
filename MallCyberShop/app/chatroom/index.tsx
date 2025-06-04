@@ -185,6 +185,8 @@ export default function ChatRoomScreen() {
 
   const renderHeaderButtons = () => {
     if (!currentUser) return null;
+
+    console.log(roomDetails, "roomDetails")
     
     return (
       <View style={styles.headerButtonsContainer}>
@@ -195,14 +197,7 @@ export default function ChatRoomScreen() {
           <Ionicons name="people" size={24} color="#007AFF" />
           <Text style={styles.headerButtonText}>Groups</Text>
         </TouchableOpacity>
-        
-        <TouchableOpacity
-          style={styles.headerButton}
-          onPress={handleCreateGroup}
-        >
-          <Ionicons name="add-circle" size={24} color="#007AFF" />
-          <Text style={styles.headerButtonText}>Create</Text>
-        </TouchableOpacity>
+              
         
         <TouchableOpacity
           style={styles.headerButton}
@@ -262,6 +257,7 @@ export default function ChatRoomScreen() {
             <GroupsScreen currentUserId={currentUser.id} />
           ) : (
             <ChatRoom
+              roomId={currentRoomId}
               currentUser={currentUser}
               chatType={chatType}
               recipientId={selectedRecipient}
@@ -274,23 +270,11 @@ export default function ChatRoomScreen() {
             onClose={() => setIsCreateGroupModalVisible(false)}
             currentUserId={currentUser.id}
             onGroupCreated={(roomId) => {
-              console.log("🚀 ~ onGroupCreated ~ roomId:", roomId)
+              console.log("🚀 ~ onGroupCreated ~ roomId:", roomId)              
               setCurrentRoomId(roomId);
               setChatType('group');
               setSelectedRecipient(undefined);
               setShowGroupsScreen(false); // Return to chat after creating a group
-            }}
-          />
-          
-          <GroupInvitationsModal
-            isVisible={isInvitationsModalVisible}
-            onClose={() => setIsInvitationsModalVisible(false)}
-            currentUserId={currentUser.id}
-            onInvitationAccepted={(roomId) => {
-              setCurrentRoomId(roomId);
-              setChatType('group');
-              setSelectedRecipient(undefined);
-              setShowGroupsScreen(false); // Return to chat after accepting an invitation
             }}
           />
           

@@ -94,7 +94,7 @@ export interface RoomDetails {
 }
 
 export interface ChatRoomProps {
-  //roomId: string;
+  roomId: string;
   currentUser: {
     id: string;
     name?: string;
