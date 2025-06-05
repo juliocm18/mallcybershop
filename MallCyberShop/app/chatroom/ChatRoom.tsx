@@ -368,7 +368,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
         .limit(1);
 
       if (roomError) {
-        console.error('Error fetching group room:', roomError);
+        console.error('ChatRoom.tsx:findOrCreateGroupRoom: Error fetching group room:', roomError);
         return null;
       }
       if (roomChat && roomChat.length > 0) {
@@ -380,14 +380,15 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
         .insert({
           type: 'group',
           name: roomPublicName,
-          created_by: currentUser.id,
+          // ID del ADMIN juliocesarm1990 por defecto para los grupos autocreados basados en la ubicación
+          created_by: 'bb353e09-30b2-46d6-9cf7-2c88a2e55434', 
           is_private: false
         })
         .select(roomSelect)
         .single();
 
       if (createError || !newRoom) {
-        console.error('Error creating public room:', createError);
+        console.error('ChatRoom.tsx:findOrCreateGroupRoom: Error creating public room:', createError);
         return null;
       }
 
