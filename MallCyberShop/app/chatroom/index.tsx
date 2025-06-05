@@ -16,7 +16,7 @@ import GroupsScreen from './GroupsScreen';
 
 export default function ChatRoomScreen() {
   const params = useLocalSearchParams();
-  const roomIdParam = params.roomId as string;
+  const roomIdParam = params.roomIdParam as string;
   
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -28,7 +28,8 @@ export default function ChatRoomScreen() {
   const [isGroupMembersModalVisible, setIsGroupMembersModalVisible] = useState(false);
   const [pendingInvitationsCount, setPendingInvitationsCount] = useState(0);
   const [currentRoomIsPrivate, setCurrentRoomIsPrivate] = useState(false);
-  const [roomDetails, setRoomDetails] = useState<{id: string, name: string, is_private: boolean} | null>(null);
+  const [roomDetails, setRoomDetails] = 
+  useState<{id: string, name: string, is_private: boolean, created_by: string} | null>(null);
 
   const updateUserStatus = async (userId: string, isOnline: boolean) => {
     try {
@@ -63,19 +64,23 @@ export default function ChatRoomScreen() {
   // Fetch room details
   const fetchRoomDetails = async (roomId: string) => {
     try {
-      console.log("Fetching room details for room ID:", roomId)
+      console.log("index:fetchRoomDetails: Fetching room details for room ID:", roomId)
       const { data, error } = await supabase
-        .from('rooms')
-        .select('id, name, is_private')
-        .eq('id', roomId)
-        .single();
-
+      .from('rooms')
+      .select(`
+        id,
+        name,
+        is_private,
+        created_by
+      `)
+      .eq('id', roomId)
+      .single();
       if (error) throw error;
+      console.log("index:fetchRoomDetails: Room details:", data)
       setRoomDetails(data);
       setCurrentRoomIsPrivate(data?.is_private || false);
     } catch (error) {
-      console.error("Error 1");
-      console.error('Error fetching room details:', error);
+      console.error("index:fetchRoomDetails: Error fetching room details:", error);
     }
   };
 
@@ -145,6 +150,7 @@ export default function ChatRoomScreen() {
 
   // Fetch room details when room changes
   useEffect(() => {
+    console.log("ChatRoomScreen:useEffect: currentRoomId", currentRoomId);
     if (currentRoomId) {
       fetchRoomDetails(currentRoomId);
     }
@@ -185,8 +191,7 @@ export default function ChatRoomScreen() {
 
   const renderHeaderButtons = () => {
     if (!currentUser) return null;
-
-    console.log(roomDetails, "roomDetails")
+    console.log("index:renderHeaderButtons: roomDetails", roomDetails)
     
     return (
       <View style={styles.headerButtonsContainer}>
@@ -278,7 +283,7 @@ export default function ChatRoomScreen() {
             }}
           />
           
-          {roomDetails && (
+          {currentRoomId && (
             <GroupMembersModal
               isVisible={isGroupMembersModalVisible}
               onClose={() => setIsGroupMembersModalVisible(false)}

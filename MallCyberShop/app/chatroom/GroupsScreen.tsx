@@ -129,11 +129,11 @@ export default function GroupsScreen({ currentUserId: propUserId }: GroupsScreen
       // Use a direct RPC call to bypass RLS policies
       // Create a stored procedure in Supabase if it doesn't exist yet
       const { data: rpcData, error: rpcError } = await supabase.rpc('get_all_groups');
-      
+
       if (rpcError) {
         // If RPC fails (likely because the function doesn't exist yet), use a fallback approach
         console.log('RPC failed, using fallback approach:', rpcError);
-        
+
         // Use service role key in a server function (this is just a placeholder)
         // In a real app, you'd call a server endpoint that uses the service role key
         // For now, we'll just show public groups to avoid the recursion
@@ -154,7 +154,7 @@ export default function GroupsScreen({ currentUserId: propUserId }: GroupsScreen
           .order('created_at', { ascending: false });
 
         if (error) throw error;
-        
+
         // Process the data
         if (data) {
           // Skip getting member counts to avoid triggering recursion
@@ -163,21 +163,21 @@ export default function GroupsScreen({ currentUserId: propUserId }: GroupsScreen
             member_count: 0, // We'll skip actual counts for now
             is_member: memberGroupIds.includes(group.id)
           }));
-          
+
           setGroups(groupsWithCounts);
           setFilteredGroups(groupsWithCounts);
         }
       } else {
         // RPC succeeded, process the data
         const data = rpcData;
-        
+
         if (data) {
           // Process the data from RPC
           const groupsWithCounts = data.map(group => ({
             ...group,
             is_member: memberGroupIds.includes(group.id)
           }));
-          
+
           setGroups(groupsWithCounts);
           setFilteredGroups(groupsWithCounts);
         }
@@ -210,23 +210,19 @@ export default function GroupsScreen({ currentUserId: propUserId }: GroupsScreen
       Alert.alert('Error', 'Debes iniciar sesión para unirte a un grupo');
       return;
     }
-
+  
     if (group.is_member) {
-      // Navigate to the chat room if already a member
-      router.push({
-        pathname: '/chatroom',
-        params: { roomIdParam: group.id }
-      });
+      console.log("🚀 ~ handleJoinGroup ~ group.is_member:", group.is_member)
+      router.push({ pathname: '/chatroom', params: { roomIdParam: group.id } });
       return;
     }
-
+  
+    if (group.is_private) {
+      Alert.alert('Grupo Cerrado', 'Este es un grupo cerrado. Necesitas una invitación para unirte.');
+      return;
+    }
+  
     try {
-      if (group.is_private) {
-        Alert.alert('Grupo Cerrado', 'Este es un grupo cerrado. Necesitas una invitación para unirte.');
-        return;
-      }
-
-      // For open groups, add user directly
       const { error } = await supabase
         .from('room_participants')
         .insert({
@@ -235,45 +231,36 @@ export default function GroupsScreen({ currentUserId: propUserId }: GroupsScreen
           role: 'member',
           joined_at: new Date().toISOString()
         });
-
+  
       if (error) throw error;
-
-      // Update local state
-      setGroups(prevGroups =>
-        prevGroups.map(g => {
-          if (g.id === group.id) {
-            return {
-              ...g,
-              is_member: true,
-              member_count: g.member_count + 1
-            };
-          }
-          return g;
-        })
+  
+      setGroups(prev =>
+        prev.map(g =>
+          g.id === group.id
+            ? { ...g, is_member: true, member_count: g.member_count + 1 }
+            : g
+        )
       );
-
-      Alert.alert('Success', 'You have joined the group');
-
-      // Navigate to the chat room
-      router.push({
-        pathname: '/chatroom',
-        params: { roomIdParam: group.id }
-      });
-    } catch (error) {
+  
+      Alert.alert('Éxito', 'Te has unido al grupo');
+  
+      router.push({ pathname: '/chatroom', params: { roomIdParam: group.id } });
+    } catch (error: any) {
       console.error('Error joining group:', error);
-      Alert.alert('Error', 'Failed to join the group');
+      Alert.alert('Error', error.message || 'No se pudo unir al grupo');
     }
   };
+  
 
   const handleGroupCreated = (groupId: string) => {
     if (currentUserId) {
       fetchGroups(currentUserId);
     }
-    
+
     // Navigate to the new group's chat room
     router.push({
       pathname: '/chatroom',
-      params: { roomId: groupId }
+      params: { roomIdParam: groupId }
     });
   };
 
@@ -282,7 +269,7 @@ export default function GroupsScreen({ currentUserId: propUserId }: GroupsScreen
       fetchGroups(currentUserId);
       fetchPendingInvitationsCount(currentUserId);
     }
-    
+
     // Navigate to the group's chat room
     router.push({
       pathname: '/chatroom',
@@ -290,53 +277,58 @@ export default function GroupsScreen({ currentUserId: propUserId }: GroupsScreen
     });
   };
 
-  const renderGroupItem = ({ item }: { item: Group }) => (
-    <TouchableOpacity 
-      style={styles.groupItem}
-      onPress={() => handleJoinGroup(item)}
-    >
-      <View style={styles.groupHeader}>
-        <View style={styles.groupImageContainer}>
-          {item.image_url ? (
-            <Image source={{ uri: item.image_url }} style={styles.groupImage} />
-          ) : (
-            <View style={[styles.groupImage, styles.defaultGroupImage]}>
-              <Text style={styles.groupImageText}>{item.name.charAt(0).toUpperCase()}</Text>
-            </View>
-          )}
-        </View>
-        <View style={styles.groupInfo}>
-          <Text style={styles.groupName}>{item.name}</Text>
-          <View style={styles.groupMeta}>
-            <View style={styles.metaItem}>
-              <Ionicons name="people-outline" size={14} color="#777" />
-              <Text style={styles.metaText}>{item.member_count} members</Text>
-            </View>
-            {item.is_private && (
-              <View style={styles.metaItem}>
-                <Ionicons name="lock-closed-outline" size={14} color="#777" />
-                <Text style={styles.metaText}>Closed</Text>
+  const renderGroupItem = ({ item }: { item: Group }) => {
+    //console.log("🚀 ~ renderGroupItem ~ item:", item)
+
+    return (
+      <TouchableOpacity
+        style={styles.groupItem}
+        onPress={() => handleJoinGroup(item)}
+      >
+        <View style={styles.groupHeader}>
+          <View style={styles.groupImageContainer}>
+            {item.image_url ? (
+              <Image source={{ uri: item.image_url }} style={styles.groupImage} />
+            ) : (
+              <View style={[styles.groupImage, styles.defaultGroupImage]}>
+                <Text style={styles.groupImageText}>{item.name.charAt(0).toUpperCase()}</Text>
               </View>
             )}
           </View>
+          <View style={styles.groupInfo}>
+            <Text style={styles.groupName}>{item.name}</Text>
+            <View style={styles.groupMeta}>
+              <View style={styles.metaItem}>
+                <Ionicons name="people-outline" size={14} color="#777" />
+                <Text style={styles.metaText}>{item.member_count} members</Text>
+              </View>
+              {item.is_private && (
+                <View style={styles.metaItem}>
+                  <Ionicons name="lock-closed-outline" size={14} color="#777" />
+                  <Text style={styles.metaText}>Closed</Text>
+                </View>
+              )}
+            </View>
+          </View>
+          <TouchableOpacity
+            style={[styles.joinButton, item.is_member && styles.joinedButton]}
+            onPress={() => handleJoinGroup(item)}
+          >
+            <Text style={[styles.joinButtonText, item.is_member && styles.joinedButtonText]}>
+              {item.is_member ? 'Abrir' : (item.is_private ? 'Cerrado' : 'Unirse')}
+            </Text>
+          </TouchableOpacity>
         </View>
-        <TouchableOpacity 
-          style={[styles.joinButton, item.is_member && styles.joinedButton]}
-          onPress={() => handleJoinGroup(item)}
-        >
-          <Text style={[styles.joinButtonText, item.is_member && styles.joinedButtonText]}>
-            {item.is_member ? 'Abrir' : (item.is_private ? 'Cerrado' : 'Unirse')}
+
+        {item.description && (
+          <Text style={styles.description} numberOfLines={2}>
+            {item.description}
           </Text>
-        </TouchableOpacity>
-      </View>
-      
-      {item.description && (
-        <Text style={styles.description} numberOfLines={2}>
-          {item.description}
-        </Text>
-      )}
-    </TouchableOpacity>
-  );
+        )}
+      </TouchableOpacity>
+
+    )
+  }
 
   return (
     <View style={styles.container}>
@@ -344,7 +336,7 @@ export default function GroupsScreen({ currentUserId: propUserId }: GroupsScreen
         <Text style={styles.title}>Grupos</Text>
         <View style={styles.headerButtons}>
           {pendingInvitationsCount > 0 && (
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.invitationsButton}
               onPress={() => setIsInvitationsModalVisible(true)}
             >
@@ -354,7 +346,7 @@ export default function GroupsScreen({ currentUserId: propUserId }: GroupsScreen
               </View>
             </TouchableOpacity>
           )}
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.createButton}
             onPress={() => setIsCreateModalVisible(true)}
           >
@@ -367,7 +359,7 @@ export default function GroupsScreen({ currentUserId: propUserId }: GroupsScreen
         <Ionicons name="search-outline" size={20} color="#999" style={styles.searchIcon} />
         <TextInput
           style={styles.searchInput}
-          placeholder="Search groups..."
+          placeholder="Buscar grupos..."
           value={searchQuery}
           onChangeText={setSearchQuery}
         />
@@ -387,7 +379,7 @@ export default function GroupsScreen({ currentUserId: propUserId }: GroupsScreen
               <Text style={styles.emptyText}>
                 {searchQuery ? 'No grupos encontrados que coincidan con su búsqueda' : 'No grupos disponibles'}
               </Text>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.createFirstButton}
                 onPress={() => setIsCreateModalVisible(true)}
               >

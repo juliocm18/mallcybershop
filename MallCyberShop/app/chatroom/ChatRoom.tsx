@@ -19,7 +19,8 @@ import { UserAliasModal } from './components/UserAliasModal';
 import { ChatRoomProps, Message, UserProfile, RoomDetails, RoomResponse, UserStatus, MessageType, MediaInfo, LocationInfo } from './types';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { router, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
+import { transformMessage } from './chatroom.functions';
 
 export const ChatRoom: React.FC<ChatRoomProps> = ({
   roomId,
@@ -31,13 +32,8 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [roomDetails, setRoomDetails] = useState<RoomDetails | null>(null);
   const [roomName, setRoomName] = useState('');
   const [actualRoomId, setActualRoomId] = useState<string | null>(null);
-  const [showParticipants, setShowParticipants] = useState(false);
-  const [selectedParticipant, setSelectedParticipant] = useState<string | null>(null);
-  const [onlineUsers, setOnlineUsers] = useState<UserStatus[]>([]);
-  const [showOnlineUsers, setShowOnlineUsers] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [hasMoreMessages, setHasMoreMessages] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -45,11 +41,66 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
   const PAGE_SIZE = 20; // Number of messages to load per page
   const [showAliasModal, setShowAliasModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   const messageIdsRef = useRef(new Set<string>());
   const flatListRef = useRef<FlatList>(null);
 
   let { roomIdParam } = useLocalSearchParams<{ roomIdParam?: string }>();
+
+
+  useEffect(() => {
+    // Subscribe to new messages in the room
+    const channel = supabase
+      .channel('room_messages')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: `room_id=eq.${actualRoomId}`
+        },
+        (payload) => {
+          //console.log('New message received:', payload);
+          // Fetch the complete message with user info
+          const fetchNewMessage = async () => {
+            const { data: newMessage } = await supabase
+              .from('messages')
+              .select(`
+                id,
+                content,
+                created_at,
+                room_id,
+                user_id,
+                recipient_id,
+                is_private,
+                message_type,
+                media_info,
+                location_info,
+                user:profiles!messages_user_id_fkey (
+                  name,
+                  avatar_url
+                )
+              `)
+              .eq('id', payload.new.id)
+              .single();
+
+            if (newMessage) {
+              const transformedMessage = transformMessage(newMessage);
+              addMessage(transformedMessage);
+            }
+          };
+          fetchNewMessage();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      channel.unsubscribe();
+    };
+  }, [actualRoomId]);
+
+
+
 
   const addMessage = (newMessage: Message) => {
     // Check if message already exists
@@ -59,22 +110,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
     }
   };
 
-  const transformMessage = (msg: any): Message => ({
-    id: msg.id,
-    content: msg.content,
-    created_at: msg.created_at,
-    room_id: msg.room_id,
-    user_id: msg.user_id,
-    recipient_id: msg.recipient_id,
-    is_private: msg.is_private,
-    message_type: msg.message_type || 'text',
-    media_info: msg.media_info || undefined,
-    location_info: msg.location_info || undefined,
-    user: {
-      name: msg.user?.name || 'Unknown',
-      avatar_url: msg.user?.avatar_url
-    }
-  });
+
 
   const fetchMessages = async (isLoadingMore = false) => {
     try {
@@ -134,16 +170,16 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
       if (fetchedMessages) {
         // Check if we have more messages to load
         setHasMoreMessages(fetchedMessages.length === PAGE_SIZE);
-        
+
         // Transform and update messages
         const transformedMessages = fetchedMessages.map(transformMessage).reverse(); // Reverse to get chronological order
-        
+
         if (isLoadingMore) {
           // Add new messages to the beginning of the list
           const newMessageIds = new Set(transformedMessages.map(msg => msg.id));
           const updatedMessageIds = new Set([...newMessageIds, ...messageIdsRef.current]);
           messageIdsRef.current = updatedMessageIds;
-          
+
           setMessages(prevMessages => [...transformedMessages, ...prevMessages]);
           setPage(prevPage => prevPage + 1);
         } else {
@@ -162,57 +198,6 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
     }
   };
 
-  useEffect(() => {
-    // Subscribe to new messages in the room
-    const channel = supabase
-      .channel('room_messages')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'messages',
-          filter: `room_id=eq.${actualRoomId}`
-        },
-        (payload) => {
-          //console.log('New message received:', payload);
-          // Fetch the complete message with user info
-          const fetchNewMessage = async () => {
-            const { data: newMessage } = await supabase
-              .from('messages')
-              .select(`
-                id,
-                content,
-                created_at,
-                room_id,
-                user_id,
-                recipient_id,
-                is_private,
-                message_type,
-                media_info,
-                location_info,
-                user:profiles!messages_user_id_fkey (
-                  name,
-                  avatar_url
-                )
-              `)
-              .eq('id', payload.new.id)
-              .single();
-
-            if (newMessage) {
-              const transformedMessage = transformMessage(newMessage);
-              addMessage(transformedMessage);
-            }
-          };
-          fetchNewMessage();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      channel.unsubscribe();
-    };
-  }, [actualRoomId]);
 
   const handleSendMessage = async (
     content: string,
@@ -272,605 +257,233 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
     }
   };
 
+
+  const roomSelect = `
+  id,
+  type,
+  name,
+  created_by,
+  recipient_id,
+  creator:profiles!rooms_created_by_fkey (
+    name,
+    avatar_url
+  ),
+  recipient:profiles!rooms_recipient_id_fkey (
+    name,
+    avatar_url
+  )`;
+
+
+  function normalizeRoomData(room: any): RoomResponse {
+    const normalizeProfile = (profile: any): any | null => {
+      if (!profile) return null;
+      if (Array.isArray(profile)) {
+        // If it's an array, extract the first item and ensure it has the required properties
+        if (profile.length > 0) {
+          const firstProfile = profile[0];
+          return {
+            name: firstProfile.name,
+            avatar_url: firstProfile.avatar_url
+          };
+        }
+        return null;
+      }
+      // If it's not an array, ensure it has the required properties
+      return {
+        name: profile.name,
+        avatar_url: profile.avatar_url
+      };
+    };
+
+    return {
+      id: room.id,
+      type: room.type,
+      name: room.name,
+      created_by: room.created_by,
+      recipient_id: room.recipient_id,
+      creator: normalizeProfile(room.creator),
+      recipient: normalizeProfile(room.recipient)
+    };
+  }
+
+
+  async function findOrCreateIndividualRoom(currentUserId: string, recipientId: string): Promise<any | null> {
+    const { data: existingRoom, error: findError } = await supabase
+      .from('rooms')
+      .select(roomSelect)
+      .eq('type', 'individual')
+      .or(`and(created_by.eq.${currentUserId},recipient_id.eq.${recipientId}),and(created_by.eq.${recipientId},recipient_id.eq.${currentUserId})`)
+      .single();
+
+    if (findError && findError.code !== 'PGRST116') {
+      console.error('Error finding individual room:', findError);
+      return null;
+    }
+
+    if (existingRoom) return existingRoom;
+
+    const { data: newRoom, error: createError } = await supabase
+      .from('rooms')
+      .insert({
+        type: 'individual',
+        created_by: currentUserId,
+        recipient_id: recipientId,
+        is_private: true
+      })
+      .select(roomSelect)
+      .single();
+
+    if (createError || !newRoom) {
+      console.error('Error creating individual room:', createError);
+      return null;
+    }
+
+    return newRoom;
+  }
+
+
+  async function findOrCreateGroupRoom(roomId: string, roomPublicName: string): Promise<any | null> {
+    if (roomId) {
+      const { data: roomChat, error: roomError } = await supabase
+        .from('rooms')
+        .select(roomSelect)
+        .eq('id', roomId)
+        .eq('type', 'group')
+        .limit(1);
+
+      if (roomError) {
+        console.error('ChatRoom.tsx:findOrCreateGroupRoom: Error fetching group room:', roomError);
+        return null;
+      }
+      if (roomChat && roomChat.length > 0) {
+        return normalizeRoomData(roomChat[0]);
+      }
+    } else {
+
+      const { data: roomChat, error: roomError } = await supabase
+        .from('rooms')
+        .select(roomSelect)
+        .eq('name', roomPublicName)
+        .eq('type', 'group')
+        .limit(1);
+
+      if (roomError) {
+        console.error('Error fetching group room:', roomError);
+        return null;
+      }
+      if (roomChat && roomChat.length > 0) {
+        return normalizeRoomData(roomChat[0]);
+      }
+
+      const { data: newRoom, error: createError } = await supabase
+        .from('rooms')
+        .insert({
+          type: 'group',
+          name: roomPublicName,
+          created_by: currentUser.id,
+          is_private: false
+        })
+        .select(roomSelect)
+        .single();
+
+      if (createError || !newRoom) {
+        console.error('Error creating public room:', createError);
+        return null;
+      }
+
+      return newRoom;
+    }
+  }
+
+
+  async function resolveRoom({
+    currentUser,
+    roomIdParam,
+    roomId,
+    recipientId,
+    roomPublicName
+  }: {
+    currentUser: { id: string };
+    roomIdParam?: string;
+    roomId?: string;
+    recipientId?: string;
+    roomPublicName: string;
+  }) {
+    const roomKey = (roomIdParam ?? roomId) || '';
+
+    console.log("ChatRoom.tsx:resolveRoom: roomKey:", roomKey)
+
+    // console.log("roomId", roomId),
+    // console.log("roomIdParam", roomIdParam),
+    // console.log("recipientId", recipientId),
+    // console.log("roomPublicName", roomPublicName);
+
+    //if (!roomKey) return;
+
+    let roomData: RoomResponse | null = null;
+
+    if (recipientId) {
+      roomData = await findOrCreateIndividualRoom(currentUser.id, recipientId);
+      if (!roomData) {
+        setRoomName('Private Chat Error');
+        return;
+      }
+    } else {
+      roomData = await findOrCreateGroupRoom(roomKey, roomPublicName);
+      if (!roomData) {
+        setRoomName('Public Chat Error');
+        return;
+      }
+    }
+
+    const roomDetails: RoomDetails = {
+      id: roomData.id,
+      type: roomData.type,
+      name: roomData.name,
+      created_by: roomData.created_by,
+      recipient_id: roomData.recipient_id,
+      creator: roomData.creator || undefined,
+      recipient: roomData.recipient || undefined
+    };
+
+    setActualRoomId(roomDetails.id);
+
+    if (roomDetails.type === 'individual') {
+      const creatorName = roomDetails.creator?.name || 'Unknown';
+      const recipientName = roomDetails.recipient?.name || 'Unknown';
+      setRoomName(`${creatorName.split(' ')[0]} & ${recipientName.split(' ')[0]}`);
+    } else {
+      setRoomName(roomDetails.name || 'Chat Room');
+    }
+  }
+
+
+
+
+
+
   const fetchRoomDetails = async () => {
     try {
-      
-      if (roomIdParam) {
-        let roomData: RoomResponse | null = null;
-        
-        if (recipientId) {
-          // Individual chat - check both directions for existing room
-          const { data: existingRoom, error: findError } = await supabase
-            .from('rooms')
-            .select(`
-              id,
-              type,
-              name,
-              created_by,
-              recipient_id,
-              creator:profiles!rooms_created_by_fkey (
-                name,
-                avatar_url
-              ),
-              recipient:profiles!rooms_recipient_id_fkey (
-                name,
-                avatar_url
-              )
-            `)
-            .eq('type', 'individual')
-            .or(`and(created_by.eq.${currentUser.id},recipient_id.eq.${recipientId}),and(created_by.eq.${recipientId},recipient_id.eq.${currentUser.id})`)
-            .single() as { data: RoomResponse | null; error: any };
-  
-          if (findError && findError.code !== 'PGRST116') { // PGRST116 is "not found" error
-            console.error('Error finding individual room:', findError);
-            setRoomName('Private Chat Error');
-            return;
-          }
-  
-          if (existingRoom) {
-            roomData = existingRoom;
-          } else {
-            // Create new individual chat room only if no existing room was found
-            const { data: newRoom, error: createError } = await supabase
-              .from('rooms')
-              .insert({
-                type: 'individual',
-                created_by: currentUser.id,
-                recipient_id: recipientId,
-                is_private: true
-              })
-              .select(`
-                id,
-                type,
-                name,
-                created_by,
-                recipient_id,
-                creator:profiles!rooms_created_by_fkey (
-                  name,
-                  avatar_url
-                ),
-                recipient:profiles!rooms_recipient_id_fkey (
-                  name,
-                  avatar_url
-                )
-              `)
-              .single() as { data: RoomResponse | null; error: any };
-  
-            if (createError || !newRoom) {
-              console.error('Error creating individual room:', createError);
-              setRoomName('Private Chat Error');
-              return;
-            }
-  
-            roomData = newRoom;
-          }
-        } else {
-          // Public chat - use maybeSingle() instead of single() to avoid error when no room is found
-          const { data: roomChat, error: roomError } = await supabase
-            .from('rooms')
-            .select(`
-              id,
-              type,
-              name,
-              created_by,
-              recipient_id,
-              creator:profiles!rooms_created_by_fkey (
-                name,
-                avatar_url
-              ),
-              recipient:profiles!rooms_recipient_id_fkey (
-                name,
-                avatar_url
-              )
-            `)
-            .eq('id', roomIdParam)
-            .eq('type', 'group')
-            .limit(1);
-            
-          if (roomError) {
-            console.error("Error roomId param");
-            console.error('Error fetching room details:', roomError);
-            setRoomName('Chat Error');
-            return;
-          }
-          
-          // Transform the array result to match RoomResponse type
-          if (roomChat && roomChat.length > 0) {
-            const room = roomChat[0];
-            roomData = {
-              id: room.id,
-              type: room.type,
-              name: room.name,
-              created_by: room.created_by,
-              recipient_id: room.recipient_id,
-              creator: room.creator && Array.isArray(room.creator) && room.creator.length > 0 
-                ? { name: room.creator[0].name, avatar_url: room.creator[0].avatar_url }
-                : room.creator 
-                  ? { name: room.creator.name, avatar_url: room.creator.avatar_url }
-                  : null,
-              recipient: room.recipient && Array.isArray(room.recipient) && room.recipient.length > 0
-                ? { name: room.recipient[0].name, avatar_url: room.recipient[0].avatar_url }
-                : room.recipient
-                  ? { name: room.recipient.name, avatar_url: room.recipient.avatar_url }
-                  : null
-            };
-          } else {
-            roomData = null;
-          }
-          if (!roomData) {
-            // Create new public room
-            const { data: newRoom, error: createError } = await supabase
-              .from('rooms')
-              .insert({
-                type: 'group',
-                name: roomPublicName,
-                created_by: 'bb353e09-30b2-46d6-9cf7-2c88a2e55434',
-                is_private: false
-              })
-              .select(`
-                id,
-                type,
-                name,
-                created_by,
-                recipient_id,
-                creator:profiles!rooms_created_by_fkey (
-                  name,
-                  avatar_url
-                ),
-                recipient:profiles!rooms_recipient_id_fkey (
-                  name,
-                  avatar_url
-                )
-              `)
-              .single() as { data: RoomResponse | null; error: any };
-  
-            if (createError || !newRoom) {
-              console.error('Error creating public room:', createError);
-              setRoomName('Public Chat Error');
-              return;
-            }
-  
-            roomData = newRoom;
-          }
-        }
-  
-        if (!roomData) {
-          console.error('No room data available');
-          setRoomName('Chat Error');
-          return;
-        }
-  
-        // Transform the Supabase response to match our RoomDetails type
-        const roomDetails: RoomDetails = {
-          id: roomData.id,
-          type: roomData.type,
-          name: roomData.name,
-          created_by: roomData.created_by,
-          recipient_id: roomData.recipient_id,
-          creator: roomData.creator || undefined,
-          recipient: roomData.recipient || undefined
-        };
-  
-        // Store the actual room ID
-        setActualRoomId(roomDetails.id);
-  
-        //console.log("room details", roomDetails);
-  
-        if (roomDetails.type === 'individual') {
-          //console.log('Individual room details:');
-          const creatorName = roomDetails.creator?.name || 'Unknown';
-          const recipientName = roomDetails.recipient?.name || 'Unknown';
-          setRoomName(`${creatorName.split(' ')[0]} & ${recipientName.split(' ')[0]}`);
-        } else if (roomDetails.name) {
-          setRoomName(roomDetails.name);
-        } else {
-          setRoomName('Chat Room');
-        }
+      const department = (await AsyncStorage.getItem("department"));
+      const country = (await AsyncStorage.getItem("country"));
+      const roomPublicName = `${country} - ${department} Chat`;
 
+      console.log("ChatRoom.tsx:fetchRoomDetails: roomPublicName:", roomPublicName)
+      console.log("ChatRoom.tsx:fetchRoomDetails: roomIdParam:", roomIdParam)
+      console.log("ChatRoom.tsx:fetchRoomDetails: roomId:", roomId)
+      console.log("ChatRoom.tsx:fetchRoomDetails: recipientId:", recipientId)
 
+      await resolveRoom({
+        currentUser,
+        roomIdParam,
+        roomId,
+        recipientId,
+        roomPublicName
+      });
 
-
-
-      } else if (roomId){
-
-        console.log("entre roomId estado ", roomId);
-        let roomData: RoomResponse | null = null;
-
-
-        if (recipientId) {
-          // Individual chat - check both directions for existing room
-          const { data: existingRoom, error: findError } = await supabase
-            .from('rooms')
-            .select(`
-              id,
-              type,
-              name,
-              created_by,
-              recipient_id,
-              creator:profiles!rooms_created_by_fkey (
-                name,
-                avatar_url
-              ),
-              recipient:profiles!rooms_recipient_id_fkey (
-                name,
-                avatar_url
-              )
-            `)
-            .eq('type', 'individual')
-            .or(`and(created_by.eq.${currentUser.id},recipient_id.eq.${recipientId}),and(created_by.eq.${recipientId},recipient_id.eq.${currentUser.id})`)
-            .single() as { data: RoomResponse | null; error: any };
-  
-          if (findError && findError.code !== 'PGRST116') { // PGRST116 is "not found" error
-            console.error('Error finding individual room:', findError);
-            setRoomName('Private Chat Error');
-            return;
-          }
-  
-          if (existingRoom) {
-            roomData = existingRoom;
-          } else {
-            // Create new individual chat room only if no existing room was found
-            const { data: newRoom, error: createError } = await supabase
-              .from('rooms')
-              .insert({
-                type: 'individual',
-                created_by: currentUser.id,
-                recipient_id: recipientId,
-                is_private: true
-              })
-              .select(`
-                id,
-                type,
-                name,
-                created_by,
-                recipient_id,
-                creator:profiles!rooms_created_by_fkey (
-                  name,
-                  avatar_url
-                ),
-                recipient:profiles!rooms_recipient_id_fkey (
-                  name,
-                  avatar_url
-                )
-              `)
-              .single() as { data: RoomResponse | null; error: any };
-  
-            if (createError || !newRoom) {
-              console.error('Error creating individual room:', createError);
-              setRoomName('Private Chat Error');
-              return;
-            }
-  
-            roomData = newRoom;
-          }
-        } else {
-          // Public chat - use maybeSingle() instead of single() to avoid error when no room is found
-          const { data: roomChat, error: roomError } = await supabase
-            .from('rooms')
-            .select(`
-              id,
-              type,
-              name,
-              created_by,
-              recipient_id,
-              creator:profiles!rooms_created_by_fkey (
-                name,
-                avatar_url
-              ),
-              recipient:profiles!rooms_recipient_id_fkey (
-                name,
-                avatar_url
-              )
-            `)
-            .eq('id', roomId)
-            .eq('type', 'group')
-            .limit(1);
-            
-          if (roomError) {
-            console.error("Error roomId roomId");
-            console.error('Error fetching room details:', roomError);
-            setRoomName('Chat Error');
-            return;
-          }
-          
-          // Transform the array result to match RoomResponse type
-          if (roomChat && roomChat.length > 0) {
-            const room = roomChat[0];
-            roomData = {
-              id: room.id,
-              type: room.type,
-              name: room.name,
-              created_by: room.created_by,
-              recipient_id: room.recipient_id,
-              creator: room.creator && Array.isArray(room.creator) && room.creator.length > 0 
-                ? { name: room.creator[0].name, avatar_url: room.creator[0].avatar_url }
-                : room.creator 
-                  ? { name: room.creator.name, avatar_url: room.creator.avatar_url }
-                  : null,
-              recipient: room.recipient && Array.isArray(room.recipient) && room.recipient.length > 0
-                ? { name: room.recipient[0].name, avatar_url: room.recipient[0].avatar_url }
-                : room.recipient
-                  ? { name: room.recipient.name, avatar_url: room.recipient.avatar_url }
-                  : null
-            };
-          } else {
-            roomData = null;
-          }
-          if (!roomData) {
-            // Create new public room
-            const { data: newRoom, error: createError } = await supabase
-              .from('rooms')
-              .insert({
-                type: 'group',
-                name: roomPublicName,
-                created_by: 'bb353e09-30b2-46d6-9cf7-2c88a2e55434',
-                is_private: false
-              })
-              .select(`
-                id,
-                type,
-                name,
-                created_by,
-                recipient_id,
-                creator:profiles!rooms_created_by_fkey (
-                  name,
-                  avatar_url
-                ),
-                recipient:profiles!rooms_recipient_id_fkey (
-                  name,
-                  avatar_url
-                )
-              `)
-              .single() as { data: RoomResponse | null; error: any };
-  
-            if (createError || !newRoom) {
-              console.error('Error creating public room:', createError);
-              setRoomName('Public Chat Error');
-              return;
-            }
-  
-            roomData = newRoom;
-          }
-        }
-  
-        if (!roomData) {
-          console.error('No room data available');
-          setRoomName('Chat Error');
-          return;
-        }
-  
-        // Transform the Supabase response to match our RoomDetails type
-        const roomDetails: RoomDetails = {
-          id: roomData.id,
-          type: roomData.type,
-          name: roomData.name,
-          created_by: roomData.created_by,
-          recipient_id: roomData.recipient_id,
-          creator: roomData.creator || undefined,
-          recipient: roomData.recipient || undefined
-        };
-  
-        // Store the actual room ID
-        setActualRoomId(roomDetails.id);
-  
-        //console.log("room details", roomDetails);
-  
-        if (roomDetails.type === 'individual') {
-          //console.log('Individual room details:');
-          const creatorName = roomDetails.creator?.name || 'Unknown';
-          const recipientName = roomDetails.recipient?.name || 'Unknown';
-          setRoomName(`${creatorName.split(' ')[0]} & ${recipientName.split(' ')[0]}`);
-        } else if (roomDetails.name) {
-          setRoomName(roomDetails.name);
-        } else {
-          setRoomName('Chat Room');
-        }
-
-      }
-      
-      else {
-
-        const department = (await AsyncStorage.getItem("department"));
-        const country = (await AsyncStorage.getItem("country"));
-        const roomPublicName = `${country} - ${department} Chat`;
-        
-        let roomData: RoomResponse | null = null;
-  
-        // Check if this is an individual chat or public chat
-        if (recipientId) {
-          // Individual chat - check both directions for existing room
-          const { data: existingRoom, error: findError } = await supabase
-            .from('rooms')
-            .select(`
-              id,
-              type,
-              name,
-              created_by,
-              recipient_id,
-              creator:profiles!rooms_created_by_fkey (
-                name,
-                avatar_url
-              ),
-              recipient:profiles!rooms_recipient_id_fkey (
-                name,
-                avatar_url
-              )
-            `)
-            .eq('type', 'individual')
-            .or(`and(created_by.eq.${currentUser.id},recipient_id.eq.${recipientId}),and(created_by.eq.${recipientId},recipient_id.eq.${currentUser.id})`)
-            .single() as { data: RoomResponse | null; error: any };
-  
-          if (findError && findError.code !== 'PGRST116') { // PGRST116 is "not found" error
-            console.error('Error finding individual room:', findError);
-            setRoomName('Private Chat Error');
-            return;
-          }
-  
-          if (existingRoom) {
-            roomData = existingRoom;
-          } else {
-            // Create new individual chat room only if no existing room was found
-            const { data: newRoom, error: createError } = await supabase
-              .from('rooms')
-              .insert({
-                type: 'individual',
-                created_by: currentUser.id,
-                recipient_id: recipientId,
-                is_private: true
-              })
-              .select(`
-                id,
-                type,
-                name,
-                created_by,
-                recipient_id,
-                creator:profiles!rooms_created_by_fkey (
-                  name,
-                  avatar_url
-                ),
-                recipient:profiles!rooms_recipient_id_fkey (
-                  name,
-                  avatar_url
-                )
-              `)
-              .single() as { data: RoomResponse | null; error: any };
-  
-            if (createError || !newRoom) {
-              console.error('Error creating individual room:', createError);
-              setRoomName('Private Chat Error');
-              return;
-            }
-  
-            roomData = newRoom;
-          }
-        } else {
-          // Public chat - use maybeSingle() instead of single() to avoid error when no room is found
-          const { data: roomChat, error: roomError } = await supabase
-            .from('rooms')
-            .select(`
-              id,
-              type,
-              name,
-              created_by,
-              recipient_id,
-              creator:profiles!rooms_created_by_fkey (
-                name,
-                avatar_url
-              ),
-              recipient:profiles!rooms_recipient_id_fkey (
-                name,
-                avatar_url
-              )
-            `)
-            .eq('name', roomPublicName)
-            .eq('type', 'group')
-            .limit(1);
-            
-          if (roomError) {
-            console.error("Error 2");
-            console.error('Error fetching room details:', roomError);
-            setRoomName('Chat Error');
-            return;
-          }
-          
-          // Transform the array result to match RoomResponse type
-          if (roomChat && roomChat.length > 0) {
-            const room = roomChat[0];
-            roomData = {
-              id: room.id,
-              type: room.type,
-              name: room.name,
-              created_by: room.created_by,
-              recipient_id: room.recipient_id,
-              creator: room.creator && Array.isArray(room.creator) && room.creator.length > 0 
-                ? { name: room.creator[0].name, avatar_url: room.creator[0].avatar_url }
-                : room.creator 
-                  ? { name: room.creator.name, avatar_url: room.creator.avatar_url }
-                  : null,
-              recipient: room.recipient && Array.isArray(room.recipient) && room.recipient.length > 0
-                ? { name: room.recipient[0].name, avatar_url: room.recipient[0].avatar_url }
-                : room.recipient
-                  ? { name: room.recipient.name, avatar_url: room.recipient.avatar_url }
-                  : null
-            };
-          } else {
-            roomData = null;
-          }
-          if (!roomData) {
-            // Create new public room
-            const { data: newRoom, error: createError } = await supabase
-              .from('rooms')
-              .insert({
-                type: 'group',
-                name: roomPublicName,
-                created_by: 'bb353e09-30b2-46d6-9cf7-2c88a2e55434',
-                is_private: false
-              })
-              .select(`
-                id,
-                type,
-                name,
-                created_by,
-                recipient_id,
-                creator:profiles!rooms_created_by_fkey (
-                  name,
-                  avatar_url
-                ),
-                recipient:profiles!rooms_recipient_id_fkey (
-                  name,
-                  avatar_url
-                )
-              `)
-              .single() as { data: RoomResponse | null; error: any };
-  
-            if (createError || !newRoom) {
-              console.error('Error creating public room:', createError);
-              setRoomName('Public Chat Error');
-              return;
-            }
-  
-            roomData = newRoom;
-          }
-        }
-  
-        if (!roomData) {
-          console.error('No room data available');
-          setRoomName('Chat Error');
-          return;
-        }
-  
-        // Transform the Supabase response to match our RoomDetails type
-        const roomDetails: RoomDetails = {
-          id: roomData.id,
-          type: roomData.type,
-          name: roomData.name,
-          created_by: roomData.created_by,
-          recipient_id: roomData.recipient_id,
-          creator: roomData.creator || undefined,
-          recipient: roomData.recipient || undefined
-        };
-  
-        // Store the actual room ID
-        setActualRoomId(roomDetails.id);
-  
-        //console.log("room details", roomDetails);
-  
-        if (roomDetails.type === 'individual') {
-          //console.log('Individual room details:');
-          const creatorName = roomDetails.creator?.name || 'Unknown';
-          const recipientName = roomDetails.recipient?.name || 'Unknown';
-          setRoomName(`${creatorName.split(' ')[0]} & ${recipientName.split(' ')[0]}`);
-        } else if (roomDetails.name) {
-          setRoomName(roomDetails.name);
-        } else {
-          setRoomName('Chat Room');
-        }
-
-      }
 
     } catch (error) {
-      console.error("Error 3");
-      console.error('Error fetching room details:', error);
+      console.error('ChatRoom.tsx:fetchRoomDetails: Error fetching room details:', error);
       setRoomName('Chat Room');
     }
   };
@@ -897,10 +510,10 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
     const isOwnMessage = item.user_id === currentUser.id;
     //console.log("item", item);
     return (
-      <MessageBubble 
-        message={item} 
-        isOwnMessage={isOwnMessage} 
-        currentUserId={currentUser.id} 
+      <MessageBubble
+        message={item}
+        isOwnMessage={isOwnMessage}
+        currentUserId={currentUser.id}
         onUserPress={handleUserPress}
       />
     );
@@ -910,14 +523,14 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
     setSelectedUser(user);
     setShowAliasModal(true);
   };
-  
+
   const handleCloseAliasModal = () => {
     setShowAliasModal(false);
     setSelectedUser(null);
   };
 
   return (
-    <KeyboardAvoidingView 
+    <KeyboardAvoidingView
       style={{ flex: 1, marginBottom: 50 }}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
@@ -954,7 +567,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
               keyboardShouldPersistTaps="handled"
               ListHeaderComponent={
                 hasMoreMessages ? (
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     style={{
                       padding: 10,
                       backgroundColor: '#f0f0f0',
@@ -1004,7 +617,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
         currentUserId={currentUser.id}
         chatType={chatType}
       />
-      
+
       <UserAliasModal
         isVisible={showAliasModal}
         onClose={handleCloseAliasModal}
