@@ -17,11 +17,12 @@ import { supabase } from '@/app/supabase';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImageManipulator from 'expo-image-manipulator';
 import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
+import { router } from 'expo-router';
 
 interface CreateGroupModalProps {
   isVisible: boolean;
   onClose: () => void;
-  onGroupCreated: (groupId: string) => void;
+  //onGroupCreated: (groupId: string) => void;
   currentUserId: string;
 }
 
@@ -30,7 +31,7 @@ type GroupType = 'open' | 'closed';
 const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
   isVisible,
   onClose,
-  onGroupCreated,
+  //onGroupCreated,
   currentUserId
 }) => {
   const [groupName, setGroupName] = useState('');
@@ -152,10 +153,11 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
   };
 
 
-  const createGroup = async () => {
+  const createGroup = async () => {    
     if (!validateForm()) return;
 
     setIsLoading(true);
+    
 
     try {
       // 1. Create the group in the rooms table
@@ -208,8 +210,11 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({
       }
 
       // 4. Notify success and close modal
-      onGroupCreated(newGroup.id);
-      handleClose();
+      console.log("🚀 CreateGroupModal ~ createGroup ~ newGroup.id:", newGroup.id)
+      //router.push({ pathname: '/chatroom', params: { roomIdParam: "d1e9a466-9cdc-4be5-91ad-57dadcccb9af" } });
+      router.push({ pathname: '/chatroom', params: { roomIdParam: newGroup.id } });
+      //onGroupCreated(newGroup.id);
+      //handleClose();
 
     } catch (error) {
       console.error('Error creating group:', error);

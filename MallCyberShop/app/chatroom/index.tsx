@@ -219,7 +219,7 @@ export default function ChatRoomScreen() {
           <Text style={styles.headerButtonText}>Invites</Text>
         </TouchableOpacity>
         
-        {chatType === 'group' && roomDetails && (
+        {chatType === 'group' && roomDetails?.created_by === currentUser?.id && (
           <TouchableOpacity
             style={styles.headerButton}
             onPress={handleManageMembers}
@@ -237,7 +237,7 @@ export default function ChatRoomScreen() {
       <Stack.Screen
         options={{
           headerShown: true,
-          title: showGroupsScreen ? 'Groups' : (roomDetails?.name || 'Chat'),
+          title: showGroupsScreen ? 'Groups' : (roomDetails?.is_private ? 'Chat Privado' : 'Chat Público'),
           headerRight: () => !showGroupsScreen && renderHeaderButtons(),
           headerLeft: () => showGroupsScreen ? (
             <TouchableOpacity
@@ -274,13 +274,13 @@ export default function ChatRoomScreen() {
             isVisible={isCreateGroupModalVisible}
             onClose={() => setIsCreateGroupModalVisible(false)}
             currentUserId={currentUser.id}
-            onGroupCreated={(roomId) => {
-              console.log("🚀 ~ onGroupCreated ~ roomId:", roomId)              
-              setCurrentRoomId(roomId);
-              setChatType('group');
-              setSelectedRecipient(undefined);
-              setShowGroupsScreen(false); // Return to chat after creating a group
-            }}
+            // onGroupCreated={(roomId) => {
+            //   console.log("🚀 ~ onGroupCreated ~ roomId:", roomId)              
+            //   setCurrentRoomId(roomId);
+            //   setChatType('group');
+            //   setSelectedRecipient(undefined);
+            //   setShowGroupsScreen(false); // Return to chat after creating a group
+            // }}
           />
           
           {currentRoomId && (
