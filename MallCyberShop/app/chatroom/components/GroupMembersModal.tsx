@@ -43,7 +43,7 @@ interface GroupMember {
   id: string;
   name: string;
   avatar_url: string | null;
-  status: any; // Using any to avoid type conflicts
+  //status: any; // Using any to avoid type conflicts
   role: 'super_admin' | 'admin' | 'member';
   joined_at: string;
 }
@@ -88,7 +88,7 @@ const GroupMembersModal: React.FC<GroupMembersModalProps> = ({
         setUserRole(data.role as 'super_admin' | 'admin' | 'member');
       }
     } catch (error) {
-      console.error('Error fetching user role:', error);
+      console.error('GroupMembersModal: fetchUserRole: Error fetching user role:', error);
     }
   };
 
@@ -101,7 +101,7 @@ const GroupMembersModal: React.FC<GroupMembersModalProps> = ({
           user_id,
           role,
           joined_at,
-          profiles:user_id(id, name, avatar_url, status)
+          profiles:user_id(id, name, avatar_url)
         `)
         .eq('room_id', roomId)
         .order('role', { ascending: false });
@@ -115,14 +115,12 @@ const GroupMembersModal: React.FC<GroupMembersModalProps> = ({
             id: string;
             name: string;
             avatar_url: string | null;
-            status: string | null;
           };
           
           return {
             id: profileData?.id || item.user_id,
             name: profileData?.name || 'Unknown User',
             avatar_url: profileData?.avatar_url || null,
-            status: profileData?.status || null,
             role: item.role as 'super_admin' | 'admin' | 'member',
             joined_at: item.joined_at as string
           };
@@ -130,7 +128,7 @@ const GroupMembersModal: React.FC<GroupMembersModalProps> = ({
         setMembers(formattedMembers);
       }
     } catch (error) {
-      console.error('Error fetching members:', error);
+      console.error('GroupMembersModal: fetchMembers: Error fetching members:', error);
       Alert.alert('Error', 'Failed to load group members');
     } finally {
       setIsLoading(false);
@@ -148,7 +146,7 @@ const GroupMembersModal: React.FC<GroupMembersModalProps> = ({
       // Search for users by name or ID
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, name, avatar_url, status')
+        .select('id, name, avatar_url')
         .or(`name.ilike.%${query}%,id.eq.${query}`)
         .limit(10);
 
@@ -166,14 +164,13 @@ const GroupMembersModal: React.FC<GroupMembersModalProps> = ({
             id: user.id as string,
             name: user.name as string,
             avatar_url: user.avatar_url as string | null,
-            status: user.status as string | null,
             isSelected: invitedUsers.includes(user.id as string)
           }));
 
-        setSearchResults(filteredUsers);
+        setSearchResults(filteredUsers as UserSearchResult[]);
       }
     } catch (error) {
-      console.error('Error searching users:', error);
+      console.error('GroupMembersModal: searchUsers: Error searching users:', error);
     } finally {
       setIsLoading(false);
     }
