@@ -95,20 +95,34 @@ const GroupInvitationsModal: React.FC<GroupInvitationsModalProps> = ({
 
       if (updateError) throw updateError;
 
-      // If accepted, add user to room participants
+      // If accepted, check if user is already a member before adding
       if (accept) {
-        const { error: joinError } = await supabase
+        // First check if the user is already a participant
+        const { data: existingParticipant, error: checkError } = await supabase
           .from('room_participants')
-          .insert({
-            room_id: roomId,
-            user_id: currentUserId,
-            role: 'member',
-            joined_at: new Date().toISOString()
-          });
+          .select('id')
+          .eq('room_id', roomId)
+          
+          .eq('user_id', currentUserId)
+          .maybeSingle();
 
-        if (joinError) throw joinError;
+        if (checkError) throw checkError;
 
-        // Notify parent component
+        // Only insert if not already a participant
+        if (!existingParticipant) {
+          const { error: joinError } = await supabase
+            .from('room_participants')
+            .insert({
+              room_id: roomId,
+              user_id: currentUserId,
+              role: 'member',
+              joined_at: new Date().toISOString()
+            });
+
+          if (joinError) throw joinError;
+        }
+
+        // Notify parent component regardless
         onInvitationAccepted(roomId);
       }
 
