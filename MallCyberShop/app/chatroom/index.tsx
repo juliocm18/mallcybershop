@@ -186,6 +186,7 @@ export default function ChatRoomScreen() {
   };
 
   const handleViewInvitations = () => {
+    console.log("ChatRoomScreen:handleViewInvitations")
     setIsInvitationsModalVisible(true);
   };
 
@@ -220,16 +221,15 @@ export default function ChatRoomScreen() {
               </View>
             )}
           </View>
-          <Text style={styles.headerButtonText}>Invites</Text>
-        </TouchableOpacity>
-        
+          <Text style={styles.headerButtonText}>Invitaciones</Text>
+        </TouchableOpacity>        
         {chatType === 'group' && roomDetails?.created_by === currentUser?.id && (
           <TouchableOpacity
             style={styles.headerButton}
             onPress={handleManageMembers}
           >
             <Ionicons name="settings" size={24} color="#007AFF" />
-            <Text style={styles.headerButtonText}>Manage</Text>
+            <Text style={styles.headerButtonText}>Gestionar</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -296,6 +296,19 @@ export default function ChatRoomScreen() {
               isGroupClosed={currentRoomIsPrivate}
             />
           )}
+          
+          <GroupInvitationsModal
+            isVisible={isInvitationsModalVisible}
+            onClose={() => setIsInvitationsModalVisible(false)}
+            currentUserId={currentUser.id}
+            onInvitationAccepted={(roomId) => {
+              setCurrentRoomId(roomId);
+              setChatType('group');
+              setSelectedRecipient(undefined);
+              setShowGroupsScreen(false);
+              fetchPendingInvitations(currentUser.id);
+            }}
+          />
         </>
       )}
     </View>

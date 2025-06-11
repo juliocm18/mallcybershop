@@ -396,7 +396,7 @@ export default function GroupsScreen({ currentUserId: propUserId }: GroupsScreen
           }
         />
       )}
-
+      
       {currentUserId && (
         <>
           <CreateGroupModal
