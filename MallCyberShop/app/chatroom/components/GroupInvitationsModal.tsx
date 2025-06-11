@@ -55,22 +55,24 @@ const GroupInvitationsModal: React.FC<GroupInvitationsModalProps> = ({
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from('group_invitations')
-        .select(`
-          id,
-          room_id,
-          status,
-          created_at,
-          room:rooms (name, description, image_url),
-          inviter:profiles!group_invitations_invited_by_fkey (name, avatar_url)
-        `)
-        .eq('user_id', currentUserId)
-        .eq('status', 'pending')
-        .order('created_at', { ascending: false });
+      .from('group_invitations')
+      .select(`
+        id,
+        room_id,
+        status,
+        created_at,
+        room:rooms!room_id(name, description, image_url),
+        inviter:profiles!invited_by(name, avatar_url)
+      `)
+      .eq('user_id', currentUserId)
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false });
+    
 
       if (error) throw error;
 
       if (data) {
+        console.log("GroupInvitationsModal:fetchInvitations:data:", data)
         setInvitations(data as unknown as GroupInvitation[]);
       }
     } catch (error) {
@@ -117,58 +119,66 @@ const GroupInvitationsModal: React.FC<GroupInvitationsModalProps> = ({
 
       Alert.alert(
         'Success', 
-        accept ? 'You have joined the group' : 'Invitation declined'
+        accept ? 'Invitación aceptada' : 'Invitación rechazada'
       );
     } catch (error) {
       console.error('Error handling invitation:', error);
-      Alert.alert('Error', 'Failed to process invitation');
+      Alert.alert('Error', 'Error al procesar la invitación');
     } finally {
       setLoading(false);
     }
   };
 
-  const renderInvitationItem = ({ item }: { item: GroupInvitation }) => (
-    <View style={styles.invitationItem}>
-      <View style={styles.invitationHeader}>
-        <View style={styles.groupImageContainer}>
-          {item.room.image_url ? (
-            <Image source={{ uri: item.room.image_url }} style={styles.groupImage} />
-          ) : (
-            <View style={[styles.groupImage, styles.defaultGroupImage]}>
-              <Text style={styles.groupImageText}>{item.room.name.charAt(0).toUpperCase()}</Text>
-            </View>
-          )}
+  const renderInvitationItem = ({ item }: { item: GroupInvitation }) => {
+    //console.log("GroupInvitationsModal:renderInvitationItem:item:", item)
+    // Handle case where room data might be null
+    const roomName = item.room?.name || 'Grupo Desconocido';
+    const roomDescription = item.room?.description;
+    const inviterName = item.inviter?.name || 'Usuario Desconocido';
+    
+    return (
+      <View style={styles.invitationItem}>
+        <View style={styles.invitationHeader}>
+          <View style={styles.groupImageContainer}>
+            {item.room?.image_url ? (
+              <Image source={{ uri: item.room.image_url }} style={styles.groupImage} />
+            ) : (
+              <View style={[styles.groupImage, styles.defaultGroupImage]}>
+                <Text style={styles.groupImageText}>{roomName.charAt(0).toUpperCase()}</Text>
+              </View>
+            )}
+          </View>
+          <View style={styles.groupInfo}>
+            <Text style={styles.groupName}>{roomName}</Text>
+            <Text style={styles.invitedBy}>Invited by {inviterName}</Text>
+          </View>
         </View>
-        <View style={styles.groupInfo}>
-          <Text style={styles.groupName}>{item.room.name}</Text>
-          <Text style={styles.invitedBy}>Invited by {item.inviter.name}</Text>
+        
+        {roomDescription && (
+          <Text style={styles.description} numberOfLines={2}>
+            {roomDescription}
+          </Text>
+        )}
+        
+        <View style={styles.actionButtons}>
+          <TouchableOpacity 
+            style={[styles.actionButton, styles.declineButton]}
+            onPress={() => handleInvitation(item.id, item.room_id, false)}
+            disabled={loading}
+          >
+            <Text style={styles.declineButtonText}>Decline</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={[styles.actionButton, styles.acceptButton]}
+            onPress={() => handleInvitation(item.id, item.room_id, true)}
+            disabled={loading}
+          >
+            <Text style={styles.acceptButtonText}>Accept</Text>
+          </TouchableOpacity>
         </View>
       </View>
-      
-      {item.room.description && (
-        <Text style={styles.description} numberOfLines={2}>
-          {item.room.description}
-        </Text>
-      )}
-      
-      <View style={styles.actionButtons}>
-        <TouchableOpacity 
-          style={[styles.actionButton, styles.declineButton]}
-          onPress={() => handleInvitation(item.id, item.room_id, false)}
-          disabled={loading}
-        >
-          <Text style={styles.declineButtonText}>Decline</Text>
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={[styles.actionButton, styles.acceptButton]}
-          onPress={() => handleInvitation(item.id, item.room_id, true)}
-          disabled={loading}
-        >
-          <Text style={styles.acceptButtonText}>Accept</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
+    );
+  };
 
   return (
     <Modal

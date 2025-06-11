@@ -42,6 +42,7 @@ export default function GroupsScreen({ currentUserId: propUserId }: GroupsScreen
   const [isInvitationsModalVisible, setIsInvitationsModalVisible] = useState(false);
   const [pendingInvitationsCount, setPendingInvitationsCount] = useState(0);
 
+  // Effect for initializing user data
   useEffect(() => {
     const fetchCurrentUser = async () => {
       // If prop is provided, use it
@@ -63,10 +64,19 @@ export default function GroupsScreen({ currentUserId: propUserId }: GroupsScreen
     };
 
     initialize();
+  }, [propUserId]);
 
+  // Separate effect for Supabase subscriptions to ensure they're only created once
+  useEffect(() => {
+    if (!currentUserId) return;
+    
+    // Create unique channel names with user ID to avoid conflicts
+    const groupsChannelName = `groups_changes_${currentUserId}`;
+    const invitationsChannelName = `invitations_changes_${currentUserId}`;
+    
     // Set up real-time subscription for group changes
     const groupsSubscription = supabase
-      .channel('groups_changes')
+      .channel(groupsChannelName)
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
@@ -74,30 +84,27 @@ export default function GroupsScreen({ currentUserId: propUserId }: GroupsScreen
         filter: 'type=eq.group'
       }, () => {
         // Refresh groups when changes occur
-        if (currentUserId) {
-          fetchGroups(currentUserId);
-        }
+        fetchGroups(currentUserId);
       })
       .subscribe();
 
     // Set up real-time subscription for invitations
     const invitationsSubscription = supabase
-      .channel('invitations_changes')
+      .channel(invitationsChannelName)
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
         table: 'group_invitations'
       }, () => {
         // Refresh invitations count when changes occur
-        if (currentUserId) {
-          fetchPendingInvitationsCount(currentUserId);
-        }
+        fetchPendingInvitationsCount(currentUserId);
       })
       .subscribe();
 
     return () => {
-      groupsSubscription.unsubscribe();
-      invitationsSubscription.unsubscribe();
+      // Properly clean up subscriptions when component unmounts or currentUserId changes
+      supabase.removeChannel(groupsSubscription);
+      supabase.removeChannel(invitationsSubscription);
     };
   }, [currentUserId]);
 

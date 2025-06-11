@@ -48,9 +48,17 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
 
 
   useEffect(() => {
+    // Only subscribe if we have a valid room ID
+    if (!actualRoomId) return;
+    
+    // Create a unique channel name with room ID to avoid conflicts
+    const channelName = `room_messages_${actualRoomId}`;
+    
+    console.log(`Creating subscription for room ${actualRoomId} with channel ${channelName}`);
+    
     // Subscribe to new messages in the room
     const channel = supabase
-      .channel('room_messages')
+      .channel(channelName)
       .on(
         'postgres_changes',
         {
@@ -95,7 +103,9 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
       .subscribe();
 
     return () => {
-      channel.unsubscribe();
+      // Use removeChannel for proper cleanup
+      console.log(`Removing subscription for room ${actualRoomId} with channel ${channelName}`);
+      supabase.removeChannel(channel);
     };
   }, [actualRoomId]);
 
@@ -412,13 +422,11 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
   }) {
     const roomKey = (roomIdParam ?? roomId) || '';
 
-    console.log("ChatRoom.tsx:resolveRoom: roomKey:", roomKey)
-
+    //console.log("ChatRoom.tsx:resolveRoom: roomKey:", roomKey)
     // console.log("roomId", roomId),
     // console.log("roomIdParam", roomIdParam),
     // console.log("recipientId", recipientId),
     // console.log("roomPublicName", roomPublicName);
-
     //if (!roomKey) return;
 
     let roomData: RoomResponse | null = null;
@@ -469,10 +477,10 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
       const country = (await AsyncStorage.getItem("country"));
       const roomPublicName = `${country} - ${department} Chat`;
 
-      console.log("ChatRoom.tsx:fetchRoomDetails: roomPublicName:", roomPublicName)
-      console.log("ChatRoom.tsx:fetchRoomDetails: roomIdParam:", roomIdParam)
-      console.log("ChatRoom.tsx:fetchRoomDetails: roomId:", roomId)
-      console.log("ChatRoom.tsx:fetchRoomDetails: recipientId:", recipientId)
+      // console.log("ChatRoom.tsx:fetchRoomDetails: roomPublicName:", roomPublicName)
+      // console.log("ChatRoom.tsx:fetchRoomDetails: roomIdParam:", roomIdParam)
+      // console.log("ChatRoom.tsx:fetchRoomDetails: roomId:", roomId)
+      // console.log("ChatRoom.tsx:fetchRoomDetails: recipientId:", recipientId)
 
       await resolveRoom({
         currentUser,

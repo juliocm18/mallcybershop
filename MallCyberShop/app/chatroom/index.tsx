@@ -76,7 +76,7 @@ export default function ChatRoomScreen() {
       .eq('id', roomId)
       .single();
       if (error) throw error;
-      console.log("index:fetchRoomDetails: Room details:", data)
+      //console.log("index:fetchRoomDetails: Room details:", data)
       setRoomDetails(data);
       setCurrentRoomIsPrivate(data?.is_private || false);
     } catch (error) {
@@ -131,8 +131,11 @@ export default function ChatRoomScreen() {
   useEffect(() => {
     if (!currentUser) return;
 
+    // Create a unique channel name with user ID to avoid conflicts
+    const channelName = `group-invitations-changes-${currentUser.id}`;
+    
     const invitationsSubscription = supabase
-      .channel('group-invitations-changes')
+      .channel(channelName)
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
@@ -144,13 +147,14 @@ export default function ChatRoomScreen() {
       .subscribe();
 
     return () => {
-      invitationsSubscription.unsubscribe();
+      // Use removeChannel instead of just unsubscribe for proper cleanup
+      supabase.removeChannel(invitationsSubscription);
     };
   }, [currentUser?.id]);
 
   // Fetch room details when room changes
   useEffect(() => {
-    console.log("ChatRoomScreen:useEffect: currentRoomId", currentRoomId);
+    //console.log("ChatRoomScreen:useEffect: currentRoomId", currentRoomId);
     if (currentRoomId) {
       fetchRoomDetails(currentRoomId);
     }
@@ -161,7 +165,7 @@ export default function ChatRoomScreen() {
   };
 
   const handleParticipantSelect = (user: UserProfile & { roomId: string }) => {
-    console.log("Participant selected:", user);
+    //console.log("Participant selected:", user);
     setCurrentRoomId(user.roomId);
     setSelectedRecipient(user.id);
     setChatType('individual');
@@ -191,7 +195,7 @@ export default function ChatRoomScreen() {
 
   const renderHeaderButtons = () => {
     if (!currentUser) return null;
-    console.log("index:renderHeaderButtons: roomDetails", roomDetails)
+    //console.log("index:renderHeaderButtons: roomDetails", roomDetails)
     
     return (
       <View style={styles.headerButtonsContainer}>

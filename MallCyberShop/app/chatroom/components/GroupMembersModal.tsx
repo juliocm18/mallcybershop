@@ -145,10 +145,11 @@ const GroupMembersModal: React.FC<GroupMembersModalProps> = ({
     try {
       // Search for users by name or ID
       const { data, error } = await supabase
-        .from('profiles')
-        .select('id, name, avatar_url')
-        .or(`name.ilike.%${query}%,id.eq.${query}`)
-        .limit(10);
+      .from('profiles')
+      .select('id, name, avatar_url')
+      .ilike('name', `%${query}%`)
+      .limit(10);
+    
 
       if (error) throw error;
 
@@ -542,7 +543,7 @@ const GroupMembersModal: React.FC<GroupMembersModalProps> = ({
                   setSearchQuery(text);
                   searchUsers(text);
                 }}
-                placeholder={`Search users by name or ID...`}
+                placeholder={`Buscar Usuarios por email o id...`}
                 autoCapitalize="none"
               />
             </View>
