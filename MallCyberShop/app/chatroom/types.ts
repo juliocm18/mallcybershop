@@ -109,6 +109,7 @@ export interface MessageBubbleProps {
   isOwnMessage: boolean;
   currentUserId: string;
   onUserPress?: (user: UserProfile) => void;
+  onMessageDeleted?: (messageId: string) => void;
 }
 
 export interface ParticipantListProps {

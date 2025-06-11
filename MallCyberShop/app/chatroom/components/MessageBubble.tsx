@@ -214,7 +214,7 @@ const mediaStyles = StyleSheet.create({
   },
 });
 
-export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isOwnMessage, currentUserId, onUserPress }) => {
+export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isOwnMessage, currentUserId, onUserPress, onMessageDeleted }) => {
   const [showOptions, setShowOptions] = useState(false);
   const [showFullImage, setShowFullImage] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
@@ -272,12 +272,12 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isOwnMess
     if (!currentUserId || message.user_id !== currentUserId) return;
 
     Alert.alert(
-      'Delete Message',
-      'Are you sure you want to delete this message?',
+      'Eliminar Mensaje',
+      '¿Estás seguro de que quieres eliminar este mensaje?',
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: 'Cancelar', style: 'cancel' },
         {
-          text: 'Delete',
+          text: 'Eliminar',
           style: 'destructive',
           onPress: async () => {
             try {
@@ -290,14 +290,18 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isOwnMess
 
               if (error) {
                 console.error('Error deleting message:', error);
-                Alert.alert('Error', 'Failed to delete message. Please try again.');
+                Alert.alert('Error', 'No se pudo eliminar el mensaje. Por favor, intenta de nuevo.');
               } else {
                 // Message deleted successfully
                 setShowOptions(false);
+                // Call the callback to update the parent component
+                if (onMessageDeleted) {
+                  onMessageDeleted(message.id);
+                }
               }
             } catch (error) {
               console.error('Error in deleteMessage:', error);
-              Alert.alert('Error', 'An unexpected error occurred. Please try again.');
+              Alert.alert('Error', 'Un error inesperado ocurrió. Por favor, intenta de nuevo.');
             } finally {
               setIsDeleting(false);
             }

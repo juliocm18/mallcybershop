@@ -41,6 +41,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
   const PAGE_SIZE = 20; // Number of messages to load per page
   const [showAliasModal, setShowAliasModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
+  const [selectedParticipant, setSelectedParticipant] = useState<string | null>(null);
   const messageIdsRef = useRef(new Set<string>());
   const flatListRef = useRef<FlatList>(null);
 
@@ -515,6 +516,13 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
     setIsDrawerOpen(false); // Close drawer after selection
   };
 
+  const handleMessageDeleted = (messageId: string) => {
+    // Remove the deleted message from the messages state
+    setMessages(prevMessages => prevMessages.filter(msg => msg.id !== messageId));
+    // Also remove from the messageIdsRef set
+    messageIdsRef.current.delete(messageId);
+  };
+
   const renderMessage = ({ item }: { item: Message }) => {
     const isOwnMessage = item.user_id === currentUser.id;
     //console.log("item", item);
@@ -524,6 +532,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
         isOwnMessage={isOwnMessage}
         currentUserId={currentUser.id}
         onUserPress={handleUserPress}
+        onMessageDeleted={handleMessageDeleted}
       />
     );
   };
