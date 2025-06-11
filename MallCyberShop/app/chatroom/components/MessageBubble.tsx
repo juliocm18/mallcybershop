@@ -314,7 +314,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isOwnMess
 
   const submitReport = async () => {
     if (!reportReason.trim()) {
-      Alert.alert('Error', 'Please provide a reason for reporting this message.');
+      Alert.alert('Error', 'Por favor, proporcione un motivo para reportar este mensaje.');
       return;
     }
 
@@ -330,15 +330,15 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isOwnMess
 
       if (error) {
         console.error('Error reporting message:', error);
-        Alert.alert('Error', 'Failed to report message. Please try again.');
+        Alert.alert('Error', 'No se pudo reportar el mensaje. Por favor, intenta de nuevo.');
       } else {
-        Alert.alert('Thank you', 'Your report has been submitted and will be reviewed.');
+        Alert.alert('Gracias', 'Tu reporte ha sido enviado y será revisado.');
         setShowReportModal(false);
         setReportReason('');
       }
     } catch (error) {
       console.error('Error in reportMessage:', error);
-      Alert.alert('Error', 'An unexpected error occurred. Please try again.');
+      Alert.alert('Error', 'Un error inesperado ocurrió. Por favor, intenta de nuevo.');
     }
   };
 
@@ -727,19 +727,19 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isOwnMess
           <View style={[baseStyles.messageOptionsContainer, isOwnMessage ? baseStyles.ownMessageOptions : baseStyles.otherMessageOptions]}>
             <TouchableOpacity style={baseStyles.messageOption} onPress={copyMessage}>
               <Ionicons name="copy-outline" size={18} color="#666" />
-              <Text style={baseStyles.messageOptionText}>Copy</Text>
+              <Text style={baseStyles.messageOptionText}>Copiar</Text>
             </TouchableOpacity>
             {isOwnMessage && (
               <TouchableOpacity style={baseStyles.messageOption} onPress={deleteMessage} disabled={isDeleting}>
                 <Ionicons name="trash-outline" size={18} color="#ff6b6b" />
                 <Text style={[baseStyles.messageOptionText, { color: '#ff6b6b' }]}>
-                  {isDeleting ? 'Deleting...' : 'Delete'}
+                  {isDeleting ? 'Eliminando...' : 'Eliminar'}
                 </Text>
               </TouchableOpacity>
             )}
             <TouchableOpacity style={baseStyles.messageOption} onPress={openReportModal}>
               <Ionicons name="flag-outline" size={18} color="#666" />
-              <Text style={baseStyles.messageOptionText}>Report</Text>
+              <Text style={baseStyles.messageOptionText}>Reportar</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -810,10 +810,10 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isOwnMess
             elevation: 5,
           }}>
             <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 15 }}>
-              Report Message
+              Reportar Mensaje
             </Text>
             <Text style={{ marginBottom: 10 }}>
-              Please provide a reason for reporting this message:
+              Por favor, proporcione un motivo para reportar este mensaje:
             </Text>
             <TextInput
               style={{
@@ -826,7 +826,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isOwnMess
                 textAlignVertical: 'top',
               }}
               multiline
-              placeholder="Enter reason here..."
+              placeholder="Ingrese el motivo..."
               value={reportReason}
               onChangeText={setReportReason}
             />
@@ -841,7 +841,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isOwnMess
                   setReportReason('');
                 }}
               >
-                <Text style={{ color: '#666' }}>Cancel</Text>
+                <Text style={{ color: '#666' }}>Cancelar</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={{
@@ -851,7 +851,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isOwnMess
                 }}
                 onPress={submitReport}
               >
-                <Text style={{ color: 'white' }}>Submit</Text>
+                <Text style={{ color: 'white' }}>Enviar</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -860,7 +860,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isOwnMess
 
       {downloadProgress > 0 && downloadProgress < 100 && (
         <View style={mediaStyles.downloadProgressContainer}>
-          <Text style={mediaStyles.downloadProgressText}>Downloading: {downloadProgress}%</Text>
+          <Text style={mediaStyles.downloadProgressText}>Descargando: {downloadProgress}%</Text>
           <View style={mediaStyles.downloadProgressBarContainer}>
             <View style={[mediaStyles.downloadProgressBar, { width: `${downloadProgress}%` }]} />
           </View>

@@ -124,6 +124,9 @@ export const MessageReactions: React.FC<MessageReactionsProps> = ({ messageId, c
           });
       }
 
+      // Explicitly fetch reactions to update UI immediately
+      await fetchReactions();
+      
       // Close reaction picker
       setShowReactionPicker(false);
     } catch (error) {
