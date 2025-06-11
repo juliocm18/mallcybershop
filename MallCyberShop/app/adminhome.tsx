@@ -133,6 +133,21 @@ const Home: React.FC = () => {
                 <Text style={styles.label}>Administración de Usuarios</Text>
               </View>
             </Link>
+            
+            <Link
+              href="./reported-messages"
+              style={[styles.button, {backgroundColor: "#E91E63"}]}
+            >
+              <View style={styles.iconLabelContainer}>
+                <FontAwesome
+                  style={styles.icon}
+                  name="flag"
+                  size={30}
+                  color="white"
+                />
+                <Text style={styles.label}>Mensajes Reportados</Text>
+              </View>
+            </Link>
           </>
         )}
       </View>
