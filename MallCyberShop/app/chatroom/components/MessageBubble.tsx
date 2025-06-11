@@ -4,7 +4,7 @@ import { MessageBubbleProps } from '../types';
 import { styles as baseStyles } from '../styles';
 import { MessageReactions } from './MessageReactions';
 import { Ionicons, MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
-import { supabase } from '@/app/supabase';
+import { supabase } from '../../supabase';
 import * as FileSystem from 'expo-file-system';
 import * as WebBrowser from 'expo-web-browser';
 // We'll use these modules without type checking for now

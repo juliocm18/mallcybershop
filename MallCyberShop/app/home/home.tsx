@@ -7,7 +7,7 @@ import {
   useWindowDimensions,
   ScrollView,
 } from "react-native";
-import { DraggableGrid } from "react-native-draggable-grid";
+//import { DraggableGrid } from "react-native-draggable-grid";
 import { handleLinkPress, getDeviceIdentifier } from "../functions";
 import { useRouter } from "expo-router";
 import { globalStyles } from "../styles";
@@ -205,7 +205,7 @@ const DynamicTabsScreen = () => {
       scrollEnabled={scrollEnabled}
     >
       <View style={{ flex: 1, backgroundColor: "#ffdcbf" }}>
-        <DraggableGrid
+        {/*<DraggableGrid
           numColumns={4}
           renderItem={(item: IconItem) => (
             <View style={globalStyles.logoContainer}>
@@ -233,7 +233,7 @@ const DynamicTabsScreen = () => {
               saveIconOrder(newData);
             }
           }}
-        /> 
+        /> */}
       </View>
     </ScrollView>
   );

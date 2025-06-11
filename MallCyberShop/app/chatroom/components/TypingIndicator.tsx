@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
-import { supabase } from '@/app/supabase';
+import { supabase } from '../../supabase';
 
 interface TypingIndicatorProps {
   roomId: string;

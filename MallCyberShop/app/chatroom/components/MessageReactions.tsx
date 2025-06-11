@@ -8,7 +8,7 @@ import {
   FlatList
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { supabase } from '@/app/supabase';
+import { supabase } from '../../supabase';
 
 interface Reaction {
   id: string;

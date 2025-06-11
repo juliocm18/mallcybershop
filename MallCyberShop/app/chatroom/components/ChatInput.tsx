@@ -18,7 +18,7 @@ import * as FileSystem from 'expo-file-system';
 import * as Location from 'expo-location';
 import { Audio } from 'expo-av';
 import { Ionicons, MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
-import { supabase } from '@/app/supabase';
+import { supabase } from '../../supabase';
 import { MediaInfo, LocationInfo, MessageType } from '../types';
 import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, TouchableOpacity, Text } from 'react-native';
 import { Stack, useLocalSearchParams, router } from 'expo-router';
-import { supabase } from '@/app/supabase';
+import { supabase } from '../supabase';
 import { User } from '@supabase/supabase-js';
 import { ChatRoom } from './ChatRoom';
 import { LoginModal } from './components/LoginModal';

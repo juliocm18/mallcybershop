@@ -10,7 +10,7 @@ import {
   KeyboardAvoidingView,
   StyleSheet
 } from 'react-native';
-import { supabase } from '@/app/supabase';
+import { supabase } from '../supabase';
 import { MessageBubble } from './components/MessageBubble';
 import { ChatInput } from './components/ChatInput';
 import { OnlineUsersDrawer } from './components/OnlineUsersDrawer';

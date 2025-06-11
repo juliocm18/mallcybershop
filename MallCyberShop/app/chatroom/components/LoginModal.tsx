@@ -8,7 +8,7 @@ import {
   ActivityIndicator,
   StyleSheet,
 } from 'react-native';
-import { supabase } from '@/app/supabase';
+import { supabase } from '../../supabase';
 import { globalStyles } from '@/app/styles';
 import { useRouter } from 'expo-router';
 

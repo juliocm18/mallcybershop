@@ -13,7 +13,7 @@ import {
 import Modal from 'react-native-modal';
 import { Picker } from '@react-native-picker/picker';
 import * as ImagePicker from 'expo-image-picker';
-import { supabase } from '@/app/supabase';
+import { supabase } from '../../supabase';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImageManipulator from 'expo-image-manipulator';
 import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';

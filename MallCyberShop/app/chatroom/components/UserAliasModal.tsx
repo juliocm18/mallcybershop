@@ -9,7 +9,7 @@ import {
   Alert,
   ActivityIndicator
 } from 'react-native';
-import { supabase } from '@/app/supabase';
+import { supabase } from '../../supabase';
 import { UserProfile } from '../types';
 
 interface UserAliasModalProps {

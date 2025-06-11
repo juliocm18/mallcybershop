@@ -10,7 +10,7 @@ import {
   Alert
 } from 'react-native';
 import Modal from 'react-native-modal';
-import { supabase } from '@/app/supabase';
+import { supabase } from '../../supabase';
 import { Ionicons } from '@expo/vector-icons';
 
 interface GroupInvitationsModalProps {
