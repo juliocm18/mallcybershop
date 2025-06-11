@@ -8,7 +8,8 @@ import {
   Platform,
   SafeAreaView,
   KeyboardAvoidingView,
-  StyleSheet
+  StyleSheet,
+  Alert
 } from 'react-native';
 import { supabase } from '../supabase';
 import { MessageBubble } from './components/MessageBubble';
@@ -19,7 +20,8 @@ import { UserAliasModal } from './components/UserAliasModal';
 import { ChatRoomProps, Message, UserProfile, RoomDetails, RoomResponse, UserStatus, MessageType, MediaInfo, LocationInfo } from './types';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useAuth } from '../context/AuthContext';
 import { transformMessage } from './chatroom.functions';
 
 export const ChatRoom: React.FC<ChatRoomProps> = ({
@@ -44,9 +46,10 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
   const [selectedParticipant, setSelectedParticipant] = useState<string | null>(null);
   const messageIdsRef = useRef(new Set<string>());
   const flatListRef = useRef<FlatList>(null);
+  const router = useRouter();
+  const { signOut } = useAuth();
 
   let { roomIdParam } = useLocalSearchParams<{ roomIdParam?: string }>();
-
 
   useEffect(() => {
     // Only subscribe if we have a valid room ID
@@ -546,6 +549,32 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
     setShowAliasModal(false);
     setSelectedUser(null);
   };
+  
+  const handleSignOut = () => {
+    Alert.alert(
+      'Cerrar Sesión',
+      '¿Estás seguro de que quieres cerrar sesión?',
+      [
+        {
+          text: 'Cancelar',
+          style: 'cancel'
+        },
+        {
+          text: 'Cerrar Sesión',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await signOut();
+              router.replace('/locationhome');
+            } catch (error) {
+              console.error('Error al cerrar sesión:', error);
+              Alert.alert('Error', 'No se pudo cerrar sesión. Por favor, intenta de nuevo.');
+            }
+          }
+        }
+      ]
+    );
+  };
 
   return (
     <KeyboardAvoidingView
@@ -557,12 +586,20 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
         <View style={styles.header}>
           <View style={styles.headerContent}>
             <Text style={styles.roomName}>{roomName}</Text>
-            <TouchableOpacity
-              style={styles.participantsButton}
-              onPress={() => setIsDrawerOpen(true)}
-            >
-              <Ionicons name="people" size={22} color="#ffffff" />
-            </TouchableOpacity>
+            <View style={styles.headerButtons}>
+              <TouchableOpacity
+                style={styles.participantsButton}
+                onPress={() => setIsDrawerOpen(true)}
+              >
+                <Ionicons name="people" size={22} color="#ffffff" />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.signOutButton}
+                onPress={handleSignOut}
+              >
+                <Ionicons name="log-out-outline" size={22} color="#ffffff" />
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
 
@@ -669,12 +706,26 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
+  headerButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   roomName: {
     color: '#ffffff',
     fontSize: 18,
     fontWeight: '500',
   },
   participantsButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    padding: 8,
+    borderRadius: 20,
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
+  },
+  signOutButton: {
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
     padding: 8,
     borderRadius: 20,
