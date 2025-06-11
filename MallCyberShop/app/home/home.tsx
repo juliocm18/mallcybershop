@@ -3,7 +3,6 @@ import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
-  Image,
   useWindowDimensions,
   ScrollView,
 } from "react-native";
@@ -17,15 +16,11 @@ import { fetchCompanies, fetchCompanyLinks } from "../company/functions";
 import { getCategoryNames, getFormattedRoutes } from "../category/functions";
 import { createCompanyCounter } from "../company/company-counter";
 import { Link } from "../link/model";
-import AdminZone from "./adminZone";
 import { useLocalSearchParams } from "expo-router";
-import { confirmButtonStyles } from "react-native-modal-datetime-picker";
-import LocationHome from "../locationhome";
-import LocationZoneHome from "./location-home";
-import ChatButton from "./chat-button";
 import { IconItem } from "./icon-item";
 import { GridItem } from "./grid-item";
 import { categoryHashMap } from "../category/category";
+import LocationZoneHome from "./location-home";
 
 const STORAGE_KEY = "icon_order";
 
@@ -239,7 +234,7 @@ const DynamicTabsScreen = () => {
   );
   /* Tabs management */
   return (
-    <View style={[globalStyles.container, {paddingTop: 25}]}>
+    <View style={[globalStyles.container]}>
         <LocationZoneHome country={currentCountry} department={currentDepartment} />
       <TabView
         navigationState={{ index, routes }}

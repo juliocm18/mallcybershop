@@ -178,7 +178,10 @@ const Index = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    paddingTop: 35,
     padding: 20,
+    paddingBottom: 40,
+    backgroundColor: "#fff",
   },
   input: {
     height: 40,

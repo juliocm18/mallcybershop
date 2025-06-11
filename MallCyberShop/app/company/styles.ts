@@ -1,6 +1,12 @@
 import {StyleSheet} from "react-native";
 export const styles = StyleSheet.create({
-  container: {padding: 20},
+  container: {
+    flex: 1,
+    paddingTop: 35,
+    padding: 20,
+    paddingBottom: 40,
+    backgroundColor: "#fff",
+  },
   row: {
     flexDirection: "row",
     justifyContent: "space-between",

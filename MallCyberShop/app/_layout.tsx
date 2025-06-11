@@ -141,7 +141,7 @@ function MainLayout() {
   useEffect(() => {
     if (!loading && isVideoFinished) {
       if (session) {
-        router.replace("/adminhome");
+        router.replace("/locationhome");
       } else {
         router.replace("/locationhome");
       }
@@ -191,7 +191,8 @@ export default function Layout() {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1, justifyContent: "center",
+    flex: 1, 
+    justifyContent: "center",
     backgroundColor: "white",
   },
   video: { width: "100%", height: "100%" },

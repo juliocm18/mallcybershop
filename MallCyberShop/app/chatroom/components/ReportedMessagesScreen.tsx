@@ -386,6 +386,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
+    paddingTop: 35,
   },
   header: {
     backgroundColor: '#fb8436',
@@ -436,6 +437,7 @@ const styles = StyleSheet.create({
     padding: 12,
   },
   reportItem: {
+    marginTop: 35,
     backgroundColor: '#fff',
     borderRadius: 8,
     padding: 16,

@@ -26,12 +26,12 @@ export const globalStyles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#ea822c",
-    paddingTop: 10,
+    paddingTop: 35,
   },
   whiteContainer: {
     flex: 1,
     backgroundColor: "#fff",
-    paddingTop: 20,
+    paddingTop: 35,
     paddingHorizontal: 20,
   },
   logoContainer: {

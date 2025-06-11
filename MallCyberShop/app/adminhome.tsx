@@ -226,7 +226,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     width: "100%",
     gap: 20,
-    marginTop: 50,
+    marginTop: 15,
   },
   button: {
     width: 150,
@@ -291,7 +291,6 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: "bold",
     textAlign: "center",
-    marginBottom: 40,
     color: "#fb8436",
   },
 });
