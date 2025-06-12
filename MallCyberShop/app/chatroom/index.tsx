@@ -204,7 +204,7 @@ export default function ChatRoomScreen() {
           style={styles.headerButton}
           onPress={navigateToGroups}
         >
-          <Ionicons name="people" size={24} color="#007AFF" />
+          <Ionicons name="people" size={24} color="#fb8436" />
           <Text style={styles.headerButtonText}>Groups</Text>
         </TouchableOpacity>
               
@@ -214,7 +214,7 @@ export default function ChatRoomScreen() {
           onPress={handleViewInvitations}
         >
           <View style={{flexDirection: 'row'}}>
-            <Ionicons name="mail" size={24} color="#007AFF" />
+            <Ionicons name="mail" size={24} color="#fb8436" />
             {pendingInvitationsCount > 0 && (
               <View style={styles.badgeContainer}>
                 <Text style={styles.badgeText}>{pendingInvitationsCount}</Text>
@@ -241,15 +241,14 @@ export default function ChatRoomScreen() {
       <Stack.Screen
         options={{
           headerShown: true,
-          title: showGroupsScreen ? 'Groups' : (roomDetails?.is_private ? 'Chat Privado' : 'Chat Público'),
+          title: showGroupsScreen ? 'Grupos' : (roomDetails?.is_private ? 'Chat Privado' : 'Chat Público'),
           headerRight: () => !showGroupsScreen && renderHeaderButtons(),
           headerLeft: () => showGroupsScreen ? (
             <TouchableOpacity
               style={styles.backButton}
               onPress={handleBackFromGroups}
             >
-              <Ionicons name="arrow-back" size={24} color="#007AFF" />
-              <Text style={styles.backButtonText}>Back</Text>
+              <Ionicons name="arrow-back" size={24} color="#fb8436" />             
             </TouchableOpacity>
           ) : undefined,
         }}

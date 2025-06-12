@@ -6,6 +6,7 @@ export const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
+    color: '#fb8436',
   },
   headerButtonsContainer: {
     flexDirection: 'row',
@@ -20,7 +21,7 @@ export const styles = StyleSheet.create({
   },
   headerButtonText: {
     fontSize: 12,
-    color: '#007AFF',
+    color: '#fb8436',
     marginTop: 2,
   },
   badgeContainer: {
@@ -43,9 +44,11 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 8,
+    backgroundColor: '#fff',
+    color: '#fb8436',
   },
   backButtonText: {
-    color: '#007AFF',
+    color: '#fb8436',
     fontSize: 16,
     marginLeft: 4,
   },

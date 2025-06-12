@@ -5,8 +5,11 @@ import {
   Text,
   useWindowDimensions,
   ScrollView,
+  Image,
+  Dimensions,
+  TouchableOpacity,
+  FlatList
 } from "react-native";
-//import { DraggableGrid } from "react-native-draggable-grid";
 import { handleLinkPress, getDeviceIdentifier } from "../functions";
 import { useRouter } from "expo-router";
 import { globalStyles } from "../styles";
@@ -66,7 +69,7 @@ const DynamicTabsScreen = () => {
   let { department } = useLocalSearchParams<{ department?: string }>();
   let { country } = useLocalSearchParams<{ country?: string }>();
 
-  const toggleModalSocial = async (item: GridItem) => {
+  const toggleModalSocial = async (item: IconItem | GridItem) => {
     const companyId = +item.id;
     await handleCreateCompanyCounter(companyId);
     const companyLinks = await fetchCompanyLinks(companyId);
@@ -194,43 +197,37 @@ const DynamicTabsScreen = () => {
   const [index, setIndex] = useState(0);
 
   const renderScene = ({ route }: { route: { key: string; title: string } }) => (
-    <ScrollView
-      contentContainerStyle={{ flexGrow: 1 }}
-      keyboardShouldPersistTaps="handled"
-      scrollEnabled={scrollEnabled}
-    >
-      <View style={{ flex: 1, backgroundColor: "#ffdcbf" }}>
-        {/*<DraggableGrid
-          numColumns={4}
-          renderItem={(item: IconItem) => (
-            <View style={globalStyles.logoContainer}>
-              <View style={globalStyles.logoWrapper}>
-                <Image
-                  source={{ uri: item.logo }}
-                  style={globalStyles.logo}
-                  resizeMode="cover"
-                />
-              </View>
-              <Text
-                style={globalStyles.logoLabel}
-                numberOfLines={2}
-                ellipsizeMode="tail"
-              >
-                {item.name}
-              </Text>
+    <View style={{ flex: 1, backgroundColor: "#ffdcbf" }}>
+      <FlatList
+        data={companyByCategory.get(route.title) || []}
+        keyExtractor={(item: IconItem) => item.id.toString()}
+        numColumns={4}
+        scrollEnabled={scrollEnabled}
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ flexGrow: 1 }}
+        renderItem={({ item }: { item: IconItem }) => (
+          <TouchableOpacity 
+            style={[globalStyles.logoContainer, { width: Dimensions.get('window').width / 4 }]}
+            onPress={() => toggleModalSocial(item as unknown as GridItem)}
+          >
+            <View style={globalStyles.logoWrapper}>
+              <Image
+                source={{ uri: item.logo }}
+                style={globalStyles.logo}
+                resizeMode="cover"
+              />
             </View>
-          )}
-          data={companyByCategory.get(route.title) || []}
-          onItemPress={toggleModalSocial}
-          onDragStart={() => setScrollEnabled(false)} // Deshabilita el scroll al arrastrar
-          onDragRelease={(newData: IconItem[]) => {
-            if (isAllowReorder) {
-              saveIconOrder(newData);
-            }
-          }}
-        /> */}
-      </View>
-    </ScrollView>
+            <Text
+              style={globalStyles.logoLabel}
+              numberOfLines={2}
+              ellipsizeMode="tail"
+            >
+              {item.name}
+            </Text>
+          </TouchableOpacity>
+        )}
+      />
+    </View>
   );
   /* Tabs management */
   return (

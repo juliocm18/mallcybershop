@@ -421,7 +421,7 @@ export default function GroupsScreen({ currentUserId: propUserId }: GroupsScreen
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#fff5ef',
   },
   header: {
     flexDirection: 'row',
@@ -462,7 +462,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   createButton: {
-    backgroundColor: '#4a6ea9',
+    backgroundColor: '#fb8436',
     width: 40,
     height: 40,
     borderRadius: 20,
@@ -472,7 +472,7 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#fff',
     borderRadius: 8,
     marginHorizontal: 16,
     marginVertical: 12,
@@ -480,17 +480,20 @@ const styles = StyleSheet.create({
   },
   searchIcon: {
     marginRight: 8,
+    color: '#fb8436',
+    backgroundColor: '#fff',
   },
   searchInput: {
     flex: 1,
     paddingVertical: 12,
     fontSize: 16,
+    backgroundColor: '#fff',
   },
   listContent: {
     padding: 16,
   },
   groupItem: {
-    backgroundColor: '#f9f9f9',
+    backgroundColor: '#ffffff',
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
@@ -510,7 +513,7 @@ const styles = StyleSheet.create({
     borderRadius: 25,
   },
   defaultGroupImage: {
-    backgroundColor: '#4a6ea9',
+    backgroundColor: '#fb8436',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -548,7 +551,7 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   joinButton: {
-    backgroundColor: '#4a6ea9',
+    backgroundColor: '#fb8436',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
