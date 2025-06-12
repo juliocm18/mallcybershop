@@ -641,7 +641,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
                       <Ionicons name="arrow-up" size={16} color="#666" style={{ marginRight: 8 }} />
                     )}
                     <Text style={{ color: '#666' }}>
-                      {isLoadingMore ? 'Loading...' : 'Load older messages'}
+                      {isLoadingMore ? 'Cargando...' : 'Cargar mensajes anteriores'}
                     </Text>
                   </TouchableOpacity>
                 ) : null
