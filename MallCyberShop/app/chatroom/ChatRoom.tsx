@@ -577,11 +577,9 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
   };
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1, marginBottom: 50 }}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
-    >
+    <View style={{ flex: 1 }}>
+
+
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
           <View style={styles.headerContent}>
@@ -603,7 +601,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
           </View>
         </View>
 
-        <View style={styles.messagesContainer}>
+        <View style={[styles.messagesContainer, { paddingBottom: 60 }]}>
           {loading ? (
             <View style={{ flex: 1 }}>
               <ActivityIndicator size="large" color="#fb8436" style={{ marginTop: 20 }} />
@@ -679,7 +677,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
         user={selectedUser}
         currentUserId={currentUser.id}
       />
-    </KeyboardAvoidingView>
+    </View>
   );
 };
 
@@ -743,6 +741,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 16,
     paddingTop: 16,
+    paddingBottom: 100, // extra to avoid overlap with absolute ChatInput
   },
   messageItem: {
     marginBottom: 12,

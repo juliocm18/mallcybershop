@@ -6,18 +6,21 @@ import {
   StyleSheet,
   ActivityIndicator,
   Platform,
+  Keyboard,
   SafeAreaView,
+  KeyboardAvoidingView,
   Modal,
   Text,
   Alert,
   Linking
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Ionicons, MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system';
 import * as Location from 'expo-location';
 import { Audio } from 'expo-av';
-import { Ionicons, MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
 import { supabase } from '../../supabase';
 import { MediaInfo, LocationInfo, MessageType } from '../types';
 import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
@@ -41,6 +44,25 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, disabled, r
   const [uploadProgress, setUploadProgress] = useState(0);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const recordingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const insets = useSafeAreaInsets();
+
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+
+    const showSub = Keyboard.addListener(showEvent, (e) => {
+      setKeyboardHeight(e.endCoordinates.height);
+    });
+    const hideSub = Keyboard.addListener(hideEvent, () => {
+      setKeyboardHeight(0);
+    });
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
 
   // Broadcast typing status when user types
   const broadcastTypingStatus = async () => {
@@ -128,7 +150,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, disabled, r
       }
     }
 
-    // 🔍 Validar tipo de imagen
+    // Validar tipo de imagen
     if (!["image/png"].includes(image.mimeType || "")) {
       throw new Error("Solo son permitidos PNG.");
     }
@@ -355,7 +377,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, disabled, r
       setSending(true);
       setUploadProgress(0);
 
-      const formData = await uriToFormData(uri); // ✅ Convertir URI a FormData
+      const formData = await uriToFormData(uri); // Convertir URI a FormData
 
       const fileExt = uri.split(".").pop();
       const fileName = `${Date.now()}.${fileExt}`;
@@ -382,70 +404,9 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, disabled, r
 
       if (error) throw new Error("No se pudo comprimir la imagen");
 
-      // ✅ Obtener la URL pública correctamente
+      // Obtener la URL pública correctamente
       const publicUrl = supabase.storage.from(storageName).getPublicUrl(filePath)
         .data.publicUrl;
-
-      // Create media info object
-      const mediaInfo: MediaInfo = {
-        url: publicUrl,
-        filename,
-        filesize: (await FileSystem.getInfoAsync(uri)).size,
-        duration: duration // Only for audio/video
-      };
-
-      // Send message with media info
-      const typeLabel = {
-        'image': 'Sent an image',
-        'pdf': 'Sent a PDF document',
-        'video': 'Sent a video',
-        'audio': 'Sent an audio recording'
-      }[type];
-
-      await onSendMessage(typeLabel, type, mediaInfo);
-
-    } catch (error) {
-      console.error(`Error uploading ${type}:`, error);
-      Alert.alert('Error', `Failed to upload ${type}`);
-    } finally {
-      setSending(false);
-      setUploadProgress(0);
-    }
-  };
-
-
-  // Upload media to Supabase storage and send message
-  const uploadAndSendMedia2 = async (uri: string, type: MessageType, filename: string, duration?: number) => {
-    try {
-      setSending(true);
-      setUploadProgress(0);
-
-      // Generate a unique filename
-      const fileExt = filename.split('.').pop();
-      const uniqueFilename = `${Date.now()}_${Math.floor(Math.random() * 1000)}.${fileExt}`;
-      const storagePath = `${roomId}/${currentUserId}/${uniqueFilename}`;
-
-      // Read file as base64
-      const fileContent = await FileSystem.readAsStringAsync(uri, { encoding: FileSystem.EncodingType.Base64 });
-
-      // Upload to Supabase storage
-      const { data, error } = await supabase.storage
-        .from('chat-media')
-        .upload(storagePath, fileContent, {
-          contentType: type === 'image' ? 'image/jpeg' :
-            type === 'pdf' ? 'application/pdf' :
-              type === 'video' ? 'video/mp4' : 'audio/m4a',
-          upsert: false
-        });
-
-      if (error) {
-        throw error;
-      }
-
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('chat-media')
-        .getPublicUrl(storagePath);
 
       // Create media info object
       const mediaInfo: MediaInfo = {
@@ -482,76 +443,9 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, disabled, r
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Upload progress modal */}
-      <Modal
-        visible={uploadProgress > 0 && uploadProgress < 100}
-        transparent={true}
-        animationType="fade"
-      >
-        <View style={styles.progressModalContainer}>
-          <View style={styles.progressModal}>
-            <Text style={styles.progressText}>Uploading... {uploadProgress}%</Text>
-            <View style={styles.progressBarContainer}>
-              <View style={[styles.progressBar, { width: `${uploadProgress}%` }]} />
-            </View>
-          </View>
-        </View>
-      </Modal>
-
-      {/* Media options modal */}
-      <Modal
-        visible={showMediaOptions}
-        transparent={true}
-        animationType="slide"
-        onRequestClose={() => setShowMediaOptions(false)}
-      >
-        <TouchableOpacity
-          style={styles.mediaOptionsOverlay}
-          activeOpacity={1}
-          onPress={() => setShowMediaOptions(false)}
-        >
-          <View style={styles.mediaOptionsContainer}>
-            <TouchableOpacity style={styles.mediaOption} onPress={pickImage}>
-              <Ionicons name="image-outline" size={24} color="#fb8436" />
-              <Text style={styles.mediaOptionText}>Image</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.mediaOption} onPress={pickDocument}>
-              <Ionicons name="document-outline" size={24} color="#fb8436" />
-              <Text style={styles.mediaOptionText}>PDF</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.mediaOption} onPress={pickVideo}>
-              <Ionicons name="videocam-outline" size={24} color="#fb8436" />
-              <Text style={styles.mediaOptionText}>Video</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.mediaOption} onPress={toggleAudioRecording}>
-              <Ionicons name="mic-outline" size={24} color="#fb8436" />
-              <Text style={styles.mediaOptionText}>Audio</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.mediaOption} onPress={shareLocation}>
-              <Ionicons name="location-outline" size={24} color="#fb8436" />
-              <Text style={styles.mediaOptionText}>Location</Text>
-            </TouchableOpacity>
-          </View>
-        </TouchableOpacity>
-      </Modal>
-
-      {/* Recording indicator */}
-      {isRecording && (
-        <View style={styles.recordingContainer}>
-          <View style={styles.recordingIndicator}>
-            <View style={styles.recordingDot} />
-            <Text style={styles.recordingText}>Recording {formatDuration(recordingDuration)}</Text>
-          </View>
-          <TouchableOpacity style={styles.stopRecordingButton} onPress={stopRecording}>
-            <Ionicons name="stop" size={24} color="#ffffff" />
-          </TouchableOpacity>
-        </View>
-      )}
+    <View 
+      style={[styles.container, { bottom: keyboardHeight > 0 ? keyboardHeight + 35: 0 }]}
+    >
 
       <View style={styles.inputContainer}>
         <TouchableOpacity
@@ -569,7 +463,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, disabled, r
             setMessage(text);
             handleTyping();
           }}
-          placeholder="Escribe un mensaje..."
+          placeholder="Escribe un mensaje1.."
           placeholderTextColor="#999"
           multiline
           maxLength={500}
@@ -604,23 +498,29 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, disabled, r
           </TouchableOpacity>
         )}
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: 'rgb(235 199 199)',
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgb(223 208 200)',
     borderTopWidth: 1,
     borderTopColor: 'rgba(0, 0, 0, 0.1)',
     paddingBottom: Platform.OS === 'ios' ? 10 : 10,
+    width: '100%',
+    zIndex: 999,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    paddingBottom: Platform.OS === 'ios' ? 24 : 12,
+    marginBottom: Platform.OS === 'ios' ? 25 : 25,
   },
   attachButton: {
     padding: 8,
