@@ -205,7 +205,7 @@ const GroupInvitationsModal: React.FC<GroupInvitationsModalProps> = ({
     >
       <View style={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.title}>Group Invitations</Text>
+          <Text style={styles.title}>Invitaciones</Text>
           <TouchableOpacity onPress={onClose} style={styles.closeButton}>
             <Ionicons name="close" size={24} color="#333" />
           </TouchableOpacity>
@@ -222,7 +222,7 @@ const GroupInvitationsModal: React.FC<GroupInvitationsModalProps> = ({
             ListEmptyComponent={
               <View style={styles.emptyContainer}>
                 <Ionicons name="mail-outline" size={48} color="#ccc" />
-                <Text style={styles.emptyText}>No pending invitations</Text>
+                <Text style={styles.emptyText}>No hay invitaciones pendientes</Text>
               </View>
             }
           />
@@ -254,7 +254,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#fb8436',
   },
   closeButton: {
     padding: 4,
