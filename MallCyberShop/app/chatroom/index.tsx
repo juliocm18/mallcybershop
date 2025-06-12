@@ -228,7 +228,7 @@ export default function ChatRoomScreen() {
             style={styles.headerButton}
             onPress={handleManageMembers}
           >
-            <Ionicons name="settings" size={24} color="#007AFF" />
+            <Ionicons name="settings" size={24} color="#fb8436" />
             <Text style={styles.headerButtonText}>Gestionar</Text>
           </TouchableOpacity>
         )}

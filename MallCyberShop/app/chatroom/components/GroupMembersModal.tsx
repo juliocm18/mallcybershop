@@ -232,7 +232,7 @@ const GroupMembersModal: React.FC<GroupMembersModalProps> = ({
 
         if (error) throw error;
 
-        Alert.alert('Success', 'Users added to the group');
+        Alert.alert('Alerta', 'Usuarios agregados al grupo');
       }
 
       // Reset state
@@ -315,12 +315,12 @@ const GroupMembersModal: React.FC<GroupMembersModalProps> = ({
     }
 
     Alert.alert(
-      'Confirm Removal',
-      `Are you sure you want to remove ${targetMember.name} from the group?`,
+      'Confirmar',
+      `¿Estás seguro de que quieres remover ${targetMember.name} del grupo?`,
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: 'Cancelar', style: 'cancel' },
         { 
-          text: 'Remove', 
+          text: 'Remover', 
           style: 'destructive',
           onPress: () => confirmRemoveUser(userId)
         }
@@ -340,7 +340,7 @@ const GroupMembersModal: React.FC<GroupMembersModalProps> = ({
 
       // Update local state
       setMembers(prevMembers => prevMembers.filter(member => member.id !== userId));
-      Alert.alert('Success', 'User removed from the group');
+      Alert.alert('Alerta', 'Usuario removido del grupo');
     } catch (error) {
       console.error('Error removing user:', error);
       Alert.alert('Error', 'Failed to remove user');
@@ -489,7 +489,7 @@ const GroupMembersModal: React.FC<GroupMembersModalProps> = ({
     >
       <View style={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.title}>Group Members</Text>
+          <Text style={styles.title}>Miembros de grupo</Text>
           <TouchableOpacity onPress={onClose} style={styles.closeButton}>
             <Ionicons name="close" size={24} color="#333" />
           </TouchableOpacity>
@@ -501,7 +501,7 @@ const GroupMembersModal: React.FC<GroupMembersModalProps> = ({
             onPress={() => setSelectedTab('members')}
           >
             <Text style={[styles.tabText, selectedTab === 'members' && styles.activeTabText]}>
-              Members
+              Miembros
             </Text>
           </TouchableOpacity>
           
@@ -511,7 +511,7 @@ const GroupMembersModal: React.FC<GroupMembersModalProps> = ({
               onPress={() => setSelectedTab('invite')}
             >
               <Text style={[styles.tabText, selectedTab === 'invite' && styles.activeTabText]}>
-                {isGroupClosed ? 'Invite' : 'Add'} Users
+                {isGroupClosed ? 'Invitar' : 'Agregar'} Usuarios
               </Text>
             </TouchableOpacity>
           )}
@@ -558,9 +558,9 @@ const GroupMembersModal: React.FC<GroupMembersModalProps> = ({
                 contentContainerStyle={styles.listContent}
                 ListEmptyComponent={
                   searchQuery ? (
-                    <Text style={styles.emptyText}>No users found</Text>
+                    <Text style={styles.emptyText}>No se encontraron usuario</Text>
                   ) : (
-                    <Text style={styles.emptyText}>Search for users to add</Text>
+                    <Text style={styles.emptyText}>Buscar usuarios para agregar</Text>
                   )
                 }
               />

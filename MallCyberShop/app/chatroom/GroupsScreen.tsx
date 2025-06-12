@@ -307,12 +307,12 @@ export default function GroupsScreen({ currentUserId: propUserId }: GroupsScreen
             <View style={styles.groupMeta}>
               <View style={styles.metaItem}>
                 <Ionicons name="people-outline" size={14} color="#777" />
-                <Text style={styles.metaText}>{item.member_count} members</Text>
+                <Text style={styles.metaText}>{item.member_count} miembros</Text>
               </View>
               {item.is_private && (
                 <View style={styles.metaItem}>
                   <Ionicons name="lock-closed-outline" size={14} color="#777" />
-                  <Text style={styles.metaText}>Closed</Text>
+                  <Text style={styles.metaText}>Cerrado</Text>
                 </View>
               )}
             </View>

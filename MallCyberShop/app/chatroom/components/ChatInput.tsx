@@ -421,7 +421,9 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, disabled, r
         'image': 'Sent an image',
         'pdf': 'Sent a PDF document',
         'video': 'Sent a video',
-        'audio': 'Sent an audio recording'
+        'audio': 'Sent an audio recording',
+        'location': 'Shared a location',
+        'text': 'Sent a message'
       }[type];
 
       await onSendMessage(typeLabel, type, mediaInfo);

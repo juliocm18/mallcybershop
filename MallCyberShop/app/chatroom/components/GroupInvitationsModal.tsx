@@ -180,14 +180,14 @@ const GroupInvitationsModal: React.FC<GroupInvitationsModalProps> = ({
             onPress={() => handleInvitation(item.id, item.room_id, false)}
             disabled={loading}
           >
-            <Text style={styles.declineButtonText}>Decline</Text>
+            <Text style={styles.declineButtonText}>Declinar</Text>
           </TouchableOpacity>
           <TouchableOpacity 
             style={[styles.actionButton, styles.acceptButton]}
             onPress={() => handleInvitation(item.id, item.room_id, true)}
             disabled={loading}
           >
-            <Text style={styles.acceptButtonText}>Accept</Text>
+            <Text style={styles.acceptButtonText}>Aceptar</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -322,7 +322,7 @@ const styles = StyleSheet.create({
     marginLeft: 12,
   },
   acceptButton: {
-    backgroundColor: '#4a6ea9',
+    backgroundColor: '#fb8436',
   },
   acceptButtonText: {
     color: '#fff',
