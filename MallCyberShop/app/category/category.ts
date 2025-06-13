@@ -1,4 +1,4 @@
-interface categoryHashMap {
+export interface categoryHashMap {
   key: string;
   title: string;
 }

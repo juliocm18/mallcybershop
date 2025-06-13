@@ -1,8 +1,6 @@
 import React from "react";
 import {View, Text, TouchableOpacity, Image, StyleSheet} from "react-native";
 import RNModal from "react-native-modal";
-import {iconMap} from "./constants/socialLinks";
-import {Link} from "./link/model";
 import {CompanyLink} from "./company/company.interface";
 
 interface SocialLinksModalProps {

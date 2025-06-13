@@ -1,6 +1,6 @@
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, Modal } from 'react-native';
 import { UserProfile, OnlineUsersDrawerProps } from '../types';
-import { supabase } from '@/app/supabase';
+import { supabase } from '../../supabase';
 import { useEffect, useState } from 'react';
 import { router } from 'expo-router';
 

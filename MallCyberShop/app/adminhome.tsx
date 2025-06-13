@@ -1,6 +1,6 @@
 import {Link, useRouter} from "expo-router";
 import React, {useEffect, useState} from "react";
-import {View, Text, StyleSheet, TouchableOpacity} from "react-native";
+import {View, Text, StyleSheet, TouchableOpacity, Alert} from "react-native";
 import {FontAwesome} from "@expo/vector-icons";
 import {useAuth} from "./context/AuthContext";
 import RoleFunctions from "./role/functions";
@@ -8,7 +8,7 @@ import {Role} from "./role/model";
 
 const Home: React.FC = () => {
   const router = useRouter();
-  const {session} = useAuth();
+  const {session, signOut} = useAuth();
   const [roles, setRoles] = useState<Role[]>([]);
   useEffect(() => {
     loadRoles();
@@ -17,6 +17,32 @@ const Home: React.FC = () => {
   const loadRoles = async () => {
     const data = await RoleFunctions.getByUser(session?.user?.id || "");
     if (data) setRoles(data);
+  };
+  
+  const handleLogout = async () => {
+    Alert.alert(
+      'Cerrar Sesión',
+      '¿Estás seguro de que quieres cerrar sesión?',
+      [
+        {
+          text: 'Cancelar',
+          style: 'cancel'
+        },
+        {
+          text: 'Cerrar Sesión',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await signOut();
+              router.replace('/locationhome');
+            } catch (error) {
+              console.error('Error al cerrar sesión:', error);
+              Alert.alert('Error', 'No se pudo cerrar sesión. Por favor, intenta de nuevo.');
+            }
+          }
+        }
+      ]
+    );
   };
   return (
     <View style={styles.container}>
@@ -133,15 +159,40 @@ const Home: React.FC = () => {
                 <Text style={styles.label}>Administración de Usuarios</Text>
               </View>
             </Link>
+            
+            <Link
+              href="./reported-messages"
+              style={[styles.button, {backgroundColor: "#E91E63"}]}
+            >
+              <View style={styles.iconLabelContainer}>
+                <FontAwesome
+                  style={styles.icon}
+                  name="flag"
+                  size={30}
+                  color="white"
+                />
+                <Text style={styles.label}>Mensajes Reportados</Text>
+              </View>
+            </Link>
           </>
         )}
       </View>
-      <TouchableOpacity
-        style={styles.bottonButton}
-        onPress={() => router.push("../locationhome")}
-      >
-        <Text style={styles.buttonText}>Ir a la Tienda</Text>
-      </TouchableOpacity>
+      <View style={styles.bottomButtonsContainer}>
+        <TouchableOpacity
+          style={styles.bottonButton}
+          onPress={() => router.push("../locationhome")}
+        >
+          <Text style={styles.buttonText}>Ir a la Tienda</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity
+          style={[styles.bottonButton, styles.logoutButton]}
+          onPress={handleLogout}
+        >
+          <FontAwesome name="sign-out" size={18} color="white" style={styles.logoutIcon} />
+          <Text style={styles.buttonText}>Cerrar Sesión</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
@@ -175,7 +226,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     width: "100%",
     gap: 20,
-    marginTop: 50,
+    marginTop: 15,
   },
   button: {
     width: 150,
@@ -214,17 +265,32 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
   },
+  bottomButtonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    width: '100%',
+    marginTop: 20,
+    gap: 15,
+  },
   bottonButton: {
     backgroundColor: "#333",
     padding: 10,
     borderRadius: 5,
-    marginTop: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 130,
+  },
+  logoutButton: {
+    backgroundColor: "#d32f2f",
+  },
+  logoutIcon: {
+    marginRight: 8,
   },
   title: {
     fontSize: 32,
     fontWeight: "bold",
     textAlign: "center",
-    marginBottom: 40,
     color: "#fb8436",
   },
 });
