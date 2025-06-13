@@ -131,7 +131,7 @@ export const UserAliasModal: React.FC<UserAliasModalProps> = ({
       <View style={styles.modalContainer}>
         <View style={styles.modalContent}>
           <Text style={styles.modalTitle}>
-            {alias ? 'Edit Alias' : 'Set Alias'}
+            {alias ? 'Editar Alias' : 'Asignar Alias'}
           </Text>
           
           {initializing ? (
@@ -151,7 +151,7 @@ export const UserAliasModal: React.FC<UserAliasModalProps> = ({
               />
               
               <Text style={styles.helperText}>
-                This alias will only be visible to you. Leave empty to remove alias.
+                Este alias solo será visible para ti. Deja vacío para eliminar alias.
               </Text>
               
               <View style={styles.buttonContainer}>
@@ -160,7 +160,7 @@ export const UserAliasModal: React.FC<UserAliasModalProps> = ({
                   onPress={onClose}
                   disabled={loading}
                 >
-                  <Text style={styles.cancelButtonText}>Cancel</Text>
+                  <Text style={styles.cancelButtonText}>Cancelar</Text>
                 </TouchableOpacity>
                 
                 <TouchableOpacity
@@ -172,7 +172,7 @@ export const UserAliasModal: React.FC<UserAliasModalProps> = ({
                     <ActivityIndicator size="small" color="#fff" />
                   ) : (
                     <Text style={styles.saveButtonText}>
-                      {alias.trim() === '' ? 'Remove' : 'Save'}
+                      {alias.trim() === '' ? 'Eliminar' : 'Guardar'}
                     </Text>
                   )}
                 </TouchableOpacity>
