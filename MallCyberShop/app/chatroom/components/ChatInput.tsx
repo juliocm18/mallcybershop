@@ -445,9 +445,21 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, disabled, r
   };
 
   return (
-    <View 
-      style={[styles.container, { bottom: keyboardHeight > 0 ? keyboardHeight + 35: 0 }]}
+    <View
+      style={[styles.container, { bottom: keyboardHeight > 0 ? keyboardHeight + 35 : 0 }]}
     >
+
+      {isRecording && (
+        <View style={styles.recordingContainer}>
+          <View style={styles.recordingIndicator}>
+            <View style={styles.recordingDot} />
+            <Text style={styles.recordingText}>Recording {formatDuration(recordingDuration)}</Text>
+          </View>
+          <TouchableOpacity style={styles.stopRecordingButton} onPress={stopRecording}>
+            <Ionicons name="stop" size={24} color="#ffffff" />
+          </TouchableOpacity>
+        </View>
+      )}
 
       <View style={styles.inputContainer}>
         <TouchableOpacity
@@ -465,7 +477,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, disabled, r
             setMessage(text);
             handleTyping();
           }}
-          placeholder="Escribe un mensaje1.."
+          placeholder="Escribe un mensaje..."
           placeholderTextColor="#999"
           multiline
           maxLength={500}
@@ -500,6 +512,62 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, disabled, r
           </TouchableOpacity>
         )}
       </View>
+      {/* Upload progress modal */}
+      <Modal
+        visible={uploadProgress > 0 && uploadProgress < 100}
+        transparent={true}
+        animationType="fade"
+      >
+        <View style={styles.progressModalContainer}>
+          <View style={styles.progressModal}>
+            <Text style={styles.progressText}>Uploading... {uploadProgress}%</Text>
+            <View style={styles.progressBarContainer}>
+              <View style={[styles.progressBar, { width: `${uploadProgress}%` }]} />
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Media options modal */}
+      <Modal
+        visible={showMediaOptions}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowMediaOptions(false)}
+      >
+        <TouchableOpacity
+          style={styles.mediaOptionsOverlay}
+          activeOpacity={1}
+          onPress={() => setShowMediaOptions(false)}
+        >
+          <View style={styles.mediaOptionsContainer}>
+            <TouchableOpacity style={styles.mediaOption} onPress={pickImage}>
+              <Ionicons name="image-outline" size={24} color="#fb8436" />
+              <Text style={styles.mediaOptionText}>Image</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.mediaOption} onPress={pickDocument}>
+              <Ionicons name="document-outline" size={24} color="#fb8436" />
+              <Text style={styles.mediaOptionText}>PDF</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.mediaOption} onPress={pickVideo}>
+              <Ionicons name="videocam-outline" size={24} color="#fb8436" />
+              <Text style={styles.mediaOptionText}>Video</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.mediaOption} onPress={toggleAudioRecording}>
+              <Ionicons name="mic-outline" size={24} color="#fb8436" />
+              <Text style={styles.mediaOptionText}>Audio</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.mediaOption} onPress={shareLocation}>
+              <Ionicons name="location-outline" size={24} color="#fb8436" />
+              <Text style={styles.mediaOptionText}>Location</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 };

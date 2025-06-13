@@ -16,9 +16,16 @@ interface TypingUser {
 export const TypingIndicator: React.FC<TypingIndicatorProps> = ({ roomId, currentUserId }) => {
   const [typingUsers, setTypingUsers] = useState<TypingUser[]>([]);
   const [dots] = useState(new Animated.Value(0));
+  const [dotCount, setDotCount] = useState(0);
 
   // Animation for the typing dots
   useEffect(() => {
+    // Listen for animated value changes
+    const animatedValueListener = dots.addListener(({ value }) => {
+      // Update dotCount state when the animated value changes
+      setDotCount(Math.round(value));
+    });
+    
     const animation = Animated.loop(
       Animated.sequence([
         Animated.timing(dots, {
@@ -51,6 +58,7 @@ export const TypingIndicator: React.FC<TypingIndicatorProps> = ({ roomId, curren
     }
 
     return () => {
+      dots.removeListener(animatedValueListener);
       animation.stop();
     };
   }, [typingUsers.length]);
@@ -111,14 +119,15 @@ export const TypingIndicator: React.FC<TypingIndicatorProps> = ({ roomId, curren
     }
   };
 
-  // Generate the dots string based on animation value
+  // Generate the dots string based on the dotCount state
   const getDots = () => {
-    const dotsValue = dots.interpolate({
-      inputRange: [0, 1, 2, 3],
-      outputRange: ['', '.', '..', '...']
-    });
-    
-    return dotsValue;
+    switch (dotCount) {
+      case 0: return '';
+      case 1: return '.';
+      case 2: return '..';
+      case 3: return '...';
+      default: return '';
+    }
   };
 
   if (typingUsers.length === 0) {

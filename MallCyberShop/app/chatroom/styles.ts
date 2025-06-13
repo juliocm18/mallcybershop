@@ -222,6 +222,7 @@ export const styles = StyleSheet.create({
     alignItems: 'flex-end',
     marginVertical: 4,
     paddingHorizontal: 8,
+    marginBottom: 30,
   },
   ownMessageContainer: {
     justifyContent: 'flex-end',

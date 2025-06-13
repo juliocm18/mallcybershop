@@ -134,6 +134,14 @@ export default function ChatRoomScreen() {
     // Create a unique channel name with user ID to avoid conflicts
     const channelName = `group-invitations-changes-${currentUser.id}`;
     
+    // First, check if there are existing channels with this name and remove them
+    const existingChannels = supabase.getChannels();
+    const existingChannel = existingChannels.find(channel => channel.topic === channelName);
+    if (existingChannel) {
+      supabase.removeChannel(existingChannel);
+    }
+    
+    // Now create a new subscription
     const invitationsSubscription = supabase
       .channel(channelName)
       .on('postgres_changes', {
@@ -147,7 +155,7 @@ export default function ChatRoomScreen() {
       .subscribe();
 
     return () => {
-      // Use removeChannel instead of just unsubscribe for proper cleanup
+      // Use removeChannel for proper cleanup
       supabase.removeChannel(invitationsSubscription);
     };
   }, [currentUser?.id]);
@@ -201,6 +209,7 @@ export default function ChatRoomScreen() {
     return (
       <View style={styles.headerButtonsContainer}>
         <TouchableOpacity
+          key="groups-button"
           style={styles.headerButton}
           onPress={navigateToGroups}
         >
@@ -210,6 +219,7 @@ export default function ChatRoomScreen() {
               
         
         <TouchableOpacity
+          key="invitations-button"
           style={styles.headerButton}
           onPress={handleViewInvitations}
         >
@@ -225,6 +235,7 @@ export default function ChatRoomScreen() {
         </TouchableOpacity>        
         {chatType === 'group' && roomDetails?.created_by === currentUser?.id && (
           <TouchableOpacity
+            key="manage-members-button"
             style={styles.headerButton}
             onPress={handleManageMembers}
           >
