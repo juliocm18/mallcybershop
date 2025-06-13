@@ -52,11 +52,65 @@ Thumbs.db
 # Debug files
 *.map
 *.log
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
 
 # Temporary files
 *.tmp
 *.temp
 .cache/
 tmp/
+
+# Database migrations
 /migrations
 migrations/
+
+# Development environment files
+.env
+.env.*
+!.env.example
+
+# Editor directories and files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Node.js dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Testing files
+__tests__/
+__mocks__/
+coverage/
+
+# Build artifacts
+build/
+dist/
+.expo/
+web-build/
+
+# Large media files (consider using Git LFS instead)
+*.mp4
+*.tiff
+*.avi
+*.flv
+*.mov
+*.wmv

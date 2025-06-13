@@ -15,9 +15,10 @@ import { useRouter } from 'expo-router';
 interface LoginModalProps {
   isVisible: boolean;
   onLoginSuccess: (userId: string) => void;
+  onClose: () => void;
 }
 
-export const LoginModal: React.FC<LoginModalProps> = ({ isVisible, onLoginSuccess }) => {
+export const LoginModal: React.FC<LoginModalProps> = ({ isVisible, onLoginSuccess, onClose }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -53,6 +54,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isVisible, onLoginSucces
   };
 
   const onGoToRegister = () => {
+    onClose(); // Hide the modal first
     router.push('/user/registerUser');
   };
 

@@ -268,6 +268,7 @@ export default function ChatRoomScreen() {
       <LoginModal 
         isVisible={showLoginModal} 
         onLoginSuccess={handleLoginSuccess}
+        onClose={() => setShowLoginModal(false)}
       />
 
       {currentUser && (
