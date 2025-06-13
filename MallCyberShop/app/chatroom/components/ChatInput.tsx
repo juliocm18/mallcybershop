@@ -107,6 +107,8 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, disabled, r
       setSending(true);
       await onSendMessage(message, 'text');
       setMessage('');
+      // Dismiss keyboard after sending message
+      Keyboard.dismiss();
     } catch (error) {
       console.error('Error sending message:', error);
     } finally {
