@@ -7,10 +7,12 @@ import { pickImage, uploadImage } from "../company/functions";
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useAuth } from "../context/AuthContext";
 import UserFunctions from "./functions";
+import { supabase } from "../supabase";
 
 export default function RegisterUser() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [phoneNumber, setPhoneNumber] = useState("");
     const [showPassword, setShowPassword] = useState(false);
     const [logoUri, setLogoUri] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
@@ -18,14 +20,17 @@ export default function RegisterUser() {
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [termsAccepted, setTermsAccepted] = useState(false);
     const [name, setName] = useState("");
+    const [validationError, setValidationError] = useState<string | null>(null);
 
     const { signUp } = useAuth();
 
     const clearFields = () => {
         setEmail("");
         setPassword("");
+        setPhoneNumber("");
         setLogoUri(null);
         setLoading(false);
+        setValidationError(null);
     };
 
     const handlePickImage = async () => {
@@ -36,9 +41,54 @@ export default function RegisterUser() {
         }
     };
 
+    // Validate if email already exists in the database
+    const checkEmailExists = async (email: string) => {
+        try {
+            const { data, error } = await supabase
+                .from('profiles')
+                .select('id')
+                .eq('email', email)
+                .maybeSingle();
+                
+            if (error) throw error;
+            return data !== null;
+        } catch (error) {
+            console.error('Error checking email:', error);
+            return false;
+        }
+    };
+
+    // Validate if phone number already exists in the database
+    const checkPhoneExists = async (phone: string) => {
+        try {
+            const { data, error } = await supabase
+                .from('profiles')
+                .select('id')
+                .eq('phone_number', phone)
+                .maybeSingle();
+                
+            if (error) throw error;
+            return data !== null;
+        } catch (error) {
+            console.error('Error checking phone:', error);
+            return false;
+        }
+    };
+
     const handleSaveUser = async () => {
-        if (!email || !password || !logoUri || !birthDate || !termsAccepted) {
+        // Reset validation error
+        setValidationError(null);
+        
+        // Basic field validation
+        if (!email || !password || !phoneNumber || !logoUri || !birthDate || !termsAccepted || !name) {
             Alert.alert("Error", "Debe completar todos los campos y aceptar los términos y condiciones");
+            return;
+        }
+        
+        // Phone number format validation (simple check for now)
+        const phoneRegex = /^[0-9]{9}$/; // Assumes 10-digit phone number
+        if (!phoneRegex.test(phoneNumber)) {
+            setValidationError("El número de teléfono debe tener 9 dígitos");
             return;
         }
 
@@ -57,6 +107,22 @@ export default function RegisterUser() {
 
         setLoading(true);
         try {
+            // Check if email already exists
+            const emailExists = await checkEmailExists(email);
+            if (emailExists) {
+                setValidationError("Este correo electrónico ya está registrado");
+                setLoading(false);
+                return;
+            }
+            
+            // Check if phone number already exists
+            const phoneExists = await checkPhoneExists(phoneNumber);
+            if (phoneExists) {
+                setValidationError("Este número de teléfono ya está registrado");
+                setLoading(false);
+                return;
+            }
+            
             const uploadedUrl = await uploadImage(logoUri);
             console.log("uploadedUrl", uploadedUrl);
             if (uploadedUrl) {
@@ -72,6 +138,8 @@ export default function RegisterUser() {
                 avatar_url: uploadedUrl,
                 name: name,
                 birth_date: birthDate.toISOString().split('T')[0],
+                phone_number: phoneNumber,
+                email: email, // Store email in profiles table for easier querying
             };
             await UserFunctions.saveClientProfile(newProfile);
             Alert.alert("Aviso", "Registro creado con éxito");
@@ -104,19 +172,25 @@ export default function RegisterUser() {
 
     return (
         <SafeAreaView style={styles.safeArea}>
-            <KeyboardAvoidingView 
+            <KeyboardAvoidingView
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 style={styles.keyboardAvoid}
             >
                 <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
                     <View style={styles.container}>
                         <Text style={styles.pageTitle}>Registro de Usuario</Text>
-                        
+
                         <View style={styles.formContainer}>
+                            {validationError && (
+                                <View style={styles.errorContainer}>
+                                    <Text style={styles.errorText}>{validationError}</Text>
+                                </View>
+                            )}
+                            
                             <Text style={styles.inputLabel}>Nombre Completo</Text>
                             <TextInput
                                 style={styles.input}
-                                placeholder="Ingrese su nombre completo"
+                                label="Nombre"
                                 value={name}
                                 onChangeText={setName}
                                 mode="outlined"
@@ -128,14 +202,29 @@ export default function RegisterUser() {
                             <Text style={styles.inputLabel}>Correo Electrónico</Text>
                             <TextInput
                                 style={styles.input}
-                                placeholder="Ingrese su correo electrónico"
+                                label="Email"
                                 value={email}
                                 onChangeText={setEmail}
-                                keyboardType="email-address"
                                 mode="outlined"
+                                keyboardType="email-address"
+                                autoCapitalize="none"
                                 outlineColor="#ddd"
                                 activeOutlineColor="#fb8436"
                                 theme={{ colors: { primary: '#fb8436' } }}
+                            />
+                            
+                            <Text style={styles.inputLabel}>Número de Teléfono</Text>
+                            <TextInput
+                                style={styles.input}
+                                label="Teléfono"
+                                value={phoneNumber}
+                                onChangeText={setPhoneNumber}
+                                mode="outlined"
+                                keyboardType="phone-pad"
+                                outlineColor="#ddd"
+                                activeOutlineColor="#fb8436"
+                                theme={{ colors: { primary: '#fb8436' } }}
+                                maxLength={10}
                             />
 
                             <Text style={styles.inputLabel}>Contraseña</Text>
@@ -150,8 +239,8 @@ export default function RegisterUser() {
                                 activeOutlineColor="#fb8436"
                                 theme={{ colors: { primary: '#fb8436' } }}
                                 right={
-                                    <TextInput.Icon 
-                                        icon={showPassword ? "eye-outline" : "eye-off-outline"} 
+                                    <TextInput.Icon
+                                        icon={showPassword ? "eye-outline" : "eye-off-outline"}
                                         onPress={() => setShowPassword(!showPassword)}
                                         color="#666"
                                     />
@@ -233,6 +322,18 @@ export default function RegisterUser() {
 }
 
 const styles = StyleSheet.create({
+    errorContainer: {
+        backgroundColor: '#ffebee',
+        borderRadius: 8,
+        padding: 12,
+        marginBottom: 20,
+        borderLeftWidth: 4,
+        borderLeftColor: '#f44336',
+    },
+    errorText: {
+        color: '#d32f2f',
+        fontSize: 14,
+    },
     safeArea: {
         flex: 1,
         backgroundColor: '#fff',
@@ -290,7 +391,7 @@ const styles = StyleSheet.create({
     cameraIcon: {
         marginRight: 10,
     },
-    imagePickerText: { 
+    imagePickerText: {
         color: "#fff",
         fontWeight: "500",
         fontSize: 16,
@@ -299,9 +400,9 @@ const styles = StyleSheet.create({
         alignItems: "center",
         marginBottom: 20,
     },
-    logoPreview: { 
-        width: 120, 
-        height: 120, 
+    logoPreview: {
+        width: 120,
+        height: 120,
         borderRadius: 60,
         borderWidth: 3,
         borderColor: "#fb8436",
